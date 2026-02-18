@@ -145,7 +145,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const lastSyncRef = useRef<string>('');
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
     const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
         const id = generateId();
