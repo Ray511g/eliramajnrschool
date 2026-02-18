@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { DAYS, TIME_SLOTS, SUBJECTS } from '../../types';
+import { DAYS, TIME_SLOTS, SUBJECTS, TimetableEntry } from '../../types';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface Props {
     grade: string;
     onClose: () => void;
+    entry?: TimetableEntry | null;
 }
 
-export default function TimetableEntryModal({ grade, onClose }: Props) {
-    const { teachers, addTimetableEntry } = useSchool();
+export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
+    const { teachers, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useSchool();
     const [form, setForm] = useState({
         day: DAYS[0],
         timeSlot: TIME_SLOTS[0],
@@ -18,25 +20,50 @@ export default function TimetableEntryModal({ grade, onClose }: Props) {
         teacherName: '',
     });
 
+    useEffect(() => {
+        if (entry) {
+            setForm({
+                day: entry.day,
+                timeSlot: entry.timeSlot,
+                subject: entry.subject,
+                teacherId: entry.teacherId || '',
+                teacherName: entry.teacherName,
+            });
+        }
+    }, [entry]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const teacher = teachers.find(t => t.id === form.teacherId);
-        addTimetableEntry({
+        const entryData = {
             grade,
             day: form.day,
             timeSlot: form.timeSlot,
             subject: form.subject,
             teacherId: form.teacherId,
             teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : form.teacherName || 'TBA',
-        });
+        };
+
+        if (entry) {
+            updateTimetableEntry(entry.id, entryData);
+        } else {
+            addTimetableEntry(entryData);
+        }
         onClose();
+    };
+
+    const handleDelete = () => {
+        if (entry && confirm('Are you sure you want to delete this timetable entry?')) {
+            deleteTimetableEntry(entry.id);
+            onClose();
+        }
     };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Add Timetable Entry</h2>
+                    <h2>{entry ? 'Edit Timetable Entry' : 'Add Timetable Entry'}</h2>
                     <button className="modal-close" onClick={onClose}><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -81,9 +108,16 @@ export default function TimetableEntryModal({ grade, onClose }: Props) {
                             )}
                         </div>
                     </div>
-                    <div className="modal-footer">
-                        <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary">Add Entry</button>
+                    <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+                        {entry ? (
+                            <button type="button" className="btn-outline danger" onClick={handleDelete}>
+                                <DeleteIcon style={{ fontSize: 18, marginRight: 5 }} /> Delete
+                            </button>
+                        ) : <div></div>}
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
+                            <button type="submit" className="btn-primary">{entry ? 'Save Changes' : 'Add Entry'}</button>
+                        </div>
                     </div>
                 </form>
             </div>

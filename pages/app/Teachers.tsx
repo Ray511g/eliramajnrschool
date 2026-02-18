@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSchool } from '../../context/SchoolContext';
+import { Teacher } from '../../types';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -11,6 +12,7 @@ export default function Teachers() {
     const { teachers, deleteTeacher } = useSchool();
     const [search, setSearch] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
 
     const filtered = teachers.filter(t =>
         `${t.firstName} ${t.lastName} ${t.subjects.join(' ')}`.toLowerCase().includes(search.toLowerCase())
@@ -18,6 +20,16 @@ export default function Teachers() {
 
     const active = teachers.filter(t => t.status === 'Active').length;
     const totalSubjects = new Set(teachers.flatMap(t => t.subjects)).size;
+
+    const handleEdit = (teacher: Teacher) => {
+        setEditingTeacher(teacher);
+        setShowAddModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowAddModal(false);
+        setEditingTeacher(null);
+    };
 
     return (
         <div className="page-container">
@@ -91,7 +103,9 @@ export default function Teachers() {
                                     <td><span className={`badge ${teacher.status === 'Active' ? 'green' : 'red'}`}>{teacher.status}</span></td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" title="Edit"><EditIcon style={{ fontSize: 16 }} /></button>
+                                            <button className="table-action-btn" title="Edit" onClick={() => handleEdit(teacher)}>
+                                                <EditIcon style={{ fontSize: 16 }} />
+                                            </button>
                                             <button className="table-action-btn danger" title="Delete" onClick={() => deleteTeacher(teacher.id)}>
                                                 <DeleteIcon style={{ fontSize: 16 }} />
                                             </button>
@@ -104,7 +118,7 @@ export default function Teachers() {
                 )}
             </div>
 
-            {showAddModal && <AddTeacherModal onClose={() => setShowAddModal(false)} />}
+            {showAddModal && <AddTeacherModal teacher={editingTeacher} onClose={handleCloseModal} />}
         </div>
     );
 }

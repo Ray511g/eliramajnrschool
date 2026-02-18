@@ -6,6 +6,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PrintIcon from '@mui/icons-material/Print';
 import DownloadIcon from '@mui/icons-material/Download';
+import DeleteIcon from '@mui/icons-material/Delete';
 import LocalAtmIcon from '@mui/icons-material/LocalAtm';
 import RecordPaymentModal from '../../components/modals/RecordPaymentModal';
 import ReceiptModal from '../../components/modals/ReceiptModal';
@@ -13,7 +14,7 @@ import FeeStructureModal from '../../components/modals/FeeStructureModal';
 import { FeePayment } from '../../types';
 
 export default function Fees() {
-    const { students, payments, settings, gradeFees, updateGradeFees } = useSchool();
+    const { students, payments, settings, gradeFees, updateGradeFees, deletePayment } = useSchool();
     const [showPayModal, setShowPayModal] = useState(false);
     const [selectedReceipt, setSelectedReceipt] = useState<FeePayment | null>(null);
     const [editingGrade, setEditingGrade] = useState<string | null>(null);
@@ -285,9 +286,14 @@ export default function Fees() {
                                             <td style={{ color: 'var(--accent-green)', fontWeight: 600 }}>KSh {payment.amount.toLocaleString()}</td>
                                             <td>{new Date(payment.date).toLocaleDateString()}</td>
                                             <td>
-                                                <button className="table-action-btn" title="View/Print Receipt" onClick={() => setSelectedReceipt(payment)}>
-                                                    <ReceiptIcon style={{ fontSize: 16 }} />
-                                                </button>
+                                                <div className="table-actions">
+                                                    <button className="table-action-btn" title="View/Print Receipt" onClick={() => setSelectedReceipt(payment)}>
+                                                        <ReceiptIcon style={{ fontSize: 16 }} />
+                                                    </button>
+                                                    <button className="table-action-btn danger" title="Delete Payment" onClick={() => { if (confirm('Are you sure you want to delete this payment?')) deletePayment(payment.id) }}>
+                                                        <DeleteIcon style={{ fontSize: 16 }} />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { GRADES, DAYS, TIME_SLOTS, SUBJECTS } from '../../types';
+import { GRADES, DAYS, TIME_SLOTS, TimetableEntry } from '../../types';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
 import TimetableEntryModal from '../../components/modals/TimetableEntryModal';
 
 export default function Timetable() {
-    const { timetable, deleteTimetableEntry } = useSchool();
+    const { timetable } = useSchool();
     const [selectedGrade, setSelectedGrade] = useState<string>('Grade 1');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
 
     const gradeEntries = timetable.filter(e => e.grade === selectedGrade);
 
@@ -17,6 +17,16 @@ export default function Timetable() {
     };
 
     const isBreak = (slot: string) => slot === '10:00 - 10:30' || slot === '12:30 - 1:10';
+
+    const handleEdit = (entry: TimetableEntry) => {
+        setEditingEntry(entry);
+        setShowAddModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowAddModal(false);
+        setEditingEntry(null);
+    };
 
     return (
         <div className="page-container">
@@ -65,7 +75,7 @@ export default function Timetable() {
                                     return (
                                         <div key={`${day}-${slot}`} className="timetable-cell">
                                             {entry ? (
-                                                <div className="timetable-entry" onClick={() => deleteTimetableEntry(entry.id)}>
+                                                <div className="timetable-entry" onClick={() => handleEdit(entry)} style={{ cursor: 'pointer' }} title="Click to edit">
                                                     <div className="subject">{entry.subject}</div>
                                                     <div className="teacher">{entry.teacherName}</div>
                                                 </div>
@@ -79,7 +89,7 @@ export default function Timetable() {
                 </div>
             </div>
 
-            {showAddModal && <TimetableEntryModal grade={selectedGrade} onClose={() => setShowAddModal(false)} />}
+            {showAddModal && <TimetableEntryModal grade={selectedGrade} entry={editingEntry} onClose={handleCloseModal} />}
         </div>
     );
 }

@@ -35,9 +35,11 @@ interface SchoolContextType {
     updateExam: (id: string, data: Partial<Exam>) => void;
     deleteExam: (id: string) => void;
     addPayment: (payment: Omit<FeePayment, 'id' | 'receiptNumber'>) => void;
+    deletePayment: (id: string) => void;
     addResult: (result: Omit<StudentResult, 'id'>) => void;
     saveBulkResults: (results: Omit<StudentResult, 'id'>[]) => void;
     addTimetableEntry: (entry: Omit<TimetableEntry, 'id'>) => void;
+    updateTimetableEntry: (id: string, updates: Partial<TimetableEntry>) => void;
     deleteTimetableEntry: (id: string) => void;
     updateSettings: (data: Partial<SchoolSettings>) => void;
     updateGradeFees: (grade: string, amount: number) => void;
@@ -46,6 +48,8 @@ interface SchoolContextType {
     uploadExams: (file: File) => Promise<void>;
     systemUsers: User[];
     addSystemUser: (user: Omit<User, 'id' | 'lastLogin' | 'status'>) => void;
+    updateSystemUser: (id: string, updates: Partial<User>) => void;
+    deleteSystemUser: (id: string) => void;
     resetUserPassword: (userId: string) => void;
     showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
     refreshData: () => void;
@@ -412,6 +416,25 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         showToast(`Payment of KSh ${payment.amount.toLocaleString()} recorded`);
     };
 
+    const deletePayment = async (id: string) => {
+        const payment = payments.find(p => p.id === id);
+        if (payment) {
+            await tryApi(`${API_URL}/payments/${id}`, { method: 'DELETE' });
+            setPayments(prev => prev.filter(p => p.id !== id));
+
+            // Reverse the fee balance adjustment
+            setStudents(prev => prev.map(s => {
+                if (s.id === payment.studentId) {
+                    const newPaid = s.paidFees - payment.amount;
+                    return { ...s, paidFees: newPaid, feeBalance: s.totalFees - newPaid };
+                }
+                return s;
+            }));
+
+            showToast('Payment deleted and fee balance adjusted', 'info');
+        }
+    };
+
     // RESULTS
     const addResult = async (result: Omit<StudentResult, 'id'>) => {
         const apiRes = await tryApi(`${API_URL}/results`, { method: 'POST', body: JSON.stringify(result) });
@@ -535,6 +558,23 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         showToast(`User ${user.name} added successfully`);
     };
 
+    const updateSystemUser = async (id: string, updates: Partial<User>) => {
+        const apiRes = await tryApi(`${API_URL}/users/${id}`, { method: 'PUT', body: JSON.stringify(updates) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setSystemUsers(prev => prev.map(u => (u.id === id ? data : u)));
+        } else {
+            setSystemUsers(prev => prev.map(u => (u.id === id ? { ...u, ...updates } : u)));
+        }
+        showToast('User updated successfully');
+    };
+
+    const deleteSystemUser = async (id: string) => {
+        await tryApi(`${API_URL}/users/${id}`, { method: 'DELETE' });
+        setSystemUsers(prev => prev.filter(u => u.id !== id));
+        showToast('User deleted successfully', 'info');
+    };
+
     const resetUserPassword = (userId: string) => {
         const user = systemUsers.find(u => u.id === userId);
         if (user) {
@@ -553,6 +593,17 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             setTimetable(prev => [...prev, newEntry]);
         }
         showToast('Timetable entry added');
+    };
+
+    const updateTimetableEntry = async (id: string, updates: Partial<TimetableEntry>) => {
+        const apiRes = await tryApi(`${API_URL}/timetable/${id}`, { method: 'PUT', body: JSON.stringify(updates) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setTimetable(prev => prev.map(t => (t.id === id ? data : t)));
+        } else {
+            setTimetable(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+        }
+        showToast('Timetable entry updated');
     };
 
     const deleteTimetableEntry = async (id: string) => {
@@ -616,11 +667,11 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             addTeacher, updateTeacher, deleteTeacher,
             saveAttendance,
             addExam, updateExam, deleteExam,
-            addPayment, addResult, saveBulkResults,
-            addTimetableEntry, deleteTimetableEntry,
+            addPayment, deletePayment, addResult, saveBulkResults,
+            addTimetableEntry, updateTimetableEntry, deleteTimetableEntry,
             updateSettings, updateGradeFees,
             uploadStudents, uploadTeachers, uploadExams,
-            systemUsers, addSystemUser, resetUserPassword,
+            systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword,
             showToast, refreshData, clearAllData,
             isSyncing
         }}>

@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { GRADES } from '../../types';
+import { GRADES, Student } from '../../types';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface Props {
     onClose: () => void;
+    student?: Student | null;
 }
 
-export default function AddStudentModal({ onClose }: Props) {
-    const { addStudent, gradeFees } = useSchool();
+export default function AddStudentModal({ onClose, student }: Props) {
+    const { addStudent, updateStudent, gradeFees } = useSchool();
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
@@ -23,15 +24,40 @@ export default function AddStudentModal({ onClose }: Props) {
         totalFees: gradeFees['Grade 1'] || 15000,
     });
 
+    useEffect(() => {
+        if (student) {
+            setForm({
+                firstName: student.firstName,
+                lastName: student.lastName,
+                admissionNumber: student.admissionNumber,
+                gender: student.gender,
+                grade: student.grade,
+                dateOfBirth: student.dateOfBirth,
+                parentName: student.parentName,
+                parentPhone: student.parentPhone,
+                parentEmail: student.parentEmail || '',
+                address: student.address || '',
+                totalFees: student.totalFees,
+            });
+        }
+    }, [student]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        addStudent({
-            ...form,
-            status: 'Active',
-            enrollmentDate: new Date().toISOString().split('T')[0],
-            paidFees: 0,
-            feeBalance: form.totalFees,
-        });
+        if (student) {
+            updateStudent(student.id, {
+                ...form,
+                feeBalance: form.totalFees - student.paidFees, // Recalculate balance based on new total
+            });
+        } else {
+            addStudent({
+                ...form,
+                status: 'Active',
+                enrollmentDate: new Date().toISOString().split('T')[0],
+                paidFees: 0,
+                feeBalance: form.totalFees,
+            });
+        }
         onClose();
     };
 
@@ -41,7 +67,7 @@ export default function AddStudentModal({ onClose }: Props) {
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Add New Student</h2>
+                    <h2>{student ? 'Edit Student' : 'Add New Student'}</h2>
                     <button className="modal-close" onClick={onClose}><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -74,6 +100,7 @@ export default function AddStudentModal({ onClose }: Props) {
                                 <label>Grade *</label>
                                 <select className="form-control" value={form.grade} onChange={e => {
                                     const grade = e.target.value;
+                                    // Only update fees if it's a new student or explicitly changing grade
                                     setForm(prev => ({ ...prev, grade, totalFees: gradeFees[grade] || prev.totalFees }));
                                 }}>
                                     {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
@@ -109,7 +136,7 @@ export default function AddStudentModal({ onClose }: Props) {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary">Add Student</button>
+                        <button type="submit" className="btn-primary">{student ? 'Save Changes' : 'Add Student'}</button>
                     </div>
                 </form>
             </div>

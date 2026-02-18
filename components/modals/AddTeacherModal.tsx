@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { GRADES, SUBJECTS } from '../../types';
+import { GRADES, SUBJECTS, Teacher } from '../../types';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface Props {
     onClose: () => void;
+    teacher?: Teacher | null;
 }
 
-export default function AddTeacherModal({ onClose }: Props) {
-    const { addTeacher } = useSchool();
+export default function AddTeacherModal({ onClose, teacher }: Props) {
+    const { addTeacher, updateTeacher } = useSchool();
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
@@ -19,13 +20,31 @@ export default function AddTeacherModal({ onClose }: Props) {
         grades: [] as string[],
     });
 
+    useEffect(() => {
+        if (teacher) {
+            setForm({
+                firstName: teacher.firstName,
+                lastName: teacher.lastName,
+                email: teacher.email,
+                phone: teacher.phone,
+                qualification: teacher.qualification,
+                subjects: teacher.subjects,
+                grades: teacher.grades,
+            });
+        }
+    }, [teacher]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        addTeacher({
-            ...form,
-            status: 'Active',
-            joinDate: new Date().toISOString().split('T')[0],
-        });
+        if (teacher) {
+            updateTeacher(teacher.id, form);
+        } else {
+            addTeacher({
+                ...form,
+                status: 'Active',
+                joinDate: new Date().toISOString().split('T')[0],
+            });
+        }
         onClose();
     };
 
@@ -51,7 +70,7 @@ export default function AddTeacherModal({ onClose }: Props) {
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Add New Teacher</h2>
+                    <h2>{teacher ? 'Edit Teacher' : 'Add New Teacher'}</h2>
                     <button className="modal-close" onClick={onClose}><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -113,7 +132,7 @@ export default function AddTeacherModal({ onClose }: Props) {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary purple">Add Teacher</button>
+                        <button type="submit" className="btn-primary purple">{teacher ? 'Save Changes' : 'Add Teacher'}</button>
                     </div>
                 </form>
             </div>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { GRADES, TERMS } from '../../types';
+import { GRADES, TERMS, Exam } from '../../types';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ScheduleExamModal from '../../components/modals/ScheduleExamModal';
@@ -12,6 +13,7 @@ export default function Exams() {
     const [gradeFilter, setGradeFilter] = useState('');
     const [termFilter, setTermFilter] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingExam, setEditingExam] = useState<Exam | null>(null);
 
     const filtered = exams.filter(e => {
         return (!gradeFilter || e.grade === gradeFilter) && (!termFilter || e.term === termFilter);
@@ -19,6 +21,16 @@ export default function Exams() {
 
     const scheduled = exams.filter(e => e.status === 'Scheduled').length;
     const completed = exams.filter(e => e.status === 'Completed').length;
+
+    const handleEdit = (exam: Exam) => {
+        setEditingExam(exam);
+        setShowAddModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowAddModal(false);
+        setEditingExam(null);
+    };
 
     return (
         <div className="page-container">
@@ -122,7 +134,10 @@ export default function Exams() {
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn danger" onClick={() => deleteExam(exam.id)}>
+                                            <button className="table-action-btn" title="Edit" onClick={() => handleEdit(exam)}>
+                                                <EditIcon style={{ fontSize: 16 }} />
+                                            </button>
+                                            <button className="table-action-btn danger" title="Delete" onClick={() => deleteExam(exam.id)}>
                                                 <DeleteIcon style={{ fontSize: 16 }} />
                                             </button>
                                         </div>
@@ -134,7 +149,7 @@ export default function Exams() {
                 )}
             </div>
 
-            {showAddModal && <ScheduleExamModal onClose={() => setShowAddModal(false)} />}
+            {showAddModal && <ScheduleExamModal exam={editingExam} onClose={handleCloseModal} />}
         </div>
     );
 }

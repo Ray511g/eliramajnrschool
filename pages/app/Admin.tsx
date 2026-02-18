@@ -5,25 +5,46 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import SchoolIcon from '@mui/icons-material/School';
 import SecurityIcon from '@mui/icons-material/Security';
+import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import * as XLSX from 'xlsx';
 
 export default function Admin() {
-    const { settings, updateSettings, uploadStudents, uploadTeachers, uploadExams, systemUsers, addSystemUser, resetUserPassword, clearAllData } = useSchool();
+    const { settings, updateSettings, uploadStudents, uploadTeachers, uploadExams, systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword, clearAllData } = useSchool();
     const { user } = useAuth();
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState(settings);
 
     // User Management State
     const [showAddUser, setShowAddUser] = useState(false);
+    const [editingUser, setEditingUser] = useState<any>(null);
     const [userForm, setUserForm] = useState({ name: '', email: '', role: 'Staff' as const });
 
     const handleAddUser = () => {
         if (!userForm.name || !userForm.email) return;
-        addSystemUser(userForm);
+
+        if (editingUser) {
+            updateSystemUser(editingUser.id, userForm);
+        } else {
+            addSystemUser(userForm);
+        }
+
         setUserForm({ name: '', email: '', role: 'Staff' });
+        setEditingUser(null);
         setShowAddUser(false);
+    };
+
+    const startEditUser = (user: any) => {
+        setEditingUser(user);
+        setUserForm({ name: user.name, email: user.email, role: user.role });
+        setShowAddUser(true);
+    };
+
+    const handleDeleteUser = (id: string, name: string) => {
+        if (confirm(`Are you sure you want to delete user ${name}? This action cannot be undone.`)) {
+            deleteSystemUser(id);
+        }
     };
 
     const downloadTemplate = (type: 'students' | 'teachers' | 'exams') => {
@@ -195,14 +216,20 @@ export default function Admin() {
                 <div className="admin-section" style={{ gridColumn: 'span 2' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                         <h3 style={{ margin: 0 }}><PersonIcon style={{ fontSize: 22 }} /> User Management</h3>
-                        <button className="btn-primary" onClick={() => setShowAddUser(!showAddUser)}>
+                        <button className="btn-primary" onClick={() => {
+                            setShowAddUser(!showAddUser);
+                            if (!showAddUser) {
+                                setEditingUser(null);
+                                setUserForm({ name: '', email: '', role: 'Staff' });
+                            }
+                        }}>
                             {showAddUser ? 'Cancel' : 'Add New User'}
                         </button>
                     </div>
 
                     {showAddUser && (
                         <div className="card" style={{ background: 'var(--bg-surface)', marginBottom: 20, border: '1px solid var(--accent-blue)' }}>
-                            <h4 style={{ margin: '0 0 16px' }}>Add New System User</h4>
+                            <h4 style={{ margin: '0 0 16px' }}>{editingUser ? 'Edit User' : 'Add New System User'}</h4>
                             <div className="form-row">
                                 <div className="form-group" style={{ flex: 1 }}>
                                     <label htmlFor="user-name">Full Name</label>
@@ -221,7 +248,7 @@ export default function Admin() {
                                     </select>
                                 </div>
                                 <div style={{ alignSelf: 'flex-end', paddingBottom: 12 }}>
-                                    <button className="btn-primary green" onClick={handleAddUser}>Create User</button>
+                                    <button className="btn-primary green" onClick={handleAddUser}>{editingUser ? 'Update User' : 'Create User'}</button>
                                 </div>
                             </div>
                         </div>
@@ -248,9 +275,21 @@ export default function Admin() {
                                         <td><span className="badge green">{u.status}</span></td>
                                         <td style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{u.lastLogin}</td>
                                         <td style={{ textAlign: 'right' }}>
-                                            <button className="btn-outline" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => resetUserPassword(u.id)}>
-                                                Reset Password
-                                            </button>
+                                            <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
+                                                <button className="btn-outline" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => resetUserPassword(u.id)} title="Reset Password">
+                                                    Reset
+                                                </button>
+                                                {u.role !== 'Super Admin' && (
+                                                    <>
+                                                        <button className="table-action-btn" onClick={() => startEditUser(u)} title="Edit User">
+                                                            <EditIcon style={{ fontSize: 16 }} />
+                                                        </button>
+                                                        <button className="table-action-btn danger" onClick={() => handleDeleteUser(u.id, u.name)} title="Delete User">
+                                                            <DeleteIcon style={{ fontSize: 16 }} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { GRADES, SUBJECTS, TERMS } from '../../types';
+import { GRADES, SUBJECTS, TERMS, Exam } from '../../types';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface Props {
     onClose: () => void;
+    exam?: Exam | null;
 }
 
-export default function ScheduleExamModal({ onClose }: Props) {
-    const { addExam } = useSchool();
+export default function ScheduleExamModal({ onClose, exam }: Props) {
+    const { addExam, updateExam } = useSchool();
     const [form, setForm] = useState({
         name: '',
         subject: SUBJECTS[0],
@@ -19,9 +20,27 @@ export default function ScheduleExamModal({ onClose }: Props) {
         totalMarks: 100,
     });
 
+    useEffect(() => {
+        if (exam) {
+            setForm({
+                name: exam.name,
+                subject: exam.subject,
+                grade: exam.grade,
+                date: exam.date,
+                term: exam.term,
+                type: exam.type,
+                totalMarks: exam.totalMarks,
+            });
+        }
+    }, [exam]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        addExam({ ...form, status: 'Scheduled' });
+        if (exam) {
+            updateExam(exam.id, form);
+        } else {
+            addExam({ ...form, status: 'Scheduled' });
+        }
         onClose();
     };
 
@@ -29,7 +48,7 @@ export default function ScheduleExamModal({ onClose }: Props) {
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Schedule Exam</h2>
+                    <h2>{exam ? 'Edit Exam' : 'Schedule Exam'}</h2>
                     <button className="modal-close" onClick={onClose}><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -82,7 +101,7 @@ export default function ScheduleExamModal({ onClose }: Props) {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary green">Schedule Exam</button>
+                        <button type="submit" className="btn-primary green">{exam ? 'Save Changes' : 'Schedule Exam'}</button>
                     </div>
                 </form>
             </div>
