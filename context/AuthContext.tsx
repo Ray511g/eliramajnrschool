@@ -54,12 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('Backend login failed, falling back to mock:', error);
         }
 
-        // Fallback to mock login
+        // Fallback to mock login when API is unavailable
         const found = MOCK_USERS.find(u => u.email === email && u.password === password);
         if (found) {
             const authUser: AuthUser = { id: found.id, name: found.name, email: found.email, role: found.role };
             setUser(authUser);
             localStorage.setItem('elirama_user', JSON.stringify(authUser));
+            localStorage.setItem('elirama_token', 'local_' + Date.now()); // Fake token for local mode
             return true;
         }
         return false;
