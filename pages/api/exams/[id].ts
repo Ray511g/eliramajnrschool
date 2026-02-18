@@ -4,7 +4,7 @@ import { requireAuth, corsHeaders } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    corsHeaders(res);
+    // corsHeaders(res); // Handled by next.config.js
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     const user = requireAuth(req, res);
@@ -24,5 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({ success: true });
     }
 
-    res.status(405).json({ error: 'Method not allowed' });
+    res.setHeader('Allow', 'PUT, DELETE');
+    res.status(405).json({ error: 'Method not allowed', receivedMethod: req.method, query: req.query });
 }

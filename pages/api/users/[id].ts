@@ -1,0 +1,64 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { prisma } from '../../../lib/prisma';
+import { requireAuth } from '../../../lib/auth';
+import { touchSync } from '../../../lib/sync';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method === 'OPTIONS') return res.status(200).end();
+
+    const currentUser = requireAuth(req, res);
+    if (!currentUser) return;
+    if (currentUser.role !== 'admin' && currentUser.role !== 'Super Admin') {
+        return res.status(403).json({ error: 'Only admins can manage users' });
+    }
+
+    const { id } = req.query;
+
+    if (req.method === 'GET') {
+        try {
+            const user = await prisma.user.findUnique({
+                where: { id: id as string },
+                select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true }
+            });
+            if (!user) return res.status(404).json({ error: 'User not found' });
+            return res.status(200).json(user);
+        } catch (error) {
+            return res.status(500).json({ error: 'Failed to fetch user' });
+        }
+    }
+
+    if (req.method === 'PUT') {
+        try {
+            const { name, email, role } = req.body;
+            const user = await prisma.user.update({
+                where: { id: id as string },
+                data: { name, email, role },
+                select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true }
+            });
+            await touchSync();
+            return res.status(200).json(user);
+        } catch (error: any) {
+            if (error?.code === 'P2025') {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            return res.status(500).json({ error: 'Failed to update user' });
+        }
+    }
+
+    if (req.method === 'DELETE') {
+        try {
+            await prisma.user.delete({ where: { id: id as string } });
+            await touchSync();
+            return res.status(200).json({ success: true });
+        } catch (error: any) {
+            console.error('Delete user error:', error);
+            if (error?.code === 'P2025') {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            return res.status(500).json({ error: 'Failed to delete user' });
+        }
+    }
+
+    res.setHeader('Allow', 'GET, PUT, DELETE');
+    res.status(405).json({ error: 'Method not allowed', receivedMethod: req.method, query: req.query });
+}
