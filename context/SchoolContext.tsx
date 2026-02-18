@@ -136,17 +136,15 @@ function saveToStorage(data: any) {
 }
 
 export function SchoolProvider({ children }: { children: ReactNode }) {
-    // Load from localStorage or use seed data
-    const stored = loadFromStorage();
-
-    const [students, setStudents] = useState<Student[]>(stored?.students ?? seedStudents);
-    const [teachers, setTeachers] = useState<Teacher[]>(stored?.teachers ?? seedTeachers);
-    const [attendance, setAttendance] = useState<AttendanceRecord[]>(stored?.attendance ?? []);
-    const [exams, setExams] = useState<Exam[]>(stored?.exams ?? seedExams);
-    const [payments, setPayments] = useState<FeePayment[]>(stored?.payments ?? seedPayments);
-    const [timetable, setTimetable] = useState<TimetableEntry[]>(stored?.timetable ?? seedTimetable);
-    const [settings, setSettings] = useState<SchoolSettings>(stored?.settings ?? defaultSettings);
-    const [gradeFees, setGradeFees] = useState<Record<string, number>>(stored?.gradeFees ?? {
+    // Always start with seed data for SSR consistency — load localStorage in useEffect
+    const [students, setStudents] = useState<Student[]>(seedStudents);
+    const [teachers, setTeachers] = useState<Teacher[]>(seedTeachers);
+    const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+    const [exams, setExams] = useState<Exam[]>(seedExams);
+    const [payments, setPayments] = useState<FeePayment[]>(seedPayments);
+    const [timetable, setTimetable] = useState<TimetableEntry[]>(seedTimetable);
+    const [settings, setSettings] = useState<SchoolSettings>(defaultSettings);
+    const [gradeFees, setGradeFees] = useState<Record<string, number>>({
         'Play Group': 12000,
         'PP1': 12500,
         'PP2': 13000,
@@ -157,21 +155,42 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         'Grade 5': 18000,
         'Grade 6': 18000,
     });
-    const [results, setResults] = useState<StudentResult[]>(stored?.results ?? []);
-    const [systemUsers, setSystemUsers] = useState<User[]>(stored?.systemUsers ?? [
+    const [results, setResults] = useState<StudentResult[]>([]);
+    const [systemUsers, setSystemUsers] = useState<User[]>([
         { id: '1', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: '2026-02-15 10:30' },
         { id: '2', name: 'Teacher User', email: 'teacher@elirama.ac.ke', role: 'Teacher', status: 'Active', lastLogin: '2026-02-16 09:15' },
         { id: '3', name: 'Zion Elirama', email: 'zion@elirama.ac.ke', role: 'Admin', status: 'Active', lastLogin: '2026-02-17 11:00' },
     ]);
     const [toasts, setToasts] = useState<Toast[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
     const lastSyncRef = useRef<string>('');
     const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
     const dbAvailableRef = useRef<boolean | null>(null); // null = untested
+    const hydratedRef = useRef(false);
 
-    // Persist to localStorage whenever state changes
+    // Load from localStorage AFTER hydration (client-only)
     useEffect(() => {
+        if (hydratedRef.current) return;
+        hydratedRef.current = true;
+        const stored = loadFromStorage();
+        if (stored) {
+            if (stored.students?.length) setStudents(stored.students);
+            if (stored.teachers?.length) setTeachers(stored.teachers);
+            if (stored.attendance?.length) setAttendance(stored.attendance);
+            if (stored.exams?.length) setExams(stored.exams);
+            if (stored.payments?.length) setPayments(stored.payments);
+            if (stored.timetable?.length) setTimetable(stored.timetable);
+            if (stored.settings) setSettings(stored.settings);
+            if (stored.gradeFees) setGradeFees(stored.gradeFees);
+            if (stored.results?.length) setResults(stored.results);
+            if (stored.systemUsers?.length) setSystemUsers(stored.systemUsers);
+        }
+    }, []);
+
+    // Persist to localStorage whenever state changes (skip during SSR)
+    useEffect(() => {
+        if (!hydratedRef.current) return;
         saveToStorage({ students, teachers, attendance, exams, payments, timetable, settings, gradeFees, results, systemUsers });
     }, [students, teachers, attendance, exams, payments, timetable, settings, gradeFees, results, systemUsers]);
 

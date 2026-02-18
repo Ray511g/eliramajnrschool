@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 interface AuthUser {
@@ -23,20 +23,23 @@ const MOCK_USERS = [
 ];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<AuthUser | null>(() => {
+    const [user, setUser] = useState<AuthUser | null>(null);
+    const [ready, setReady] = useState(false);
+
+    // Restore session from localStorage AFTER hydration
+    useEffect(() => {
         try {
             const saved = localStorage.getItem('elirama_user');
-            return saved ? JSON.parse(saved) : null;
-        } catch {
-            return null;
-        }
-    });
+            if (saved) setUser(JSON.parse(saved));
+        } catch { /* ignore */ }
+        setReady(true);
+    }, []);
 
     const isAuthenticated = !!user;
 
     const login = async (email: string, password: string): Promise<boolean> => {
         try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
             const response = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
