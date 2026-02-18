@@ -151,12 +151,12 @@ export default function Dashboard() {
                     <h3>Add New Student</h3>
                     <p>Register a new student</p>
                 </div>
-                <div className="quick-action-card" onClick={() => navigate('/attendance')}>
+                <div className="quick-action-card" onClick={() => router.push('/attendance')}>
                     <div className="qa-icon green"><EventAvailableIcon /></div>
                     <h3>Mark Attendance</h3>
                     <p>Record today's attendance</p>
                 </div>
-                <div className="quick-action-card" onClick={() => navigate('/fees')}>
+                <div className="quick-action-card" onClick={() => router.push('/fees')}>
                     <div className="qa-icon orange"><AttachMoneyIcon /></div>
                     <h3>Process Fee Payment</h3>
                     <p>Record student payment</p>
