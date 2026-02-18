@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useSchool } from '../../context/SchoolContext';
 import AddIcon from '@mui/icons-material/Add';
 import PaymentIcon from '@mui/icons-material/Payment';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PrintIcon from '@mui/icons-material/Print';
-import LocalAtmIcon from '@mui/icons-material/LocalAtm'; // Added import
+import DownloadIcon from '@mui/icons-material/Download';
+import LocalAtmIcon from '@mui/icons-material/LocalAtm';
 import RecordPaymentModal from '../../components/modals/RecordPaymentModal';
 import ReceiptModal from '../../components/modals/ReceiptModal';
-import FeeStructureModal from '../../components/modals/FeeStructureModal'; // Added import
+import FeeStructureModal from '../../components/modals/FeeStructureModal';
 import { FeePayment } from '../../types';
 
 export default function Fees() {
-    const { students, payments, gradeFees, updateGradeFees } = useSchool();
+    const { students, payments, settings, gradeFees, updateGradeFees } = useSchool();
     const [showPayModal, setShowPayModal] = useState(false);
     const [selectedReceipt, setSelectedReceipt] = useState<FeePayment | null>(null);
     const [editingGrade, setEditingGrade] = useState<string | null>(null);
@@ -36,6 +37,179 @@ export default function Fees() {
         }
     };
 
+    // Generate fee statement HTML (reusable for print and download)
+    const generateStatementHTML = useCallback(() => {
+        const schoolName = settings?.schoolName || 'ELIRAMA SCHOOL';
+        const schoolPhone = settings?.phone || '+254 700 000 000';
+        const schoolEmail = settings?.email || 'info@elirama.ac.ke';
+        const currentTerm = settings?.currentTerm || 'Term 1';
+        const currentYear = settings?.currentYear || new Date().getFullYear();
+
+        return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Fee Statement - ${schoolName}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; background: #fff; }
+        .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #1a56db; }
+        .header h1 { font-size: 24px; color: #1a56db; margin-bottom: 4px; }
+        .header p { font-size: 12px; color: #666; }
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .summary-card { padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center; }
+        .summary-card .value { font-size: 18px; font-weight: 700; }
+        .summary-card .label { font-size: 11px; color: #666; margin-top: 4px; }
+        .blue .value { color: #1a56db; }
+        .green .value { color: #16a34a; }
+        .red .value { color: #dc2626; }
+        .purple .value { color: #7c3aed; }
+        h2 { font-size: 16px; margin: 24px 0 12px; color: #1a56db; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #f1f5f9; padding: 8px 10px; text-align: left; font-weight: 600; border: 1px solid #e2e8f0; }
+        td { padding: 8px 10px; border: 1px solid #e2e8f0; }
+        tr:nth-child(even) { background: #f8fafc; }
+        .paid { color: #16a34a; font-weight: 600; }
+        .pending { color: #dc2626; font-weight: 600; }
+        .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #999; padding-top: 15px; border-top: 1px solid #e5e7eb; }
+        @media print {
+            body { padding: 15px; }
+            .summary-grid { gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${schoolName}</h1>
+        <p>${schoolPhone} | ${schoolEmail}</p>
+        <p style="margin-top: 8px; font-size: 14px; font-weight: 600;">Fee Collection Statement - ${currentTerm} ${currentYear}</p>
+        <p style="margin-top: 4px;">Generated: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card blue"><div class="value">KSh ${totalFees.toLocaleString()}</div><div class="label">Total Expected</div></div>
+        <div class="summary-card green"><div class="value">KSh ${collected.toLocaleString()}</div><div class="label">Collected</div></div>
+        <div class="summary-card red"><div class="value">KSh ${pending.toLocaleString()}</div><div class="label">Pending</div></div>
+        <div class="summary-card purple"><div class="value">${collectionRate}%</div><div class="label">Collection Rate</div></div>
+    </div>
+
+    <h2>Student Fee Balances</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Admission No.</th>
+                <th>Student Name</th>
+                <th>Grade</th>
+                <th>Total Fees</th>
+                <th>Paid</th>
+                <th>Balance</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${students.map((s, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${s.admissionNumber}</td>
+                    <td>${s.firstName} ${s.lastName}</td>
+                    <td>${s.grade}</td>
+                    <td>KSh ${s.totalFees.toLocaleString()}</td>
+                    <td class="paid">KSh ${s.paidFees.toLocaleString()}</td>
+                    <td class="${s.feeBalance > 0 ? 'pending' : 'paid'}">KSh ${s.feeBalance.toLocaleString()}</td>
+                    <td>${s.feeBalance === 0 ? '✅ Paid' : '⏳ Pending'}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+
+    ${payments.length > 0 ? `
+    <h2>Recent Payments (Last 20)</h2>
+    <table>
+        <thead>
+            <tr><th>Receipt #</th><th>Student</th><th>Grade</th><th>Amount</th><th>Method</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            ${[...payments].reverse().slice(0, 20).map(p => `
+                <tr>
+                    <td>${p.receiptNumber}</td>
+                    <td>${p.studentName}</td>
+                    <td>${p.grade}</td>
+                    <td class="paid">KSh ${p.amount.toLocaleString()}</td>
+                    <td>${p.method}</td>
+                    <td>${new Date(p.date).toLocaleDateString()}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+    ` : ''}
+
+    <div class="footer">
+        <p>${schoolName} - ${currentTerm} ${currentYear} Fee Statement</p>
+        <p>This is a computer-generated document. No signature required.</p>
+    </div>
+</body>
+</html>`;
+    }, [students, payments, settings, totalFees, collected, pending, collectionRate]);
+
+    // Download fee statement as HTML file
+    const handleDownload = useCallback(() => {
+        const html = generateStatementHTML();
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Fee_Statement_${settings?.currentTerm || 'Term1'}_${new Date().toISOString().split('T')[0]}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, [generateStatementHTML, settings]);
+
+    // Download fee statement as CSV
+    const handleDownloadCSV = useCallback(() => {
+        const headers = ['Admission No', 'Student Name', 'Grade', 'Total Fees', 'Paid', 'Balance', 'Status'];
+        const rows = students.map(s => [
+            s.admissionNumber,
+            `${s.firstName} ${s.lastName}`,
+            s.grade,
+            s.totalFees,
+            s.paidFees,
+            s.feeBalance,
+            s.feeBalance === 0 ? 'Paid' : 'Pending'
+        ]);
+        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Fee_Balances_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, [students]);
+
+    // Print (optimized — preloads content, waits for render, then prints)
+    const handlePrint = useCallback(() => {
+        const html = generateStatementHTML();
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(html);
+            printWindow.document.close();
+            // Wait for content to fully render before triggering print
+            printWindow.onload = () => {
+                printWindow.focus();
+                printWindow.print();
+            };
+            // Fallback if onload doesn't fire (some browsers)
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+            }, 500);
+        }
+    }, [generateStatementHTML]);
+
     return (
         <div className="page-container">
             <div className="page-header">
@@ -43,47 +217,18 @@ export default function Fees() {
                     <h1>Fee Management</h1>
                     <p>Track and manage student fee payments</p>
                 </div>
-                <div className="page-header-right" style={{ display: 'flex', gap: 12 }}>
-                    <button className="btn-outline" onClick={() => setShowStructure(true)}> {/* Added button */}
+                <div className="page-header-right" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button className="btn-outline" onClick={() => setShowStructure(true)}>
                         <LocalAtmIcon style={{ fontSize: 18 }} /> View Fee Structure
                     </button>
-                    <button className="btn-outline" onClick={() => {
-                        const win = window.open('', '_blank');
-                        if (win) {
-                            win.document.write(`
-                                <html>
-                                <head><title>Fee Collection Report</title><style>body{font-family:sans-serif;padding:30px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:10px;text-align:left}th{background:#f8fafc}</style></head>
-                                <body>
-                                    <h1>Fee Collection Summary - ${new Date().toLocaleDateString()}</h1>
-                                    <table>
-                                        <tr><th>Total Expected</th><td>KSh ${totalFees.toLocaleString()}</td></tr>
-                                        <tr><th>Collected</th><td>KSh ${collected.toLocaleString()}</td></tr>
-                                        <tr><th>Pending Balance</th><td>KSh ${pending.toLocaleString()}</td></tr>
-                                        <tr><th>Collection Rate</th><td>${collectionRate}%</td></tr>
-                                    </table>
-                                    <h2 style="margin-top:20px">Recent Payments</h2>
-                                    <table>
-                                        <thead><tr><th>Receipt</th><th>Student</th><th>Grade</th><th>Amount</th><th>Date</th></tr></thead>
-                                        <tbody>
-                                            ${payments.slice(-20).reverse().map(p => `
-                                                <tr>
-                                                    <td>${p.receiptNumber}</td>
-                                                    <td>${p.studentName}</td>
-                                                    <td>${p.grade}</td>
-                                                    <td>KSh ${p.amount.toLocaleString()}</td>
-                                                    <td>${new Date(p.date).toLocaleDateString()}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </body>
-                                </html>
-                            `);
-                            win.document.close();
-                            win.print();
-                        }
-                    }}>
-                        <PrintIcon style={{ fontSize: 18 }} /> Export Summary
+                    <button className="btn-outline" onClick={handleDownloadCSV} title="Download CSV spreadsheet">
+                        <DownloadIcon style={{ fontSize: 18 }} /> CSV
+                    </button>
+                    <button className="btn-outline" onClick={handleDownload} title="Download full fee statement">
+                        <DownloadIcon style={{ fontSize: 18 }} /> Statement
+                    </button>
+                    <button className="btn-outline" onClick={handlePrint} title="Print fee statement">
+                        <PrintIcon style={{ fontSize: 18 }} /> Print
                     </button>
                     <button className="btn-primary green" onClick={() => setShowPayModal(true)}>
                         <AddIcon style={{ fontSize: 18 }} /> Record Payment
