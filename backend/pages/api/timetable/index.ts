@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
 import { requireAuth, corsHeaders } from '../../../lib/auth';
+import { touchSync } from '../../../lib/sync';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     corsHeaders(res);
@@ -19,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
         const entry = await prisma.timetableEntry.create({ data: req.body });
+        await touchSync();
         return res.status(201).json(entry);
     }
 

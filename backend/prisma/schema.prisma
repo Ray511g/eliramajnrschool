@@ -41,6 +41,7 @@ model Student {
   updatedAt       DateTime      @updatedAt
   attendance      Attendance[]
   payments        Payment[]
+  results         Result[]
 }
 
 model Teacher {
@@ -123,4 +124,25 @@ model Settings {
   currentTerm String   @default("Term 1")
   currentYear Int      @default(2026)
   updatedAt   DateTime @updatedAt
+}
+
+model Result {
+  id          String   @id @default(cuid())
+  studentId   String
+  studentName String
+  examId      String
+  subject     String
+  marks       Float
+  level       String   // EE, ME, AE, BE
+  remarks     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, examId, subject])
+}
+
+model SyncStatus {
+  id           String   @id @default("global")
+  lastUpdated  DateTime @default(now()) @updatedAt
 }

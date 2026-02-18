@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
 import { requireAuth, corsHeaders } from '../../../lib/auth';
+import { touchSync } from '../../../lib/sync';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     corsHeaders(res);
@@ -28,11 +29,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         }
         const student = await prisma.student.update({ where: { id: id as string }, data });
+        await touchSync();
         return res.status(200).json(student);
     }
 
     if (req.method === 'DELETE') {
         await prisma.student.delete({ where: { id: id as string } });
+        await touchSync();
         return res.status(200).json({ success: true });
     }
 

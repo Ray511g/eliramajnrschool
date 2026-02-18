@@ -35,6 +35,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isAuthenticated = !!user;
 
     const login = async (email: string, password: string): Promise<boolean> => {
+        try {
+            const response = await fetch('http://localhost:3001/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setUser(data.user);
+                localStorage.setItem('elirama_user', JSON.stringify(data.user));
+                localStorage.setItem('elirama_token', data.token);
+                return true;
+            }
+        } catch (error) {
+            console.error('Backend login failed, falling back to mock:', error);
+        }
+
+        // Fallback to mock login
         const found = MOCK_USERS.find(u => u.email === email && u.password === password);
         if (found) {
             const authUser: AuthUser = { id: found.id, name: found.name, email: found.email, role: found.role };

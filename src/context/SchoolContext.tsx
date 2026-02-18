@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import {
     Student, Teacher, AttendanceRecord, Exam, StudentResult, FeePayment, TimetableEntry,
@@ -50,6 +50,7 @@ interface SchoolContextType {
     showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
     refreshData: () => void;
     clearAllData: () => void;
+    isSyncing: boolean;
 }
 
 const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
@@ -141,7 +142,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         { id: '3', name: 'Zion Elirama', email: 'zion@elirama.ac.ke', role: 'Admin', status: 'Active', lastLogin: '2026-02-17 11:00' },
     ]);
     const [toasts, setToasts] = useState<Toast[]>([]);
-    const loading = false;
+    const [loading, setLoading] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const lastSyncRef = useRef<string>('');
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
     const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
         const id = generateId();
@@ -149,83 +153,283 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
     }, []);
 
-    const refreshData = () => { };
+    const fetchData = useCallback(async (isInitial = false) => {
+        const token = localStorage.getItem('elirama_token');
+        if (!token) return;
+
+        try {
+            // Smart polling: check if data has changed since last sync
+            if (!isInitial) {
+                const statusRes = await fetch(`${API_URL}/sync/status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (statusRes.ok) {
+                    const { lastUpdated } = await statusRes.json();
+                    if (lastSyncRef.current === lastUpdated) return; // No changes
+                    lastSyncRef.current = lastUpdated;
+                }
+            }
+
+            setIsSyncing(true);
+            const [stdRes, tchRes, exmRes, setRes, resRes, usrRes, tmtRes] = await Promise.all([
+                fetch(`${API_URL}/students`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_URL}/teachers`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_URL}/exams`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_URL}/settings`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_URL}/results`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_URL}/timetable`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            ]);
+
+            if (stdRes.ok) setStudents(await stdRes.json());
+            if (tchRes.ok) setTeachers(await tchRes.json());
+            if (exmRes.ok) setExams(await exmRes.json());
+            if (setRes.ok) setSettings(await setRes.json());
+            if (resRes.ok) setResults(await resRes.json());
+            if (usrRes.ok) setSystemUsers(await usrRes.json());
+            if (tmtRes.ok) setTimetable(await tmtRes.json());
+
+            // If it's the initial fetch, capture the timestamp now
+            if (isInitial) {
+                const statusRes = await fetch(`${API_URL}/sync/status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (statusRes.ok) {
+                    const { lastUpdated } = await statusRes.json();
+                    lastSyncRef.current = lastUpdated;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to sync with backend:', error);
+        } finally {
+            setIsSyncing(false);
+        }
+    }, []);
+
+    // Initial fetch
+    useEffect(() => {
+        setLoading(true);
+        fetchData(true).finally(() => setLoading(false));
+    }, [fetchData]);
+
+    // Polling fetch every 3 seconds for real-time sync across devices
+    useEffect(() => {
+        const interval = setInterval(() => fetchData(false), 3000);
+        return () => clearInterval(interval);
+    }, [fetchData]);
+
+    const refreshData = () => fetchData();
 
     // STUDENTS
-    const addStudent = (student: Omit<Student, 'id'>) => {
-        setStudents(prev => [...prev, { ...student, id: generateId() }]);
-        showToast('Student added successfully');
+    const addStudent = async (student: Omit<Student, 'id'>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/students`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(student),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setStudents(prev => [...prev, data]);
+                showToast('Student added successfully');
+            }
+        } catch (error) { showToast('Failed to add student', 'error'); }
     };
-    const updateStudent = (id: string, data: Partial<Student>) => {
-        setStudents(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
-        showToast('Student updated');
+    const updateStudent = async (id: string, data: Partial<Student>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/students/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(data),
+            });
+            if (response.ok) {
+                const updated = await response.json();
+                setStudents(prev => prev.map(s => s.id === id ? updated : s));
+                showToast('Student updated');
+            }
+        } catch (error) { showToast('Failed to update student', 'error'); }
     };
-    const deleteStudent = (id: string) => {
-        setStudents(prev => prev.filter(s => s.id !== id));
-        showToast('Student deleted', 'info');
+    const deleteStudent = async (id: string) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/students/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (response.ok) {
+                setStudents(prev => prev.filter(s => s.id !== id));
+                showToast('Student deleted', 'info');
+            }
+        } catch (error) { showToast('Failed to delete student', 'error'); }
     };
 
     // TEACHERS
-    const addTeacher = (teacher: Omit<Teacher, 'id'>) => {
-        setTeachers(prev => [...prev, { ...teacher, id: generateId() }]);
-        showToast('Teacher added successfully');
+    const addTeacher = async (teacher: Omit<Teacher, 'id'>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/teachers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(teacher),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setTeachers(prev => [...prev, data]);
+                showToast('Teacher added successfully');
+            }
+        } catch (error) { showToast('Failed to add teacher', 'error'); }
     };
-    const updateTeacher = (id: string, data: Partial<Teacher>) => {
-        setTeachers(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
-        showToast('Teacher updated');
+    const updateTeacher = async (id: string, data: Partial<Teacher>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/teachers/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(data),
+            });
+            if (response.ok) {
+                const updated = await response.json();
+                setTeachers(prev => prev.map(t => t.id === id ? updated : t));
+                showToast('Teacher updated');
+            }
+        } catch (error) { showToast('Failed to update teacher', 'error'); }
     };
-    const deleteTeacher = (id: string) => {
-        setTeachers(prev => prev.filter(t => t.id !== id));
-        showToast('Teacher deleted', 'info');
+    const deleteTeacher = async (id: string) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/teachers/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (response.ok) {
+                setTeachers(prev => prev.filter(t => t.id !== id));
+                showToast('Teacher deleted', 'info');
+            }
+        } catch (error) { showToast('Failed to delete teacher', 'error'); }
     };
 
     // ATTENDANCE
-    const saveAttendance = (records: AttendanceRecord[]) => {
-        const dateStr = records[0]?.date;
-        setAttendance(prev => [...prev.filter(r => r.date !== dateStr), ...records]);
-        showToast('Attendance saved successfully');
+    const saveAttendance = async (records: AttendanceRecord[]) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ records }), // Wrap in object as backend expects
+            });
+            if (response.ok) {
+                const dateStr = records[0]?.date;
+                setAttendance(prev => [...prev.filter(r => r.date !== dateStr), ...records]);
+                showToast('Attendance saved successfully');
+            }
+        } catch (error) { showToast('Failed to save attendance', 'error'); }
     };
 
     // EXAMS
-    const addExam = (exam: Omit<Exam, 'id'>) => {
-        setExams(prev => [...prev, { ...exam, id: generateId() }]);
-        showToast('Exam scheduled successfully');
+    const addExam = async (exam: Omit<Exam, 'id'>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/exams`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(exam),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setExams(prev => [...prev, data]);
+                showToast('Exam scheduled successfully');
+            }
+        } catch (error) { showToast('Failed to schedule exam', 'error'); }
     };
-    const updateExam = (id: string, data: Partial<Exam>) => {
-        setExams(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
-        showToast('Exam updated');
+    const updateExam = async (id: string, data: Partial<Exam>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/exams/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(data),
+            });
+            if (response.ok) {
+                const updated = await response.json();
+                setExams(prev => prev.map(e => e.id === id ? updated : e));
+                showToast('Exam updated');
+            }
+        } catch (error) { showToast('Failed to update exam', 'error'); }
     };
-    const deleteExam = (id: string) => {
-        setExams(prev => prev.filter(e => e.id !== id));
-        showToast('Exam deleted', 'info');
+    const deleteExam = async (id: string) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/exams/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (response.ok) {
+                setExams(prev => prev.filter(e => e.id !== id));
+                showToast('Exam deleted', 'info');
+            }
+        } catch (error) { showToast('Failed to delete exam', 'error'); }
     };
 
     // PAYMENTS
-    const addPayment = (payment: Omit<FeePayment, 'id' | 'receiptNumber'>) => {
-        const id = generateId();
-        const receiptNumber = `RCT-${Date.now().toString().slice(-6)}`;
-        setPayments(prev => [...prev, { ...payment, id, receiptNumber }]);
-        setStudents(prev => prev.map(s => {
-            if (s.id === payment.studentId) {
-                const newPaid = s.paidFees + payment.amount;
-                return { ...s, paidFees: newPaid, feeBalance: s.totalFees - newPaid };
+    const addPayment = async (payment: Omit<FeePayment, 'id' | 'receiptNumber'>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/fees`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(payment),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setPayments(prev => [...prev, data]);
+                // Update student locally to reflect new balance immediately
+                setStudents(prev => prev.map(s => {
+                    if (s.id === payment.studentId) {
+                        const newPaid = s.paidFees + payment.amount;
+                        return { ...s, paidFees: newPaid, feeBalance: s.totalFees - newPaid };
+                    }
+                    return s;
+                }));
+                showToast(`Payment of KSh ${payment.amount.toLocaleString()} recorded`);
             }
-            return s;
-        }));
-        showToast(`Payment of KSh ${payment.amount.toLocaleString()} recorded`);
+        } catch (error) { showToast('Failed to record payment', 'error'); }
     };
 
     // RESULTS
-    const addResult = (result: Omit<StudentResult, 'id'>) => {
-        setResults(prev => [...prev.filter(r => !(r.studentId === result.studentId && r.examId === result.examId)), { ...result, id: generateId() }]);
+    const addResult = async (result: Omit<StudentResult, 'id'>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/results`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(result),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setResults(prev => [...prev.filter(r => !(r.studentId === result.studentId && r.examId === result.examId)), data]);
+            }
+        } catch (error) { console.error('Failed to save result:', error); }
     };
 
-    const saveBulkResults = (newResults: Omit<StudentResult, 'id'>[]) => {
-        setResults(prev => {
-            const filtered = prev.filter(r => !newResults.some(nr => nr.studentId === r.studentId && nr.examId === r.examId));
-            return [...filtered, ...newResults.map(r => ({ ...r, id: generateId() }))];
-        });
-        showToast(`Saved ${newResults.length} results`);
+    const saveBulkResults = async (newResults: Omit<StudentResult, 'id'>[]) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/results`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(newResults),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setResults(prev => {
+                    const filtered = prev.filter(r => !newResults.some(nr => nr.studentId === r.studentId && nr.examId === r.examId));
+                    return [...filtered, ...data];
+                });
+                showToast(`Saved ${newResults.length} results`);
+            }
+        } catch (error) { showToast('Failed to save results', 'error'); }
     };
 
     // EXCEL UPLOADS
@@ -249,9 +453,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const uploadStudents = async (file: File) => {
         try {
             const data = await readFile(file);
-            const newStudents = data.map((row: any) => ({
-                id: generateId(),
-                admissionNumber: row['Admission No'] || row['AdmissionNumber'] || `ADM-${Math.random().toString(36).slice(2, 5).toUpperCase()}`,
+            const studentsToUpload = data.map((row: any) => ({
+                admissionNumber: row['Admission No'] || row['AdmissionNumber'] || `ADM - ${Math.random().toString(36).slice(2, 5).toUpperCase()}`,
                 firstName: row['First Name'] || row['FirstName'] || '',
                 lastName: row['Last Name'] || row['LastName'] || '',
                 gender: (row['Gender'] || 'Male') as any,
@@ -267,16 +470,18 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 paidFees: 0,
                 feeBalance: Number(row['Total Fees']) || gradeFees[row['Grade']] || 15000,
             }));
-            setStudents(prev => [...prev, ...newStudents]);
-            showToast(`Imported ${newStudents.length} students`);
+
+            for (const s of studentsToUpload) {
+                await addStudent(s);
+            }
+            showToast(`Imported ${studentsToUpload.length} students`);
         } catch (err) { showToast('Failed to import students', 'error'); }
     };
 
     const uploadTeachers = async (file: File) => {
         try {
             const data = await readFile(file);
-            const newTeachers = data.map((row: any) => ({
-                id: generateId(),
+            const teachersToUpload = data.map((row: any) => ({
                 firstName: row['First Name'] || row['FirstName'] || '',
                 lastName: row['Last Name'] || row['LastName'] || '',
                 email: row['Email'] || '',
@@ -287,16 +492,17 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 joinDate: new Date().toISOString().split('T')[0],
                 qualification: row['Qualification'] || '',
             }));
-            setTeachers(prev => [...prev, ...newTeachers]);
-            showToast(`Imported ${newTeachers.length} teachers`);
+            for (const t of teachersToUpload) {
+                await addTeacher(t);
+            }
+            showToast(`Imported ${teachersToUpload.length} teachers`);
         } catch (err) { showToast('Failed to import teachers', 'error'); }
     };
 
     const uploadExams = async (file: File) => {
         try {
             const data = await readFile(file);
-            const newExams = data.map((row: any) => ({
-                id: generateId(),
+            const examsToUpload = data.map((row: any) => ({
                 name: row['Exam Name'] || row['Name'] || '',
                 subject: row['Subject'] || '',
                 grade: row['Grade'] || '',
@@ -306,21 +512,28 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 status: 'Scheduled' as any,
                 totalMarks: Number(row['Total Marks']) || 100,
             }));
-            setExams(prev => [...prev, ...newExams]);
-            showToast(`Imported ${newExams.length} exams`);
+            for (const e of examsToUpload) {
+                await addExam(e);
+            }
+            showToast(`Imported ${examsToUpload.length} exams`);
         } catch (err) { showToast('Failed to import exams', 'error'); }
     };
 
     // USERS
-    const addSystemUser = (user: Omit<User, 'id' | 'lastLogin' | 'status'>) => {
-        const newUser: User = {
-            ...user,
-            id: generateId(),
-            status: 'Active',
-            lastLogin: 'Never',
-        };
-        setSystemUsers(prev => [...prev, newUser]);
-        showToast(`User ${user.name} added successfully`);
+    const addSystemUser = async (user: Omit<User, 'id' | 'lastLogin' | 'status'>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(user),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setSystemUsers(prev => [...prev, data]);
+                showToast(`User ${user.name} added successfully`);
+            }
+        } catch (error) { showToast('Failed to add user', 'error'); }
     };
 
     const resetUserPassword = (userId: string) => {
@@ -332,18 +545,49 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     // TIMETABLE
-    const addTimetableEntry = (entry: Omit<TimetableEntry, 'id'>) => {
-        setTimetable(prev => [...prev, { ...entry, id: generateId() }]);
-        showToast('Timetable entry added');
+    const addTimetableEntry = async (entry: Omit<TimetableEntry, 'id'>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/timetable`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(entry),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setTimetable(prev => [...prev, data]);
+                showToast('Timetable entry added');
+            }
+        } catch (error) { showToast('Failed to add timetable entry', 'error'); }
     };
-    const deleteTimetableEntry = (id: string) => {
-        setTimetable(prev => prev.filter(t => t.id !== id));
+    const deleteTimetableEntry = async (id: string) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/timetable/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (response.ok) {
+                setTimetable(prev => prev.filter(t => t.id !== id));
+            }
+        } catch (error) { console.error('Failed to delete timetable entry:', error); }
     };
 
     // SETTINGS
-    const updateSettings = (data: Partial<SchoolSettings>) => {
-        setSettings(prev => ({ ...prev, ...data }));
-        showToast('Settings updated');
+    const updateSettings = async (data: Partial<SchoolSettings>) => {
+        const token = localStorage.getItem('elirama_token');
+        try {
+            const response = await fetch(`${API_URL}/settings`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(data),
+            });
+            if (response.ok) {
+                const updated = await response.json();
+                setSettings(updated);
+                showToast('Settings updated');
+            }
+        } catch (error) { showToast('Failed to update settings', 'error'); }
     };
 
     const updateGradeFees = (grade: string, amount: number) => {
@@ -357,7 +601,21 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         showToast(`Fees for ${grade} updated to KSh ${amount.toLocaleString()} `);
     };
 
-    const clearAllData = () => {
+    const clearAllData = async () => {
+        const token = localStorage.getItem('elirama_token');
+        if (token) {
+            try {
+                const response = await fetch(`${API_URL}/settings/reset`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                if (!response.ok) throw new Error('Global reset failed');
+            } catch (error) {
+                console.error('Error during global reset:', error);
+                showToast('Failed to clear data globally. Checking local only.', 'error');
+            }
+        }
+
         setStudents([]);
         setTeachers([]);
         setAttendance([]);
@@ -367,7 +625,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setResults([]);
         setSystemUsers([{ id: '1', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: 'Never' }]);
         setSettings(defaultSettings);
-        showToast('All system data has been cleared', 'info');
+        showToast('All system data has been cleared globally', 'info');
     };
 
     return (
@@ -383,6 +641,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             uploadStudents, uploadTeachers, uploadExams,
             systemUsers, addSystemUser, resetUserPassword,
             showToast, refreshData, clearAllData,
+            isSyncing
         }}>
             {children}
         </SchoolContext.Provider>

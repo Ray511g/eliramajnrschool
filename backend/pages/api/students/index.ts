@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
 import { requireAuth, corsHeaders } from '../../../lib/auth';
+import { touchSync } from '../../../lib/sync';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     corsHeaders(res);
@@ -32,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 feeBalance: data.totalFees - (data.paidFees || 0),
             },
         });
+        await touchSync();
         return res.status(201).json(student);
     }
 

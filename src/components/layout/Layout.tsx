@@ -8,7 +8,7 @@ import InfoIcon from '@mui/icons-material/Info';
 
 export default function Layout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { toasts } = useSchool();
+    const { toasts, isSyncing } = useSchool();
 
     return (
         <div className="app-layout">
@@ -29,6 +29,11 @@ export default function Layout() {
                     ))}
                 </div>
             )}
+
+            <div className="sync-indicator">
+                <div className={`sync-dot ${isSyncing ? 'syncing' : 'live'}`} />
+                <span>{isSyncing ? 'Updating...' : 'Live Sync'}</span>
+            </div>
         </div>
     );
 }
