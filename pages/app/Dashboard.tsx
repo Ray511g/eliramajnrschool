@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSchool } from '../context/SchoolContext';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import PeopleIcon from '@mui/icons-material/People';
 import SchoolIcon from '@mui/icons-material/School';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -15,7 +15,7 @@ import AddStudentModal from '../components/modals/AddStudentModal';
 
 export default function Dashboard() {
     const { students, teachers, attendance, payments, settings } = useSchool();
-    const navigate = useNavigate();
+    const router = useRouter();
     const [showAddStudent, setShowAddStudent] = useState(false);
 
     const today = new Date();

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import ErrorIcon from '@mui/icons-material/Error';
 
 export default function Login() {
     const { login } = useAuth();
-    const navigate = useNavigate();
+    const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -18,7 +18,7 @@ export default function Login() {
         try {
             const success = await login(email, password);
             if (success) {
-                navigate('/');
+                router.push('/');
             } else {
                 setError('Invalid email or password. Try admin@elirama.ac.ke / admin123');
             }

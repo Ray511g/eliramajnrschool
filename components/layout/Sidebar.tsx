@@ -11,6 +11,8 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import PaymentIcon from '@mui/icons-material/Payment';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import DescriptionIcon from '@mui/icons-material/Description';
+import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -25,7 +27,9 @@ const navItems = [
     { path: '/exams', icon: <AssignmentIcon />, label: 'Exams' },
     { path: '/timetable', icon: <ScheduleIcon />, label: 'Timetable' },
     { path: '/fees', icon: <PaymentIcon />, label: 'Fees' },
-    { path: '/reports', icon: <AssessmentIcon />, label: 'Reports' },
+    { path: '/results', icon: <AssessmentIcon />, label: 'Results' },
+    { path: '/reports', icon: <DescriptionIcon />, label: 'Reports' },
+    { path: '/communication', icon: <EmailIcon />, label: 'Communication' },
     { path: '/admin', icon: <SettingsIcon />, label: 'Admin' },
 ];
 

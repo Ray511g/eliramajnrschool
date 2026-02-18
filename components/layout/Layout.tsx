@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, ReactNode } from 'react';
 import Sidebar from './Sidebar';
 import { useSchool } from '../../context/SchoolContext';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import InfoIcon from '@mui/icons-material/Info';
 
-export default function Layout() {
+interface LayoutProps {
+    children: ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { toasts, isSyncing } = useSchool();
 
@@ -14,7 +17,7 @@ export default function Layout() {
         <div className="app-layout">
             <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
             <main className="main-content">
-                <Outlet />
+                {children}
             </main>
 
             {toasts.length > 0 && (
