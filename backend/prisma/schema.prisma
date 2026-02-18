@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("teacher") // admin, teacher, staff
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Student {
+  id              String        @id @default(cuid())
+  admissionNumber String        @unique
+  firstName       String
+  lastName        String
+  gender          String
+  grade           String
+  dateOfBirth     String?
+  parentName      String
+  parentPhone     String
+  parentEmail     String?
+  address         String?
+  status          String        @default("Active")
+  enrollmentDate  String
+  totalFees       Float         @default(0)
+  paidFees        Float         @default(0)
+  feeBalance      Float         @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  attendance      Attendance[]
+  payments        Payment[]
+}
+
+model Teacher {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String   @unique
+  phone         String
+  qualification String?
+  subjects      String[] // stored as array
+  grades        String[] // stored as array
+  status        String   @default("Active")
+  joinDate      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  studentId   String
+  studentName String
+  grade       String
+  date        String
+  status      String   // Present, Absent, Late, Excused
+  createdAt   DateTime @default(now())
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date])
+}
+
+model Exam {
+  id         String   @id @default(cuid())
+  name       String
+  subject    String
+  grade      String
+  date       String
+  type       String   // Midterm, Final, Quiz, Assignment
+  term       String
+  status     String   @default("Scheduled")
+  totalMarks Int      @default(100)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  studentId     String
+  studentName   String
+  grade         String
+  amount        Float
+  method        String   // Cash, M-Pesa, Bank Transfer, Cheque
+  reference     String?
+  date          String
+  term          String
+  receiptNumber String   @unique
+  createdAt     DateTime @default(now())
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model TimetableEntry {
+  id          String   @id @default(cuid())
+  grade       String
+  day         String
+  timeSlot    String
+  subject     String
+  teacherId   String?
+  teacherName String
+  createdAt   DateTime @default(now())
+
+  @@unique([grade, day, timeSlot])
+}
+
+model Settings {
+  id          String   @id @default(cuid())
+  schoolName  String   @default("ELIRAMA SCHOOL")
+  motto       String   @default("Excellence in Education")
+  phone       String   @default("+254 700 000 000")
+  email       String   @default("info@elirama.ac.ke")
+  address     String   @default("Nairobi, Kenya")
+  currentTerm String   @default("Term 1")
+  currentYear Int      @default(2026)
+  updatedAt   DateTime @updatedAt
+}
