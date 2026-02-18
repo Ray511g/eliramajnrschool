@@ -47,7 +47,7 @@ export default function ScheduleExamModal({ onClose }: Props) {
                             </div>
                             <div className="form-group">
                                 <label>Grade *</label>
-                                <select className="form-control" value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })}>
+                                <select className="form-control" value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value as any })}>
                                     {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                             </div>
