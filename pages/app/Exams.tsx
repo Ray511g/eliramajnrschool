@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
-import { GRADES, TERMS } from '../types';
+import { useSchool } from '../../context/SchoolContext';
+import { GRADES, TERMS } from '../../types';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import ScheduleExamModal from '../components/modals/ScheduleExamModal';
+import ScheduleExamModal from '../../components/modals/ScheduleExamModal';
 
 export default function Exams() {
     const { exams, deleteExam } = useSchool();

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
-import { GRADES, DAYS, TIME_SLOTS, SUBJECTS } from '../types';
+import { useSchool } from '../../context/SchoolContext';
+import { GRADES, DAYS, TIME_SLOTS, SUBJECTS } from '../../types';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import TimetableEntryModal from '../components/modals/TimetableEntryModal';
+import TimetableEntryModal from '../../components/modals/TimetableEntryModal';
 
 export default function Timetable() {
     const { timetable, deleteTimetableEntry } = useSchool();

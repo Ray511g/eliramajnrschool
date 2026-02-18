@@ -1,6 +1,6 @@
 import React from 'react';
-import { useSchool } from '../context/SchoolContext';
-import { GRADES } from '../types';
+import { useSchool } from '../../context/SchoolContext';
+import { GRADES } from '../../types';
 import GradeIcon from '@mui/icons-material/Grade';
 import PeopleIcon from '@mui/icons-material/People';
 

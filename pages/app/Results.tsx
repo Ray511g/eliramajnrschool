@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
-import { GRADES, StudentResult, PerformanceLevel, Exam } from '../types';
+import { useSchool } from '../../context/SchoolContext';
+import { GRADES, StudentResult, PerformanceLevel, Exam } from '../../types';
 import SearchIcon from '@mui/icons-material/Search';
 import SaveIcon from '@mui/icons-material/Save';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import ReportFormModal from '../components/modals/ReportFormModal';
+import ReportFormModal from '../../components/modals/ReportFormModal';
 
 const calculateLevel = (marks: number): PerformanceLevel => {
     if (marks >= 80) return 'EE';

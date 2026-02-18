@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { useSchool } from '../context/SchoolContext';
-import { GRADES, AttendanceRecord } from '../types';
+import { useSchool } from '../../context/SchoolContext';
+import { GRADES, AttendanceRecord } from '../../types';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';

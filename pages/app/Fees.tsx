@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
+import { useSchool } from '../../context/SchoolContext';
 import AddIcon from '@mui/icons-material/Add';
 import PaymentIcon from '@mui/icons-material/Payment';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PrintIcon from '@mui/icons-material/Print';
 import LocalAtmIcon from '@mui/icons-material/LocalAtm'; // Added import
-import RecordPaymentModal from '../components/modals/RecordPaymentModal';
-import ReceiptModal from '../components/modals/ReceiptModal';
-import FeeStructureModal from '../components/modals/FeeStructureModal'; // Added import
-import { FeePayment } from '../types';
+import RecordPaymentModal from '../../components/modals/RecordPaymentModal';
+import ReceiptModal from '../../components/modals/ReceiptModal';
+import FeeStructureModal from '../../components/modals/FeeStructureModal'; // Added import
+import { FeePayment } from '../../types';
 
 export default function Fees() {
     const { students, payments, gradeFees, updateGradeFees } = useSchool();

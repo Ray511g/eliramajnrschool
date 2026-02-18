@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
+import { useSchool } from '../../context/SchoolContext';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SchoolIcon from '@mui/icons-material/School';
-import AddTeacherModal from '../components/modals/AddTeacherModal';
+import AddTeacherModal from '../../components/modals/AddTeacherModal';
 
 export default function Teachers() {
     const { teachers, deleteTeacher } = useSchool();

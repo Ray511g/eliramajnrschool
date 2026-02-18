@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
-import { useAuth } from '../context/AuthContext';
+import { useSchool } from '../../context/SchoolContext';
+import { useAuth } from '../../context/AuthContext';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import SchoolIcon from '@mui/icons-material/School';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
+import { useSchool } from '../../context/SchoolContext';
 import { useRouter } from 'next/router';
 import PeopleIcon from '@mui/icons-material/People';
 import SchoolIcon from '@mui/icons-material/School';
@@ -11,7 +11,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import WidgetsIcon from '@mui/icons-material/Widgets';
-import AddStudentModal from '../components/modals/AddStudentModal';
+import AddStudentModal from '../../components/modals/AddStudentModal';
 
 export default function Dashboard() {
     const { students, teachers, attendance, payments, settings } = useSchool();

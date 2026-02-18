@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
-import { GRADES } from '../types';
+import { useSchool } from '../../context/SchoolContext';
+import { GRADES } from '../../types';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
-import AddStudentModal from '../components/modals/AddStudentModal';
+import AddStudentModal from '../../components/modals/AddStudentModal';
 
 export default function Students() {
     const { students, deleteStudent } = useSchool();

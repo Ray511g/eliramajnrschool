@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
-import { SUBJECTS } from '../types';
+import { useSchool } from '../../context/SchoolContext';
+import { SUBJECTS } from '../../types';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import PeopleIcon from '@mui/icons-material/People';
 import EventNoteIcon from '@mui/icons-material/EventNote';

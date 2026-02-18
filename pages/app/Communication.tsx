@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSchool } from '../context/SchoolContext';
+import { useSchool } from '../../context/SchoolContext';
 import SendIcon from '@mui/icons-material/Send';
 import PrintIcon from '@mui/icons-material/Print';
 import EmailIcon from '@mui/icons-material/Email';
