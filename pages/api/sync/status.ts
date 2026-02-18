@@ -1,9 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
-import { cors, runMiddleware } from '../../../lib/auth';
+import { corsHeaders } from '../../../lib/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    await runMiddleware(req, res, cors);
+    corsHeaders(res);
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
     if (req.method === 'GET') {
         try {
