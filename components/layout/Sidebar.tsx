@@ -83,10 +83,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     ))}
                 </nav>
 
-                <div className="sidebar-footer">
+                <div className="logout-section">
+                    <div style={{ padding: '0 24px 10px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>
+                        v1.2.0 (Live)
+                    </div>
                     <button className="logout-btn" onClick={handleLogout}>
                         <LogoutIcon />
-                        Logout
+                        <span>Logout</span>
                     </button>
                 </div>
             </aside>
