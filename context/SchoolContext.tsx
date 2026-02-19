@@ -204,13 +204,20 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
     }, []);
 
+    // Use a ref to prevent overlapping requests
+    const isFetchingRef = useRef(false);
+
     // Try to sync with the database if available
     const fetchData = useCallback(async (isInitial = false) => {
+        // Prevent stacking requests
+        if (isFetchingRef.current && !isInitial) return;
+
         const token = localStorage.getItem('elirama_token');
         if (!token) return;
         // If we already know the DB is unavailable, skip API calls
         if (dbAvailableRef.current === false && !isInitial) return;
 
+        isFetchingRef.current = true;
         try {
             if (!isInitial) {
                 const statusRes = await fetch(`${API_URL}/sync/status`, {
@@ -260,6 +267,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             dbAvailableRef.current = false;
         } finally {
             setIsSyncing(false);
+            isFetchingRef.current = false;
         }
     }, []);
 
@@ -269,7 +277,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     }, [fetchData]);
 
     useEffect(() => {
-        const interval = setInterval(() => fetchData(false), 3000);
+        const interval = setInterval(() => fetchData(false), 1000); // Poll every 1 second
         return () => clearInterval(interval);
     }, [fetchData]);
 

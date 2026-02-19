@@ -34,8 +34,7 @@ export default function Layout({ children }: LayoutProps) {
             )}
 
             <div className="sync-indicator">
-                <div className={`sync-dot ${isSyncing ? 'syncing' : 'live'}`} />
-                <span>{isSyncing ? 'Updating...' : 'Live Sync'}</span>
+
             </div>
         </div>
     );
