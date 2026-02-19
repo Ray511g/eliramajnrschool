@@ -5,6 +5,7 @@ import { touchSync } from '../../../lib/sync';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     corsHeaders(res);
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     const user = requireAuth(req, res);

@@ -220,7 +220,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         isFetchingRef.current = true;
         try {
             if (!isInitial) {
-                const statusRes = await fetch(`${API_URL}/sync/status`, {
+                const statusRes = await fetch(`${API_URL}/sync/status?t=${Date.now()}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!statusRes.ok) {
@@ -254,7 +254,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             dbAvailableRef.current = true;
 
             if (isInitial) {
-                const statusRes = await fetch(`${API_URL}/sync/status`, {
+                const statusRes = await fetch(`${API_URL}/sync/status?t=${Date.now()}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (statusRes.ok) {

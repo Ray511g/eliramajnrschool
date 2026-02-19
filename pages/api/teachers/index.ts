@@ -4,7 +4,8 @@ import { requireAuth, corsHeaders } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    corsHeaders(res);
+    // corsHeaders(res); // Handled by next.config.js but we add cache control here
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     const user = requireAuth(req, res);
