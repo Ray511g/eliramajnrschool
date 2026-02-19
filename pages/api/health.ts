@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Test Prisma
     try {
-        const { prisma } = require('../../../lib/prisma');
+        const { prisma } = require('../../lib/prisma');
         await prisma.$queryRaw`SELECT 1`;
         diagnostics.prisma = 'OK - connected';
 
