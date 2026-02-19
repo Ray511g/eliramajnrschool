@@ -11,6 +11,7 @@ interface AuthUser {
 interface AuthContextType {
     user: AuthUser | null;
     isAuthenticated: boolean;
+    isLoading: boolean;
     login: (email: string, password: string) => Promise<boolean>;
     logout: () => void;
 }
@@ -24,7 +25,7 @@ const MOCK_USERS = [
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null);
-    const [ready, setReady] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     // Restore session from localStorage AFTER hydration
     useEffect(() => {
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const saved = localStorage.getItem('elirama_user');
             if (saved) setUser(JSON.parse(saved));
         } catch { /* ignore */ }
-        setReady(true);
+        setLoading(false);
     }, []);
 
     const isAuthenticated = !!user;
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+        <AuthContext.Provider value={{ user, isAuthenticated, isLoading: loading, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

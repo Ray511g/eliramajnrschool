@@ -5,13 +5,14 @@ import Layout from '../components/layout/Layout';
 import Dashboard from './app/Dashboard';
 
 export default function IndexPage() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (!isAuthenticated) router.replace('/login');
-    }, [isAuthenticated, router]);
+        if (!isLoading && !isAuthenticated) router.replace('/login');
+    }, [isAuthenticated, isLoading, router]);
 
+    if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     if (!isAuthenticated) return null;
 
     return (

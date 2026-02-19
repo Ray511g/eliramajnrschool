@@ -5,9 +5,10 @@ import Layout from '../components/layout/Layout';
 import AdminPage from './app/Admin';
 
 export default function Admin() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
-    useEffect(() => { if (!isAuthenticated) router.replace('/login'); }, [isAuthenticated, router]);
+    useEffect(() => { if (!isLoading && !isAuthenticated) router.replace('/login'); }, [isAuthenticated, isLoading, router]);
+    if (isLoading) return null;
     if (!isAuthenticated) return null;
     return <Layout><AdminPage /></Layout>;
 }

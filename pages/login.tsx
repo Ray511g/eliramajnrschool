@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import LoginPage from './app/Login';
 
 export default function Login() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (isAuthenticated) router.replace('/');
-    }, [isAuthenticated, router]);
+        if (!isLoading && isAuthenticated) router.replace('/');
+    }, [isAuthenticated, isLoading, router]);
 
+    if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     return <LoginPage />;
 }

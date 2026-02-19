@@ -5,9 +5,14 @@ import Layout from '../components/layout/Layout';
 import StudentsPage from './app/Students';
 
 export default function Students() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
-    useEffect(() => { if (!isAuthenticated) router.replace('/login'); }, [isAuthenticated, router]);
+
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) router.replace('/login');
+    }, [isAuthenticated, isLoading, router]);
+
+    if (isLoading) return null;
     if (!isAuthenticated) return null;
     return <Layout><StudentsPage /></Layout>;
 }

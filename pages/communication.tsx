@@ -5,13 +5,14 @@ import Layout from '../components/layout/Layout';
 import CommunicationPage from './app/Communication';
 
 export default function Communication() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (!isAuthenticated) router.replace('/login');
-    }, [isAuthenticated, router]);
+        if (!isLoading && !isAuthenticated) router.replace('/login');
+    }, [isAuthenticated, isLoading, router]);
 
+    if (isLoading) return null;
     if (!isAuthenticated) return null;
 
     return (
