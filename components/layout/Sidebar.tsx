@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
+import { useSchool } from '../../context/SchoolContext';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SchoolIcon from '@mui/icons-material/School';
@@ -40,6 +41,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const { logout } = useAuth();
+    const { serverStatus } = useSchool();
     const router = useRouter();
 
     const handleLogout = () => {
@@ -84,8 +86,16 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 </nav>
 
                 <div className="logout-section">
-                    <div style={{ padding: '0 24px 10px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>
-                        v1.2.0 (Live)
+                    <div style={{ padding: '0 24px 10px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>v1.2.1 (Live)</span>
+                        <span style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            backgroundColor: serverStatus === 'connected' ? '#00c853' : serverStatus === 'checking' ? '#ffb300' : '#ff3d00',
+                            boxShadow: serverStatus === 'connected' ? '0 0 5px #00c853' : 'none',
+                            transition: 'background-color 0.3s'
+                        }} title={serverStatus === 'connected' ? 'Online' : 'Offline (Local Mode)'} />
                     </div>
                     <button className="logout-btn" onClick={handleLogout}>
                         <LogoutIcon />
