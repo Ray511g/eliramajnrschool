@@ -25,7 +25,7 @@ export default function ScheduleExamModal({ onClose, exam }: Props) {
             setForm({
                 name: exam.name,
                 subject: exam.subject,
-                grade: exam.grade,
+                grade: exam.grade as any,
                 date: exam.date,
                 term: exam.term,
                 type: exam.type,
