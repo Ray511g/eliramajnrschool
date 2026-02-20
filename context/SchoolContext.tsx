@@ -188,9 +188,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const [feeStructures, setFeeStructures] = useState<FeeStructureItem[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
     const [systemUsers, setSystemUsers] = useState<User[]>([
-        { id: '1', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: '2026-02-15 10:30' },
-        { id: '2', name: 'Teacher User', email: 'teacher@elirama.ac.ke', role: 'Teacher', status: 'Active', lastLogin: '2026-02-16 09:15' },
-        { id: '3', name: 'Zion Elirama', email: 'zion@elirama.ac.ke', role: 'Admin', status: 'Active', lastLogin: '2026-02-17 11:00' },
+        { id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: '2026-02-15 10:30', updatedAt: '2026-02-18 10:00' },
+        { id: '2', firstName: 'Teacher', lastName: 'User', username: 'teacher', name: 'Teacher User', email: 'teacher@elirama.ac.ke', role: 'Teacher', status: 'Active', lastLogin: '2026-02-16 09:15', updatedAt: '2026-02-18 10:00' },
+        { id: '3', firstName: 'Zion', lastName: 'Elirama', username: 'zion', name: 'Zion Elirama', email: 'zion@elirama.ac.ke', role: 'Admin', status: 'Active', lastLogin: '2026-02-17 11:00', updatedAt: '2026-02-18 10:00' },
     ]);
     const [toasts, setToasts] = useState<Toast[]>([]);
     const [loading, setLoading] = useState(true);
@@ -688,7 +688,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             const data = await apiRes.json();
             setSystemUsers(prev => [...prev, data]);
         } else {
-            const newUser: User = { ...user, id: generateId(), lastLogin: 'Never', status: 'Active' } as User;
+            const newUser: User = { ...user, id: generateId(), lastLogin: 'Never', status: 'Active', updatedAt: new Date().toLocaleDateString() } as User;
             setSystemUsers(prev => [...prev, newUser]);
         }
         showToast(`User ${user.name} added successfully`);
@@ -700,7 +700,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             const data = await apiRes.json();
             setSystemUsers(prev => prev.map(u => (u.id === id ? data : u)));
         } else {
-            setSystemUsers(prev => prev.map(u => (u.id === id ? { ...u, ...updates } : u)));
+            setSystemUsers(prev => prev.map(u => (u.id === id ? { ...u, ...updates, updatedAt: new Date().toLocaleDateString() } : u)));
         }
         showToast('User updated successfully');
     };
@@ -815,7 +815,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setPayments([]);
         setTimetable([]);
         setResults([]);
-        setSystemUsers([{ id: '1', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: 'Never' }]);
+        setSystemUsers([{ id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: 'Never', updatedAt: new Date().toISOString() }]);
         setSettings(defaultSettings);
         localStorage.removeItem(STORAGE_KEY);
         showToast('All system data has been cleared', 'info');

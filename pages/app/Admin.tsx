@@ -10,6 +10,11 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import * as XLSX from 'xlsx';
 import { PERMISSIONS } from '../../components/layout/Sidebar';
+import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 export default function Admin() {
     const {
@@ -28,29 +33,50 @@ export default function Admin() {
     // User Management State
     const [showAddUser, setShowAddUser] = useState(false);
     const [editingUser, setEditingUser] = useState<any>(null);
-    const [userForm, setUserForm] = useState({ name: '', email: '', role: 'Staff' as const, permissions: [] as string[] });
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [userForm, setUserForm] = useState({
+        firstName: '',
+        lastName: '',
+        username: '',
+        name: '',
+        email: '',
+        role: 'Staff' as const,
+        permissions: [] as string[]
+    });
 
     useEffect(() => {
         if (activeTab === 'audit') fetchAuditLogs();
     }, [activeTab]);
 
     const handleAddUser = () => {
-        if (!userForm.name || !userForm.email) return;
+        if (!userForm.firstName || !userForm.lastName || !userForm.username || !userForm.email) return;
+
+        const fullName = `${userForm.firstName} ${userForm.lastName}`;
+        const submissionData = { ...userForm, name: fullName };
 
         if (editingUser) {
-            updateSystemUser(editingUser.id, userForm);
+            updateSystemUser(editingUser.id, submissionData);
         } else {
-            addSystemUser(userForm);
+            addSystemUser(submissionData);
         }
 
-        setUserForm({ name: '', email: '', role: 'Staff', permissions: [] });
+        setUserForm({ firstName: '', lastName: '', username: '', name: '', email: '', role: 'Staff', permissions: [] });
         setEditingUser(null);
         setShowAddUser(false);
     };
 
-    const startEditUser = (user: any) => {
-        setEditingUser(user);
-        setUserForm({ name: user.name, email: user.email, role: user.role, permissions: user.permissions || [] });
+    const startEditUser = (u: any) => {
+        setEditingUser(u);
+        setUserForm({
+            firstName: u.firstName || '',
+            lastName: u.lastName || '',
+            username: u.username || '',
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            permissions: u.permissions || []
+        });
         setShowAddUser(true);
     };
 
@@ -410,53 +436,105 @@ export default function Admin() {
                     <div className="admin-section" style={{ gridColumn: 'span 2' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                             <h3 style={{ margin: 0 }}><PersonIcon style={{ fontSize: 22 }} /> User Management</h3>
-                            <button className="btn-primary" onClick={() => {
+                            {selectedUserId && (
+                                <button className="btn-primary" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }} onClick={() => {
+                                    const u = systemUsers.find(u => u.id === selectedUserId);
+                                    if (u) startEditUser(u);
+                                }}>
+                                    View/Assign Roles
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Toolbar - Screenshot Style */}
+                        <div className="user-toolbar">
+                            <button className="toolbar-btn" onClick={() => {
                                 setShowAddUser(!showAddUser);
                                 if (!showAddUser) {
                                     setEditingUser(null);
-                                    setUserForm({ name: '', email: '', role: 'Staff', permissions: [] });
+                                    setUserForm({ firstName: '', lastName: '', username: '', name: '', email: '', role: 'Staff', permissions: [] });
                                 }
                             }}>
-                                {showAddUser ? 'Cancel' : 'Add New User'}
+                                <AddIcon style={{ fontSize: 18, color: '#27ae60' }} /> Add
                             </button>
+                            <button
+                                className={`toolbar-btn ${!selectedUserId ? 'disabled' : ''}`}
+                                disabled={!selectedUserId}
+                                onClick={() => {
+                                    const u = systemUsers.find(u => u.id === selectedUserId);
+                                    if (u) startEditUser(u);
+                                }}
+                            >
+                                <EditIcon style={{ fontSize: 18, color: '#2980b9' }} /> Edit
+                            </button>
+                            <button
+                                className={`toolbar-btn ${!selectedUserId ? 'disabled' : ''}`}
+                                disabled={!selectedUserId}
+                                onClick={() => {
+                                    const u = systemUsers.find(u => u.id === selectedUserId);
+                                    if (u) handleDeleteUser(u.id, u.name);
+                                }}
+                            >
+                                <DeleteIcon style={{ fontSize: 18, color: '#e74c3c' }} /> Delete
+                            </button>
+                            <div className="toolbar-divider"></div>
+                            <div className="search-input-wrapper" style={{ maxWidth: 300 }}>
+                                <SearchIcon className="search-icon" />
+                                <input
+                                    className="search-input"
+                                    placeholder="Search users..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                />
+                            </div>
                         </div>
 
                         {showAddUser && (
-                            <div className="card" style={{ background: 'var(--bg-surface)', marginBottom: 20, border: '1px solid var(--accent-blue)' }}>
+                            <div className="card" style={{ background: 'var(--bg-surface)', marginBottom: 0, borderRadius: 0, borderTop: 'none', border: '1px solid var(--border-color)' }}>
                                 <h4 style={{ margin: '0 0 16px' }}>{editingUser ? 'Edit User' : 'Add New System User'}</h4>
                                 <div className="form-row">
                                     <div className="form-group" style={{ flex: 1 }}>
-                                        <label htmlFor="user-name">Full Name</label>
-                                        <input id="user-name" className="form-control" value={userForm.name} onChange={e => setUserForm({ ...userForm, name: e.target.value })} placeholder="e.g. John Doe" />
+                                        <label>First Name</label>
+                                        <input className="form-control" value={userForm.firstName} onChange={e => setUserForm({ ...userForm, firstName: e.target.value })} placeholder="ANN" />
                                     </div>
                                     <div className="form-group" style={{ flex: 1 }}>
-                                        <label htmlFor="user-email">Email Address</label>
-                                        <input id="user-email" className="form-control" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} placeholder="email@elirama.ac.ke" />
+                                        <label>Last Name</label>
+                                        <input className="form-control" value={userForm.lastName} onChange={e => setUserForm({ ...userForm, lastName: e.target.value })} placeholder="NKIROTE" />
                                     </div>
                                     <div className="form-group" style={{ flex: 1 }}>
-                                        <label htmlFor="user-role">Role</label>
-                                        <select id="user-role" title="Select User Role" className="form-control" value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value as any })}>
+                                        <label>Username</label>
+                                        <input className="form-control" value={userForm.username} onChange={e => setUserForm({ ...userForm, username: e.target.value })} placeholder="ANKIROTE" />
+                                    </div>
+                                </div>
+                                <div className="form-row" style={{ marginTop: 15 }}>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label>Email Address</label>
+                                        <input className="form-control" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} placeholder="ann@spa-limited.com" />
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label>Role</label>
+                                        <select title="Select User Role" className="form-control" value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value as any })}>
                                             <option value="Admin">Admin</option>
                                             <option value="Teacher">Teacher</option>
                                             <option value="Staff">Staff</option>
                                         </select>
                                     </div>
                                 </div>
+
                                 <div className="form-group" style={{ marginTop: 15 }}>
-                                    <label style={{ fontWeight: 600, display: 'block', marginBottom: 10 }}>Permissions (Assign Access Rights)</label>
+                                    <label style={{ fontWeight: 600, display: 'block', marginBottom: 10 }}>Permissions & Access Rights</label>
                                     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                         {PERMISSIONS.map(perm => (
                                             <label key={perm.code} style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: 8,
-                                                fontSize: 13,
+                                                fontSize: 12,
                                                 cursor: 'pointer',
-                                                padding: '8px 16px',
+                                                padding: '6px 12px',
                                                 background: userForm.permissions.includes(perm.code) ? 'rgba(52, 152, 219, 0.1)' : 'var(--bg-body)',
-                                                borderRadius: '30px',
+                                                borderRadius: '4px',
                                                 border: userForm.permissions.includes(perm.code) ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
-                                                transition: 'all 0.2s'
                                             }}>
                                                 <input
                                                     type="checkbox"
@@ -470,49 +548,48 @@ export default function Admin() {
                                             </label>
                                         ))}
                                     </div>
-                                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 10 }}>
-                                        * Note: Admin roles always have full system access regardless of assigned rights.
-                                    </p>
                                 </div>
-                                <div style={{ textAlign: 'right', marginTop: 20 }}>
-                                    <button className="btn-primary green" onClick={handleAddUser}>{editingUser ? 'Update User' : 'Create User'}</button>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20 }}>
+                                    <button className="btn-outline" onClick={() => resetUserPassword(editingUser?.id || '')} disabled={!editingUser}>
+                                        <VpnKeyIcon style={{ fontSize: 16 }} /> Reset Password
+                                    </button>
+                                    <div style={{ display: 'flex', gap: 10 }}>
+                                        <button className="btn-outline" onClick={() => setShowAddUser(false)}>Cancel</button>
+                                        <button className="btn-primary green" onClick={handleAddUser}>{editingUser ? 'Save Changes' : 'Create User'}</button>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        <div className="table-container">
+                        <div className="user-management-table-wrapper">
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Rights</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: 'right' }}>Actions</th>
+                                        <th style={{ width: '18%' }}>First Name</th>
+                                        <th style={{ width: '18%' }}>Last Name</th>
+                                        <th style={{ width: '18%' }}>Username</th>
+                                        <th style={{ width: '25%' }}>Email</th>
+                                        <th style={{ width: '21%' }}>User updated</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {systemUsers.map(u => (
-                                        <tr key={u.id}>
-                                            <td style={{ fontWeight: 500 }}>{u.name}</td>
+                                    {systemUsers.filter(u =>
+                                        u.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        u.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+                                    ).map(u => (
+                                        <tr
+                                            key={u.id}
+                                            className={selectedUserId === u.id ? 'selected-row' : ''}
+                                            onClick={() => setSelectedUserId(u.id === selectedUserId ? null : u.id)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.firstName}</td>
+                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.lastName}</td>
+                                            <td style={{ color: selectedUserId === u.id ? 'white' : 'var(--accent-blue)', textTransform: 'uppercase' }}>{u.username}</td>
                                             <td>{u.email}</td>
-                                            <td><span className={`badge ${u.role === 'Super Admin' ? 'purple' : 'blue'}`}>{u.role}</span></td>
-                                            <td style={{ fontSize: 11, maxWidth: 200, color: 'var(--text-secondary)' }}>
-                                                {u.role.includes('Admin') ? 'Full Access' : (u.permissions?.length ? u.permissions.map(p => p.split('_')[1]).join(', ') : 'Default')}
-                                            </td>
-                                            <td><span className="badge green">{u.status}</span></td>
-                                            <td style={{ textAlign: 'right' }}>
-                                                <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
-                                                    <button className="btn-outline" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => resetUserPassword(u.id)} title="Reset Password">Reset</button>
-                                                    {u.role !== 'Super Admin' && (
-                                                        <>
-                                                            <button className="table-action-btn" onClick={() => startEditUser(u)} title="Edit User"><EditIcon style={{ fontSize: 16 }} /></button>
-                                                            <button className="table-action-btn danger" onClick={() => handleDeleteUser(u.id, u.name)} title="Delete User"><DeleteIcon style={{ fontSize: 16 }} /></button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
+                                            <td>{u.updatedAt || '01/01/2026'}</td>
                                         </tr>
                                     ))}
                                 </tbody>

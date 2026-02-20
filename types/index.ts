@@ -96,12 +96,16 @@ export interface TimeSlot {
 
 export interface User {
     id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+    name: string; // Keep as fullName for display
     email: string;
     role: 'Super Admin' | 'Admin' | 'Teacher' | 'Staff';
     permissions?: string[];
     status: 'Active' | 'Inactive';
     lastLogin: string;
+    updatedAt?: string;
 }
 
 export interface SchoolSettings {
