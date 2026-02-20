@@ -106,8 +106,10 @@ export interface SchoolSettings {
     schoolName: string;
     motto: string;
     phone: string;
+    telephone?: string;
     email: string;
     address: string;
+    poBox?: string;
     currentTerm: string;
     currentYear: number;
     headteacherSignature?: string; // Base64 or URL

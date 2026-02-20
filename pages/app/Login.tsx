@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useSchool } from '../../context/SchoolContext';
 import { useRouter } from 'next/router';
 import ErrorIcon from '@mui/icons-material/Error';
 
 export default function Login() {
     const { login } = useAuth();
+    const { settings } = useSchool();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -31,9 +33,15 @@ export default function Login() {
         <div className="login-page">
             <div className="login-card">
                 <div className="login-header">
-                    <div className="login-logo">E</div>
-                    <h1>ELIRAMA SCHOOL</h1>
-                    <p>School Management System</p>
+                    <div className="login-logo">
+                        {settings.logo ? (
+                            <img src={settings.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        ) : (
+                            (settings.schoolName || 'E')[0]
+                        )}
+                    </div>
+                    <h1>{settings.schoolName || 'ELIRAMA SCHOOL'}</h1>
+                    <p>{settings.motto || 'School Management System'}</p>
                 </div>
 
                 {error && (

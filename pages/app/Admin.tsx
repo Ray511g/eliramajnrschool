@@ -160,6 +160,14 @@ export default function Admin() {
                                         <input id="school-address" className="form-control" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
                                     </div>
                                     <div className="form-group">
+                                        <label htmlFor="school-pobox">P.O. Box</label>
+                                        <input id="school-pobox" className="form-control" value={form.poBox || ''} onChange={e => setForm({ ...form, poBox: e.target.value })} placeholder="e.g. P.O. Box 123-00100" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label htmlFor="school-telephone">Telephone Number</label>
+                                        <input id="school-telephone" className="form-control" value={form.telephone || ''} onChange={e => setForm({ ...form, telephone: e.target.value })} placeholder="e.g. +254 20 1234567" />
+                                    </div>
+                                    <div className="form-group">
                                         <label htmlFor="paybill-number">Lipa na M-Pesa Paybill</label>
                                         <input id="paybill-number" className="form-control" value={form.paybillNumber} onChange={e => setForm({ ...form, paybillNumber: e.target.value })} placeholder="e.g. 123456" />
                                     </div>
@@ -219,6 +227,8 @@ export default function Admin() {
                                     <div className="setting-row"><span className="setting-label">Phone</span><span className="setting-value">{settings.phone}</span></div>
                                     <div className="setting-row"><span className="setting-label">Email</span><span className="setting-value">{settings.email}</span></div>
                                     <div className="setting-row"><span className="setting-label">Address</span><span className="setting-value">{settings.address}</span></div>
+                                    <div className="setting-row"><span className="setting-label">P.O. Box</span><span className="setting-value">{settings.poBox || 'Not Set'}</span></div>
+                                    <div className="setting-row"><span className="setting-label">Telephone</span><span className="setting-value">{settings.telephone || 'Not Set'}</span></div>
                                     <div className="setting-row"><span className="setting-label">Paybill Number</span><span className="setting-value">{settings.paybillNumber || 'Not Set'}</span></div>
                                     <div className="setting-row">
                                         <span className="setting-label">Headteacher Signature</span>

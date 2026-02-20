@@ -122,8 +122,10 @@ model Settings {
   schoolName  String     @default("ELIRAMA SCHOOL")
   motto       String     @default("Excellence in Education")
   phone       String     @default("+254 700 000 000")
+  telephone   String?
   email       String     @default("info@elirama.ac.ke")
   address     String     @default("Nairobi, Kenya")
+  poBox       String?
   currentTerm String     @default("Term 1")
   currentYear Int        @default(2026)
   logo        String?    // Base64 or URL
