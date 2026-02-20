@@ -9,7 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import * as XLSX from 'xlsx';
-import { PERMISSIONS } from '../layout/Sidebar';
+import { PERMISSIONS } from '../../components/layout/Sidebar';
 
 export default function Admin() {
     const {
