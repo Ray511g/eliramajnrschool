@@ -18,6 +18,7 @@ model User {
   role      String   @default("teacher") // admin, teacher, staff
   status    String   @default("Active")
   lastLogin String?
+  permissions String[] // Array of permission codes e.g. ['MANAGE_FEES', 'VIEW_REPORTS']
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -117,15 +118,26 @@ model TimetableEntry {
 }
 
 model Settings {
-  id          String   @id @default(cuid())
-  schoolName  String   @default("ELIRAMA SCHOOL")
-  motto       String   @default("Excellence in Education")
-  phone       String   @default("+254 700 000 000")
-  email       String   @default("info@elirama.ac.ke")
-  address     String   @default("Nairobi, Kenya")
-  currentTerm String   @default("Term 1")
-  currentYear Int      @default(2026)
-  updatedAt   DateTime @updatedAt
+  id          String     @id @default(cuid())
+  schoolName  String     @default("ELIRAMA SCHOOL")
+  motto       String     @default("Excellence in Education")
+  phone       String     @default("+254 700 000 000")
+  email       String     @default("info@elirama.ac.ke")
+  address     String     @default("Nairobi, Kenya")
+  currentTerm String     @default("Term 1")
+  currentYear Int        @default(2026)
+  logo        String?    // Base64 or URL
+  updatedAt   DateTime   @updatedAt
+  timeSlots   TimeSlot[]
+}
+
+model TimeSlot {
+  id         String   @id @default(cuid())
+  label      String
+  type       String   @default("Lesson") // Lesson, Break, Lunch
+  order      Int      @default(0)
+  settings   Settings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+  settingsId String
 }
 
 model Result {
@@ -147,4 +159,24 @@ model Result {
 model SyncStatus {
   id           String   @id @default("global")
   lastUpdated  DateTime @default(now()) @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  userName  String
+  action    String
+  details   String
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model FeeStructure {
+  id        String   @id @default(cuid())
+  grade     String
+  name      String   // e.g., "Tuition", "Lunch", "Transport"
+  amount    Float
+  term      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

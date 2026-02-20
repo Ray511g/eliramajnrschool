@@ -11,10 +11,15 @@ interface Props {
 }
 
 export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
-    const { teachers, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useSchool();
+    const { teachers, settings, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useSchool();
+
+    const lessonSlots = settings.timetableSlots && settings.timetableSlots.length > 0
+        ? settings.timetableSlots.filter(s => s.type === 'Lesson')
+        : TIME_SLOTS.filter(s => s !== '10:00 - 10:30' && s !== '12:30 - 1:10').map(s => ({ id: s, label: s }));
+
     const [form, setForm] = useState({
         day: DAYS[0],
-        timeSlot: TIME_SLOTS[0],
+        timeSlot: lessonSlots[0]?.label || '',
         subject: SUBJECTS[0],
         teacherId: '',
         teacherName: '',
@@ -82,8 +87,8 @@ export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
                             <div className="form-group">
                                 <label>Time Slot *</label>
                                 <select className="form-control" value={form.timeSlot} onChange={e => setForm({ ...form, timeSlot: e.target.value })}>
-                                    {TIME_SLOTS.filter(s => s !== '10:00 - 10:30' && s !== '12:30 - 1:10').map(s => (
-                                        <option key={s} value={s}>{s}</option>
+                                    {lessonSlots.map(s => (
+                                        <option key={s.id} value={s.label}>{s.label}</option>
                                     ))}
                                 </select>
                             </div>

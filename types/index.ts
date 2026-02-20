@@ -87,6 +87,12 @@ export interface TimetableEntry {
     teacherName: string;
 }
 
+export interface TimeSlot {
+    id: string;
+    label: string;
+    type: 'Lesson' | 'Break' | 'Lunch';
+}
+
 export interface User {
     id: string;
     name: string;
@@ -107,6 +113,8 @@ export interface SchoolSettings {
     headteacherSignature?: string; // Base64 or URL
     financeSignature?: string;     // Base64 or URL
     paybillNumber?: string;
+    logo?: string;
+    timetableSlots?: TimeSlot[];
 }
 
 export type GradeLevel = 'Play Group' | 'PP1' | 'PP2' | 'Grade 1' | 'Grade 2' | 'Grade 3' | 'Grade 4' | 'Grade 5' | 'Grade 6';
@@ -134,3 +142,21 @@ export const SUBJECTS = [
 ];
 
 export const TERMS = ['Term 1', 'Term 2', 'Term 3'];
+
+export interface AuditLogItem {
+    id: string;
+    userId: string;
+    userName: string;
+    action: string;
+    details: string;
+    ipAddress?: string;
+    createdAt: string;
+}
+
+export interface FeeStructureItem {
+    id: string;
+    grade: string;
+    name: string;
+    amount: number;
+    term: string;
+}

@@ -40,8 +40,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-    const { logout } = useAuth();
-    const { serverStatus } = useSchool();
+    const { logout, user } = useAuth();
+    const { serverStatus, settings } = useSchool();
     const router = useRouter();
 
     const handleLogout = () => {
@@ -54,6 +54,24 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         return router.pathname.startsWith(path);
     };
 
+    // Filter nav items based on RBAC
+    const filteredNavItems = navItems.filter(item => {
+        if (user?.role === 'Super Admin') return true;
+        if (user?.role === 'Admin') return true;
+
+        // Teachers only see specific items
+        if (user?.role === 'Teacher') {
+            return ['/', '/students', '/attendance', '/grades', '/exams', '/timetable', '/results', '/reports'].includes(item.path);
+        }
+
+        // Staff (e.g. Bursar/Secretary) see specific items
+        if (user?.role === 'Staff') {
+            return ['/', '/students', '/fees', '/communication'].includes(item.path);
+        }
+
+        return false;
+    });
+
     return (
         <>
             <button className="hamburger-btn" onClick={() => setIsOpen(!isOpen)}>
@@ -64,15 +82,19 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <div className="sidebar-logo">E</div>
+                    <div className="sidebar-logo">
+                        {settings.logo ? (
+                            <img src={settings.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
+                        ) : 'E'}
+                    </div>
                     <div className="sidebar-brand">
-                        <h2>ELIRAMA</h2>
+                        <h2>{settings.schoolName || 'ELIRAMA'}</h2>
                         <p>School Management</p>
                     </div>
                 </div>
 
                 <nav className="sidebar-nav">
-                    {navItems.map((item) => (
+                    {filteredNavItems.map((item) => (
                         <Link
                             key={item.path}
                             href={item.path}
@@ -87,7 +109,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                 <div className="logout-section">
                     <div style={{ padding: '0 24px 10px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>v1.2.1 (Live)</span>
+                        <span>v1.3.0 (RBAC)</span>
                         <span style={{
                             width: '8px',
                             height: '8px',

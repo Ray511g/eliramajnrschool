@@ -5,18 +5,19 @@ import AddIcon from '@mui/icons-material/Add';
 import TimetableEntryModal from '../../components/modals/TimetableEntryModal';
 
 export default function Timetable() {
-    const { timetable } = useSchool();
+    const { timetable, settings } = useSchool();
     const [selectedGrade, setSelectedGrade] = useState<string>('Grade 1');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
 
     const gradeEntries = timetable.filter(e => e.grade === selectedGrade);
+    const slots = settings.timetableSlots && settings.timetableSlots.length > 0
+        ? settings.timetableSlots
+        : TIME_SLOTS.map((s, i) => ({ id: String(i), label: s, type: (s === '10:00 - 10:30' ? 'Break' : (s === '12:30 - 1:10' ? 'Lunch' : 'Lesson')) }));
 
-    const getEntry = (day: string, slot: string) => {
-        return gradeEntries.find(e => e.day === day && e.timeSlot === slot);
+    const getEntry = (day: string, slotLabel: string) => {
+        return gradeEntries.find(e => e.day === day && e.timeSlot === slotLabel);
     };
-
-    const isBreak = (slot: string) => slot === '10:00 - 10:30' || slot === '12:30 - 1:10';
 
     const handleEdit = (entry: TimetableEntry) => {
         setEditingEntry(entry);
@@ -28,14 +29,21 @@ export default function Timetable() {
         setEditingEntry(null);
     };
 
+    const handlePrint = () => {
+        window.print();
+    };
+
     return (
         <div className="page-container">
-            <div className="page-header">
+            <div className="page-header no-print">
                 <div className="page-header-left">
                     <h1>Timetable</h1>
                     <p>Weekly class schedule</p>
                 </div>
                 <div className="page-header-right">
+                    <button className="btn-outline" onClick={handlePrint} style={{ marginRight: 10 }}>
+                        Print Timetable
+                    </button>
                     <select
                         title="Select grade for timetable view"
                         className="filter-select"
@@ -50,6 +58,15 @@ export default function Timetable() {
                 </div>
             </div>
 
+            <div className="print-only">
+                <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                    {settings.logo && <img src={settings.logo} style={{ height: 60, marginBottom: 10 }} alt="School Logo" />}
+                    <h1 style={{ margin: 0 }}>{settings.schoolName}</h1>
+                    <p style={{ margin: 5 }}>{settings.motto}</p>
+                    <h2 style={{ marginTop: 20 }}>{selectedGrade} Timetable</h2>
+                </div>
+            </div>
+
             <div className="timetable-wrapper">
                 <div className="timetable-grid">
                     {/* Header row */}
@@ -59,21 +76,21 @@ export default function Timetable() {
                     ))}
 
                     {/* Body rows */}
-                    {TIME_SLOTS.map(slot => {
-                        if (isBreak(slot)) {
+                    {slots.map(slot => {
+                        if (slot.type === 'Break' || slot.type === 'Lunch') {
                             return (
-                                <div key={slot} className="timetable-cell break-row">
-                                    {slot === '10:00 - 10:30' ? '☕ BREAK' : '🍽️ LUNCH BREAK'}
+                                <div key={slot.id} className="timetable-cell break-row">
+                                    {slot.type === 'Break' ? `☕ BREAK (${slot.label})` : `🍽️ LUNCH BREAK (${slot.label})`}
                                 </div>
                             );
                         }
                         return (
-                            <React.Fragment key={slot}>
-                                <div className="timetable-cell time-slot">{slot}</div>
+                            <React.Fragment key={slot.id}>
+                                <div className="timetable-cell time-slot">{slot.label}</div>
                                 {DAYS.map(day => {
-                                    const entry = getEntry(day, slot);
+                                    const entry = getEntry(day, slot.label);
                                     return (
-                                        <div key={`${day}-${slot}`} className="timetable-cell">
+                                        <div key={`${day}-${slot.id}`} className="timetable-cell">
                                             {entry ? (
                                                 <div className="timetable-entry" onClick={() => handleEdit(entry)} style={{ cursor: 'pointer' }} title="Click to edit">
                                                     <div className="subject">{entry.subject}</div>
@@ -90,6 +107,24 @@ export default function Timetable() {
             </div>
 
             {showAddModal && <TimetableEntryModal grade={selectedGrade} entry={editingEntry} onClose={handleCloseModal} />}
+
+            <style jsx>{`
+                @media print {
+                    .no-print { display: none !important; }
+                    .sidebar, .sidebar-overlay, .mobile-header { display: none !important; }
+                    .main-content { margin: 0 !important; padding: 0 !important; }
+                    .page-container { padding: 0 !important; background: white !important; }
+                    .page-header { display: none !important; }
+                    .timetable-wrapper { margin: 0 !important; border: none !important; box-shadow: none !important; }
+                    .timetable-grid { border: 1px solid #000 !important; }
+                    .timetable-cell { border: 1px solid #000 !important; color: #000 !important; }
+                    .timetable-cell.header { background: #eee !important; font-weight: bold !important; }
+                    .timetable-entry { background: none !important; border: none !important; box-shadow: none !important; padding: 2px !important; }
+                    .subject { font-weight: bold !important; color: #000 !important; }
+                    .teacher { color: #333 !important; }
+                    .break-row { background: #f9f9f9 !important; font-weight: bold !important; border: 1px solid #000 !important; }
+                }
+            `}</style>
         </div>
     );
 }

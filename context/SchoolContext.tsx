@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import type { ReactNode } from 'react';
 import {
     Student, Teacher, AttendanceRecord, Exam, StudentResult, FeePayment, TimetableEntry,
-    SchoolSettings, GradeLevel, GRADES, SUBJECTS, TERMS, PerformanceLevel, User
+    SchoolSettings, GradeLevel, GRADES, SUBJECTS, TERMS, PerformanceLevel, User,
+    FeeStructureItem, AuditLogItem, TimeSlot // New types
 } from '../types';
 import * as XLSX from 'xlsx';
 
@@ -54,6 +55,12 @@ interface SchoolContextType {
     showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
     refreshData: () => void;
     clearAllData: () => void;
+    // New Features
+    feeStructures: FeeStructureItem[];
+    auditLogs: AuditLogItem[];
+    addFeeStructure: (item: Omit<FeeStructureItem, 'id' | 'createdAt'>) => void;
+    deleteFeeStructure: (id: string) => void;
+    fetchAuditLogs: () => void;
     isSyncing: boolean;
     serverStatus: 'connected' | 'disconnected' | 'checking';
 }
@@ -64,6 +71,19 @@ function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+const defaultTimeSlots: TimeSlot[] = [
+    { id: '1', label: '8:00 - 8:40', type: 'Lesson' },
+    { id: '2', label: '8:40 - 9:20', type: 'Lesson' },
+    { id: '3', label: '9:20 - 10:00', type: 'Lesson' },
+    { id: '4', label: '10:00 - 10:30', type: 'Break' },
+    { id: '5', label: '10:30 - 11:10', type: 'Lesson' },
+    { id: '6', label: '11:10 - 11:50', type: 'Lesson' },
+    { id: '7', label: '11:50 - 12:30', type: 'Lesson' },
+    { id: '8', label: '12:30 - 1:10', type: 'Lunch' },
+    { id: '9', label: '1:10 - 1:50', type: 'Lesson' },
+    { id: '10', label: '1:50 - 2:30', type: 'Lesson' },
+];
+
 const defaultSettings: SchoolSettings = {
     schoolName: 'ELIRAMA SCHOOL',
     motto: 'Excellence in Education',
@@ -73,6 +93,7 @@ const defaultSettings: SchoolSettings = {
     currentTerm: 'Term 1',
     currentYear: 2026,
     paybillNumber: '123456',
+    timetableSlots: defaultTimeSlots
 };
 
 // Default seed data — used when localStorage is empty
@@ -161,6 +182,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         'Grade 6': 18000,
     });
     const [results, setResults] = useState<StudentResult[]>([]);
+    // New Features State
+    const [feeStructures, setFeeStructures] = useState<FeeStructureItem[]>([]);
+    const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
     const [systemUsers, setSystemUsers] = useState<User[]>([
         { id: '1', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: '2026-02-15 10:30' },
         { id: '2', name: 'Teacher User', email: 'teacher@elirama.ac.ke', role: 'Teacher', status: 'Active', lastLogin: '2026-02-16 09:15' },
@@ -744,6 +768,31 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         showToast(`Fees for ${grade} updated to KSh ${amount.toLocaleString()} `);
     };
 
+    // FEE STRUCTURE
+    const addFeeStructure = async (item: Omit<FeeStructureItem, 'id' | 'createdAt'>) => {
+        const apiRes = await tryApi(`${API_URL}/fees/structure`, { method: 'POST', body: JSON.stringify(item) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setFeeStructures(prev => [...prev, data]);
+            showToast('Fee item added');
+        }
+    };
+
+    const deleteFeeStructure = async (id: string) => {
+        await tryApi(`${API_URL}/fees/structure?id=${id}`, { method: 'DELETE' });
+        setFeeStructures(prev => prev.filter(f => f.id !== id));
+        showToast('Fee item deleted');
+    };
+
+    // AUDIT LOGS
+    const fetchAuditLogs = async () => {
+        const apiRes = await tryApi(`${API_URL}/audit`, { method: 'GET' });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setAuditLogs(data);
+        }
+    };
+
     const clearAllData = async () => {
         const token = localStorage.getItem('elirama_token');
         if (token) {
@@ -783,6 +832,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             uploadStudents, uploadTeachers, uploadExams,
             systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword,
             showToast, refreshData, clearAllData,
+            feeStructures, auditLogs, addFeeStructure, deleteFeeStructure, fetchAuditLogs,
             isSyncing, serverStatus
         }}>
             {children}
