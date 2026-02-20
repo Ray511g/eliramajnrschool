@@ -7,16 +7,21 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SchoolIcon from '@mui/icons-material/School';
 import AddTeacherModal from '../../components/modals/AddTeacherModal';
+import Pagination from '../../components/common/Pagination';
 
 export default function Teachers() {
     const { teachers, deleteTeacher } = useSchool();
     const [search, setSearch] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const filtered = teachers.filter(t =>
         `${t.firstName} ${t.lastName} ${t.subjects.join(' ')}`.toLowerCase().includes(search.toLowerCase())
     );
+
+    const paginatedTeachers = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const active = teachers.filter(t => t.status === 'Active').length;
     const totalSubjects = new Set(teachers.flatMap(t => t.subjects)).size;
@@ -93,7 +98,7 @@ export default function Teachers() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.map(teacher => (
+                            {paginatedTeachers.map(teacher => (
                                 <tr key={teacher.id}>
                                     <td>{teacher.firstName} {teacher.lastName}</td>
                                     <td>{teacher.email}</td>
@@ -117,6 +122,13 @@ export default function Teachers() {
                     </table>
                 )}
             </div>
+
+            <Pagination
+                totalItems={filtered.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+            />
 
             {showAddModal && <AddTeacherModal teacher={editingTeacher} onClose={handleCloseModal} />}
         </div>

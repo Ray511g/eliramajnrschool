@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import AddStudentModal from '../../components/modals/AddStudentModal';
+import Pagination from '../../components/common/Pagination';
 
 export default function Students() {
     const { students, deleteStudent } = useSchool();
@@ -14,12 +15,16 @@ export default function Students() {
     const [gradeFilter, setGradeFilter] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const filtered = students.filter(s => {
         const matchSearch = `${s.firstName} ${s.lastName} ${s.admissionNumber}`.toLowerCase().includes(search.toLowerCase());
         const matchGrade = !gradeFilter || s.grade === gradeFilter;
         return matchSearch && matchGrade;
     });
+
+    const paginatedStudents = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const active = students.filter(s => s.status === 'Active').length;
     const male = students.filter(s => s.gender === 'Male').length;
@@ -111,7 +116,7 @@ export default function Students() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.map(student => (
+                            {paginatedStudents.map(student => (
                                 <tr key={student.id}>
                                     <td>{student.admissionNumber}</td>
                                     <td>{student.firstName} {student.lastName}</td>
@@ -136,6 +141,13 @@ export default function Students() {
                     </table>
                 )}
             </div>
+
+            <Pagination
+                totalItems={filtered.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+            />
 
             {showAddModal && <AddStudentModal student={editingStudent} onClose={handleCloseModal} />}
         </div>

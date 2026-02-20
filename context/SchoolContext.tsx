@@ -52,6 +52,7 @@ interface SchoolContextType {
     updateSystemUser: (id: string, updates: Partial<User>) => void;
     deleteSystemUser: (id: string) => void;
     resetUserPassword: (userId: string) => void;
+    changeUserPassword: (userId: string, newPassword: string) => void;
     showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
     refreshData: () => void;
     clearAllData: () => void;
@@ -714,7 +715,21 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const resetUserPassword = (userId: string) => {
         const user = systemUsers.find(u => u.id === userId);
         if (user) {
-            showToast(`Password reset link sent to ${user.email}`);
+            showToast(`Password for ${user.username} has been reset to default`);
+        }
+    };
+
+    const changeUserPassword = async (userId: string, newPassword: string) => {
+        const apiRes = await tryApi(`${API_URL}/users/${userId}/password`, {
+            method: 'PUT',
+            body: JSON.stringify({ password: newPassword })
+        });
+
+        if (apiRes) {
+            showToast('Password changed successfully');
+        } else {
+            setSystemUsers(prev => prev.map(u => u.id === userId ? { ...u, password: newPassword, updatedAt: new Date().toLocaleDateString() } : u));
+            showToast('Password changed locally');
         }
     };
 
@@ -832,7 +847,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             addTimetableEntry, updateTimetableEntry, deleteTimetableEntry,
             updateSettings, updateGradeFees,
             uploadStudents, uploadTeachers, uploadExams,
-            systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword,
+            systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword, changeUserPassword,
             showToast, refreshData, clearAllData,
             feeStructures, auditLogs, addFeeStructure, deleteFeeStructure, fetchAuditLogs,
             isSyncing, serverStatus

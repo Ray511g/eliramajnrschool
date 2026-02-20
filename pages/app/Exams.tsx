@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ScheduleExamModal from '../../components/modals/ScheduleExamModal';
+import Pagination from '../../components/common/Pagination';
 
 export default function Exams() {
     const { exams, deleteExam } = useSchool();
@@ -14,10 +15,14 @@ export default function Exams() {
     const [termFilter, setTermFilter] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingExam, setEditingExam] = useState<Exam | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const filtered = exams.filter(e => {
         return (!gradeFilter || e.grade === gradeFilter) && (!termFilter || e.term === termFilter);
     });
+
+    const paginatedExams = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const scheduled = exams.filter(e => e.status === 'Scheduled').length;
     const completed = exams.filter(e => e.status === 'Completed').length;
@@ -119,7 +124,7 @@ export default function Exams() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.map(exam => (
+                            {paginatedExams.map(exam => (
                                 <tr key={exam.id}>
                                     <td>{exam.name}</td>
                                     <td>{exam.subject}</td>
@@ -148,6 +153,13 @@ export default function Exams() {
                     </table>
                 )}
             </div>
+
+            <Pagination
+                totalItems={filtered.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+            />
 
             {showAddModal && <ScheduleExamModal exam={editingExam} onClose={handleCloseModal} />}
         </div>

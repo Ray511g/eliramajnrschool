@@ -5,6 +5,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import SaveIcon from '@mui/icons-material/Save';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import ReportFormModal from '../../components/modals/ReportFormModal';
+import Pagination from '../../components/common/Pagination';
 
 const calculateLevel = (marks: number): PerformanceLevel => {
     if (marks >= 80) return 'EE';
@@ -29,9 +30,12 @@ export default function Results() {
     const [selectedExamId, setSelectedExamId] = useState('');
     const [localResults, setLocalResults] = useState<Record<string, { marks: number, remarks: string }>>({});
     const [viewingStudentId, setViewingStudentId] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const filteredExams = exams.filter(e => e.grade === selectedGrade);
     const gradeStudents = students.filter(s => s.grade === selectedGrade);
+    const paginatedStudents = gradeStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const selectedExam = exams.find(e => e.id === selectedExamId);
 
     const handleLoadResults = () => {
@@ -133,7 +137,7 @@ export default function Results() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {gradeStudents.map(student => {
+                                {paginatedStudents.map(student => {
                                     const res = localResults[student.id] || { marks: 0, remarks: '' };
                                     const level = calculateLevel(res.marks);
                                     return (
@@ -191,6 +195,13 @@ export default function Results() {
                             </tbody>
                         </table>
                     </div>
+
+                    <Pagination
+                        totalItems={gradeStudents.length}
+                        itemsPerPage={itemsPerPage}
+                        currentPage={currentPage}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
 

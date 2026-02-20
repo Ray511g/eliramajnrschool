@@ -14,6 +14,11 @@ export default function RecordPaymentModal({ onClose }: Props) {
         method: 'Cash' as 'Cash' | 'M-Pesa' | 'Bank Transfer' | 'Cheque',
         reference: '',
     });
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredStudents = students.filter(s =>
+        `${s.firstName} ${s.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const selectedStudent = students.find(s => s.id === form.studentId);
 
@@ -41,9 +46,17 @@ export default function RecordPaymentModal({ onClose }: Props) {
                     <div className="modal-body">
                         <div className="form-group">
                             <label>Student *</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Search by name..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                style={{ marginBottom: 8 }}
+                            />
                             <select className="form-control" required value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })}>
-                                <option value="">Select a student</option>
-                                {students.map(s => (
+                                <option value="">Select a student ({filteredStudents.length} matches)</option>
+                                {filteredStudents.map(s => (
                                     <option key={s.id} value={s.id}>
                                         {s.firstName} {s.lastName} ({s.grade}) - Balance: KSh {s.feeBalance.toLocaleString()}
                                     </option>

@@ -36,6 +36,8 @@ export interface AttendanceRecord {
     studentName: string;
     grade: string;
     date: string;
+    term?: string;
+    period?: string;
     status: 'Present' | 'Absent' | 'Late' | 'Excused';
 }
 
@@ -105,6 +107,7 @@ export interface User {
     permissions?: string[];
     status: 'Active' | 'Inactive';
     lastLogin: string;
+    password?: string;
     updatedAt?: string;
 }
 

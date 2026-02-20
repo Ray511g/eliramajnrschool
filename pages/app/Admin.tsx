@@ -39,6 +39,7 @@ export default function Admin() {
         firstName: '',
         lastName: '',
         username: '',
+        password: '',
         name: '',
         email: '',
         role: 'Staff' as const,
@@ -61,7 +62,7 @@ export default function Admin() {
             addSystemUser(submissionData);
         }
 
-        setUserForm({ firstName: '', lastName: '', username: '', name: '', email: '', role: 'Staff', permissions: [] });
+        setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Staff', permissions: [] });
         setEditingUser(null);
         setShowAddUser(false);
     };
@@ -72,6 +73,7 @@ export default function Admin() {
             firstName: u.firstName || '',
             lastName: u.lastName || '',
             username: u.username || '',
+            password: u.password || '',
             name: u.name,
             email: u.email,
             role: u.role,
@@ -451,8 +453,7 @@ export default function Admin() {
                             <button className="toolbar-btn" onClick={() => {
                                 setShowAddUser(!showAddUser);
                                 if (!showAddUser) {
-                                    setEditingUser(null);
-                                    setUserForm({ firstName: '', lastName: '', username: '', name: '', email: '', role: 'Staff', permissions: [] });
+                                    setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Staff', permissions: [] });
                                 }
                             }}>
                                 <AddIcon style={{ fontSize: 18, color: '#27ae60' }} /> Add
@@ -505,6 +506,10 @@ export default function Admin() {
                                         <label>Username</label>
                                         <input className="form-control" value={userForm.username} onChange={e => setUserForm({ ...userForm, username: e.target.value })} placeholder="ANKIROTE" />
                                     </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label>System Password</label>
+                                        <input className="form-control" type="password" value={userForm.password} onChange={e => setUserForm({ ...userForm, password: e.target.value })} placeholder="••••••••" />
+                                    </div>
                                 </div>
                                 <div className="form-row" style={{ marginTop: 15 }}>
                                     <div className="form-group" style={{ flex: 1 }}>
@@ -549,10 +554,7 @@ export default function Admin() {
                                         ))}
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20 }}>
-                                    <button className="btn-outline" onClick={() => resetUserPassword(editingUser?.id || '')} disabled={!editingUser}>
-                                        <VpnKeyIcon style={{ fontSize: 16 }} /> Reset Password
-                                    </button>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
                                     <div style={{ display: 'flex', gap: 10 }}>
                                         <button className="btn-outline" onClick={() => setShowAddUser(false)}>Cancel</button>
                                         <button className="btn-primary green" onClick={handleAddUser}>{editingUser ? 'Save Changes' : 'Create User'}</button>

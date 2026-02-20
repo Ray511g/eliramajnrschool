@@ -18,6 +18,11 @@ export default function Reports() {
         studentId: '',
         term: settings.currentTerm,
     });
+    const [studentSearch, setStudentSearch] = useState('');
+
+    const filteredStudents = students.filter(s =>
+        `${s.firstName} ${s.lastName} ${s.admissionNumber}`.toLowerCase().includes(studentSearch.toLowerCase())
+    );
 
     const exportCSV = (data: Record<string, any>[], filename: string) => {
         if (data.length === 0) return;
@@ -377,6 +382,14 @@ export default function Reports() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 20, alignItems: 'end' }}>
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label htmlFor="student-select">Select Student</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Search student..."
+                                    value={studentSearch}
+                                    onChange={e => setStudentSearch(e.target.value)}
+                                    style={{ marginBottom: 8 }}
+                                />
                                 <select
                                     id="student-select"
                                     title="Student selection"
@@ -384,8 +397,8 @@ export default function Reports() {
                                     value={reportFilter.studentId}
                                     onChange={(e) => setReportFilter({ ...reportFilter, studentId: e.target.value })}
                                 >
-                                    <option value="">Choose a student...</option>
-                                    {students.map(s => (
+                                    <option value="">Choose a student ({filteredStudents.length} matches)</option>
+                                    {filteredStudents.map(s => (
                                         <option key={s.id} value={s.id}>{s.firstName} {s.lastName} ({s.admissionNumber})</option>
                                     ))}
                                 </select>
