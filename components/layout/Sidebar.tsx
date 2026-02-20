@@ -21,15 +21,15 @@ import CloseIcon from '@mui/icons-material/Close';
 
 const navItems = [
     { path: '/', icon: <DashboardIcon />, label: 'Dashboard' },
-    { path: '/students', icon: <PeopleIcon />, label: 'Students' },
-    { path: '/teachers', icon: <SchoolIcon />, label: 'Teachers' },
+    { path: '/students', icon: <PeopleIcon />, label: 'Students', permission: 'MANAGE_STUDENTS' },
+    { path: '/teachers', icon: <SchoolIcon />, label: 'Teachers', permission: 'MANAGE_TEACHERS' },
     { path: '/attendance', icon: <EventNoteIcon />, label: 'Attendance' },
     { path: '/grades', icon: <GradeIcon />, label: 'Grades' },
-    { path: '/exams', icon: <AssignmentIcon />, label: 'Exams' },
+    { path: '/exams', icon: <AssignmentIcon />, label: 'Exams', permission: 'MANAGE_EXAMS' },
     { path: '/timetable', icon: <ScheduleIcon />, label: 'Timetable' },
-    { path: '/fees', icon: <PaymentIcon />, label: 'Fees' },
+    { path: '/fees', icon: <PaymentIcon />, label: 'Fees', permission: 'MANAGE_FEES' },
     { path: '/results', icon: <AssessmentIcon />, label: 'Results' },
-    { path: '/reports', icon: <DescriptionIcon />, label: 'Reports' },
+    { path: '/reports', icon: <DescriptionIcon />, label: 'Reports', permission: 'VIEW_REPORTS' },
     { path: '/communication', icon: <EmailIcon />, label: 'Communication' },
     { path: '/admin', icon: <SettingsIcon />, label: 'Admin' },
 ];
@@ -54,17 +54,21 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         return router.pathname.startsWith(path);
     };
 
-    // Filter nav items based on RBAC
+    // Filter nav items based on RBAC (Role + Permissions)
     const filteredNavItems = navItems.filter(item => {
-        if (user?.role === 'Super Admin') return true;
-        if (user?.role === 'Admin') return true;
+        // Super Admin & Admin see everything
+        if (user?.role === 'Super Admin' || user?.role === 'Admin') return true;
 
-        // Teachers only see specific items
+        // Check explicit permissions if set
+        if (item.permission && user?.permissions?.includes(item.permission)) {
+            return true;
+        }
+
+        // Role-based defaults (if no explicit permission check required or if permission check failed)
         if (user?.role === 'Teacher') {
             return ['/', '/students', '/attendance', '/grades', '/exams', '/timetable', '/results', '/reports'].includes(item.path);
         }
 
-        // Staff (e.g. Bursar/Secretary) see specific items
         if (user?.role === 'Staff') {
             return ['/', '/students', '/fees', '/communication'].includes(item.path);
         }

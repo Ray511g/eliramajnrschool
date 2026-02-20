@@ -47,8 +47,8 @@ export default function Dashboard() {
         <div className="page-container">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="school-title">{settings.schoolName}</h1>
-                    <p>School Management Dashboard</p>
+                    <h1>Dashboard Overview</h1>
+                    <p>Welcome back! Here's what's happening today.</p>
                 </div>
                 <div className="date-display">
                     <p className="date-label">Today's Date</p>

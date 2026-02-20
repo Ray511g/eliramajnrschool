@@ -98,6 +98,7 @@ export interface User {
     name: string;
     email: string;
     role: 'Super Admin' | 'Admin' | 'Teacher' | 'Staff';
+    permissions?: string[];
     status: 'Active' | 'Inactive';
     lastLogin: string;
 }

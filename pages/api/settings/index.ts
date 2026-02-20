@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
 import { requireAuth, corsHeaders } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
+import { logAction } from '../../../lib/audit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     corsHeaders(res);
@@ -90,6 +91,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 include: { timeSlots: { orderBy: { order: 'asc' } } }
             });
         }
+        await logAction(
+            user.id,
+            user.name,
+            'UPDATE_SETTINGS',
+            'Updated school configuration settings',
+            (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
+        );
+
         await touchSync();
         return res.status(200).json(settings);
     }

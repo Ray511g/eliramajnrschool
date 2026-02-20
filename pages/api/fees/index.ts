@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
 import { requireAuth, corsHeaders } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
+import { logAction } from '../../../lib/audit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     corsHeaders(res);
@@ -33,6 +34,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 data: { paidFees: newPaid, feeBalance: student.totalFees - newPaid },
             });
         }
+
+        await logAction(
+            user.id,
+            user.name,
+            'RECORD_PAYMENT',
+            `Recorded payment of KSh ${amount.toLocaleString()} for student ${studentName} (${receiptNumber})`,
+            (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
+        );
 
         await touchSync();
         return res.status(201).json(payment);

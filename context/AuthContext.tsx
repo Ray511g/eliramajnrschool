@@ -6,6 +6,7 @@ interface AuthUser {
     name: string;
     email: string;
     role: 'Super Admin' | 'Admin' | 'Teacher' | 'Staff';
+    permissions?: string[];
 }
 
 interface AuthContextType {
