@@ -89,8 +89,9 @@ export interface TimetableEntry {
 
 export interface TimeSlot {
     id: string;
-    label: string;
-    type: 'Lesson' | 'Break' | 'Lunch';
+    label: string; // The time range, e.g. "8:00 - 8:40"
+    name?: string;  // Optional custom name, e.g. "Tea Break", "Assembly"
+    type: 'Lesson' | 'Break' | 'Lunch' | 'Other';
 }
 
 export interface User {

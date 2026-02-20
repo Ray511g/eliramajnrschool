@@ -77,10 +77,12 @@ export default function Timetable() {
 
                     {/* Body rows */}
                     {slots.map(slot => {
-                        if (slot.type === 'Break' || slot.type === 'Lunch') {
+                        if (slot.type === 'Break' || slot.type === 'Lunch' || slot.type === 'Other') {
+                            const icon = slot.type === 'Break' ? '☕' : (slot.type === 'Lunch' ? '🍽️' : '🔔');
+                            const displayName = slot.name || (slot.type.toUpperCase());
                             return (
                                 <div key={slot.id} className="timetable-cell break-row">
-                                    {slot.type === 'Break' ? `☕ BREAK (${slot.label})` : `🍽️ LUNCH BREAK (${slot.label})`}
+                                    {icon} {displayName} ({slot.label})
                                 </div>
                             );
                         }

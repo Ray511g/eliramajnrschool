@@ -269,39 +269,61 @@ export default function Admin() {
                                     </div>
 
                                     <div style={{ marginTop: 20, borderTop: '1px solid var(--border-color)', paddingTop: 20 }}>
-                                        <h4 style={{ marginBottom: 15 }}>Timetable Slots</h4>
+                                        <h4 style={{ marginBottom: 15 }}>Timetable Slots & Breaks</h4>
+                                        <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 15 }}>
+                                            Configure the time intervals for your school. You can define lessons, breaks, lunch times, or other school activities.
+                                        </p>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                             {(form.timetableSlots || []).map((slot: any, idx: number) => (
-                                                <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                                    <input
-                                                        className="form-control"
-                                                        style={{ flex: 2 }}
-                                                        value={slot.label}
-                                                        placeholder="8:00 - 8:40"
-                                                        onChange={e => {
-                                                            const newSlots = [...(form.timetableSlots || [])];
-                                                            newSlots[idx].label = e.target.value;
-                                                            setForm({ ...form, timetableSlots: newSlots });
-                                                        }}
-                                                    />
-                                                    <select
-                                                        title="Select Slot Type"
-                                                        className="form-control"
-                                                        style={{ flex: 1.5 }}
-                                                        value={slot.type}
-                                                        onChange={e => {
-                                                            const newSlots = [...(form.timetableSlots || [])];
-                                                            newSlots[idx].type = e.target.value as any;
-                                                            setForm({ ...form, timetableSlots: newSlots });
-                                                        }}
-                                                    >
-                                                        <option value="Lesson">Lesson</option>
-                                                        <option value="Break">Break</option>
-                                                        <option value="Lunch">Lunch</option>
-                                                    </select>
+                                                <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'var(--bg-card)', padding: 10, borderRadius: 8 }}>
+                                                    <div style={{ flex: 1.5 }}>
+                                                        <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Time Interval</label>
+                                                        <input
+                                                            className="form-control"
+                                                            value={slot.label}
+                                                            placeholder="e.g. 8:00 - 8:40"
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timetableSlots || [])];
+                                                                newSlots[idx].label = e.target.value;
+                                                                setForm({ ...form, timetableSlots: newSlots });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div style={{ flex: 1.5 }}>
+                                                        <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Label/Name (Optional)</label>
+                                                        <input
+                                                            className="form-control"
+                                                            value={slot.name || ''}
+                                                            placeholder="e.g. Mathematics"
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timetableSlots || [])];
+                                                                newSlots[idx].name = e.target.value;
+                                                                setForm({ ...form, timetableSlots: newSlots });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div style={{ flex: 1.2 }}>
+                                                        <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Slot Type</label>
+                                                        <select
+                                                            title="Select Slot Type"
+                                                            className="form-control"
+                                                            value={slot.type}
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timetableSlots || [])];
+                                                                newSlots[idx].type = e.target.value as any;
+                                                                setForm({ ...form, timetableSlots: newSlots });
+                                                            }}
+                                                        >
+                                                            <option value="Lesson">Lesson</option>
+                                                            <option value="Break">Break</option>
+                                                            <option value="Lunch">Lunch</option>
+                                                            <option value="Other">Other (e.g. Assembly)</option>
+                                                        </select>
+                                                    </div>
                                                     <button
                                                         className="table-action-btn danger"
                                                         title="Remove Slot"
+                                                        style={{ marginTop: 18 }}
                                                         onClick={() => {
                                                             const newSlots = (form.timetableSlots || []).filter((_, i) => i !== idx);
                                                             setForm({ ...form, timetableSlots: newSlots });
@@ -319,7 +341,7 @@ export default function Admin() {
                                                     setForm({ ...form, timetableSlots: newSlots });
                                                 }}
                                             >
-                                                + Add Time Slot
+                                                + Add New Time Slot
                                             </button>
                                         </div>
                                     </div>
