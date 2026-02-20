@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const user = await prisma.user.findUnique({
                 where: { id: id as string },
-                select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true }
+                select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true, permissions: true }
             });
             if (!user) return res.status(404).json({ error: 'User not found' });
             return res.status(200).json(user);
@@ -29,11 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'PUT') {
         try {
-            const { name, email, role } = req.body;
+            const { name, email, role, permissions } = req.body;
             const user = await prisma.user.update({
                 where: { id: id as string },
-                data: { name, email, role },
-                select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true }
+                data: { name, email, role, permissions },
+                select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true, permissions: true }
             });
             await touchSync();
             return res.status(200).json(user);
@@ -60,5 +60,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     res.setHeader('Allow', 'GET, PUT, DELETE');
-    res.status(405).json({ error: 'Method not allowed', receivedMethod: req.method, query: req.query });
+    res.status(405).json({ error: 'Method not allowed' });
 }

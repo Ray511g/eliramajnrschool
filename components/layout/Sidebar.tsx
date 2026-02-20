@@ -19,19 +19,31 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 
+export const PERMISSIONS = [
+    { code: 'MANAGE_STUDENTS', label: 'Students Module' },
+    { code: 'MANAGE_TEACHERS', label: 'Teachers Module' },
+    { code: 'MANAGE_FEES', label: 'Finance/Fees' },
+    { code: 'MANAGE_ATTENDANCE', label: 'Attendance' },
+    { code: 'MANAGE_EXAMS', label: 'Exams/Grades' },
+    { code: 'MANAGE_REPORTS', label: 'Reports' },
+    { code: 'MANAGE_COMMUNICATION', label: 'Communication' },
+    { code: 'MANAGE_TIMETABLE', label: 'Timetable' },
+    { code: 'MANAGE_ADMIN', label: 'Admin Settings' },
+];
+
 const navItems = [
     { path: '/', icon: <DashboardIcon />, label: 'Dashboard' },
     { path: '/students', icon: <PeopleIcon />, label: 'Students', permission: 'MANAGE_STUDENTS' },
     { path: '/teachers', icon: <SchoolIcon />, label: 'Teachers', permission: 'MANAGE_TEACHERS' },
-    { path: '/attendance', icon: <EventNoteIcon />, label: 'Attendance' },
-    { path: '/grades', icon: <GradeIcon />, label: 'Grades' },
+    { path: '/attendance', icon: <EventNoteIcon />, label: 'Attendance', permission: 'MANAGE_ATTENDANCE' },
+    { path: '/grades', icon: <GradeIcon />, label: 'Grades', permission: 'MANAGE_EXAMS' },
     { path: '/exams', icon: <AssignmentIcon />, label: 'Exams', permission: 'MANAGE_EXAMS' },
-    { path: '/timetable', icon: <ScheduleIcon />, label: 'Timetable' },
+    { path: '/timetable', icon: <ScheduleIcon />, label: 'Timetable', permission: 'MANAGE_TIMETABLE' },
     { path: '/fees', icon: <PaymentIcon />, label: 'Fees', permission: 'MANAGE_FEES' },
-    { path: '/results', icon: <AssessmentIcon />, label: 'Results' },
-    { path: '/reports', icon: <DescriptionIcon />, label: 'Reports', permission: 'VIEW_REPORTS' },
-    { path: '/communication', icon: <EmailIcon />, label: 'Communication' },
-    { path: '/admin', icon: <SettingsIcon />, label: 'Admin' },
+    { path: '/results', icon: <AssessmentIcon />, label: 'Results', permission: 'MANAGE_REPORTS' },
+    { path: '/reports', icon: <DescriptionIcon />, label: 'Reports', permission: 'MANAGE_REPORTS' },
+    { path: '/communication', icon: <EmailIcon />, label: 'Communication', permission: 'MANAGE_COMMUNICATION' },
+    { path: '/admin', icon: <SettingsIcon />, label: 'Admin', permission: 'MANAGE_ADMIN' },
 ];
 
 interface SidebarProps {
@@ -54,23 +66,29 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         return router.pathname.startsWith(path);
     };
 
-    // Filter nav items based on RBAC (Role + Permissions)
+    // Robust RBAC filtering
     const filteredNavItems = navItems.filter(item => {
-        // Super Admin & Admin see everything
-        if (user?.role === 'Super Admin' || user?.role === 'Admin') return true;
+        // Dashboard is always visible to everyone
+        if (item.path === '/') return true;
 
-        // Check explicit permissions if set
-        if (item.permission && user?.permissions?.includes(item.permission)) {
-            return true;
+        const role = user?.role;
+        if (!role) return false;
+
+        const upperRole = role.toUpperCase();
+
+        // Force full access for any Admin role (case-insensitive)
+        if (upperRole.includes('ADMIN')) return true;
+
+        // Specific rights/permissions
+        if (item.permission && user?.permissions?.includes(item.permission)) return true;
+
+        // Role-based defaults (if no specific permissions defined)
+        if (upperRole === 'TEACHER') {
+            return ['/students', '/attendance', '/grades', '/exams', '/timetable', '/results', '/reports'].includes(item.path);
         }
 
-        // Role-based defaults (if no explicit permission check required or if permission check failed)
-        if (user?.role === 'Teacher') {
-            return ['/', '/students', '/attendance', '/grades', '/exams', '/timetable', '/results', '/reports'].includes(item.path);
-        }
-
-        if (user?.role === 'Staff') {
-            return ['/', '/students', '/fees', '/communication'].includes(item.path);
+        if (upperRole === 'STAFF') {
+            return ['/students', '/fees', '/communication'].includes(item.path);
         }
 
         return false;
@@ -78,7 +96,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
     return (
         <>
-            <button className="hamburger-btn" onClick={() => setIsOpen(!isOpen)}>
+            <button className="hamburger-btn" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle Sidebar">
                 {isOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
 
@@ -87,12 +105,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
-                        {settings.logo ? (
+                        {settings?.logo ? (
                             <img src={settings.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
                         ) : 'E'}
                     </div>
                     <div className="sidebar-brand">
-                        <h2>{settings.schoolName || 'ELIRAMA'}</h2>
+                        <h2>{settings?.schoolName || 'ELIRAMA'}</h2>
                         <p>School Management</p>
                     </div>
                 </div>
@@ -106,14 +124,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             onClick={() => setIsOpen(false)}
                         >
                             <span className="nav-icon">{item.icon}</span>
-                            {item.label}
+                            <span>{item.label}</span>
                         </Link>
                     ))}
                 </nav>
 
                 <div className="logout-section">
                     <div style={{ padding: '0 24px 10px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>v1.3.0 (RBAC)</span>
+                        <span>v1.3.2 (RBAC+)</span>
                         <span style={{
                             width: '8px',
                             height: '8px',

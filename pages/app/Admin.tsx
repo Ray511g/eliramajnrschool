@@ -9,6 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import * as XLSX from 'xlsx';
+import { PERMISSIONS } from '../layout/Sidebar';
 
 export default function Admin() {
     const {
@@ -419,25 +420,39 @@ export default function Admin() {
                                         </select>
                                     </div>
                                 </div>
-                                <div className="form-group" style={{ marginTop: 10 }}>
-                                    <label>Permissions (Rights)</label>
-                                    <div style={{ display: 'flex', gap: 15, flexWrap: 'wrap' }}>
-                                        {['MANAGE_STUDENTS', 'MANAGE_TEACHERS', 'MANAGE_FEES', 'VIEW_REPORTS', 'MANAGE_EXAMS'].map(perm => (
-                                            <label key={perm} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, cursor: 'pointer' }}>
+                                <div className="form-group" style={{ marginTop: 15 }}>
+                                    <label style={{ fontWeight: 600, display: 'block', marginBottom: 10 }}>Permissions (Assign Access Rights)</label>
+                                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                        {PERMISSIONS.map(perm => (
+                                            <label key={perm.code} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 8,
+                                                fontSize: 13,
+                                                cursor: 'pointer',
+                                                padding: '8px 16px',
+                                                background: userForm.permissions.includes(perm.code) ? 'rgba(52, 152, 219, 0.1)' : 'var(--bg-body)',
+                                                borderRadius: '30px',
+                                                border: userForm.permissions.includes(perm.code) ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
+                                                transition: 'all 0.2s'
+                                            }}>
                                                 <input
                                                     type="checkbox"
-                                                    checked={userForm.permissions.includes(perm)}
+                                                    checked={userForm.permissions.includes(perm.code)}
                                                     onChange={e => {
-                                                        if (e.target.checked) setUserForm({ ...userForm, permissions: [...userForm.permissions, perm] });
-                                                        else setUserForm({ ...userForm, permissions: userForm.permissions.filter(p => p !== perm) });
+                                                        if (e.target.checked) setUserForm({ ...userForm, permissions: [...userForm.permissions, perm.code] });
+                                                        else setUserForm({ ...userForm, permissions: userForm.permissions.filter(p => p !== perm.code) });
                                                     }}
                                                 />
-                                                {perm.replace('_', ' ')}
+                                                {perm.label}
                                             </label>
                                         ))}
                                     </div>
+                                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 10 }}>
+                                        * Note: Admin roles always have full system access regardless of assigned rights.
+                                    </p>
                                 </div>
-                                <div style={{ textAlign: 'right', marginTop: 15 }}>
+                                <div style={{ textAlign: 'right', marginTop: 20 }}>
                                     <button className="btn-primary green" onClick={handleAddUser}>{editingUser ? 'Update User' : 'Create User'}</button>
                                 </div>
                             </div>
@@ -450,8 +465,8 @@ export default function Admin() {
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Role</th>
+                                        <th>Rights</th>
                                         <th>Status</th>
-                                        <th>Last Login</th>
                                         <th style={{ textAlign: 'right' }}>Actions</th>
                                     </tr>
                                 </thead>
@@ -461,8 +476,10 @@ export default function Admin() {
                                             <td style={{ fontWeight: 500 }}>{u.name}</td>
                                             <td>{u.email}</td>
                                             <td><span className={`badge ${u.role === 'Super Admin' ? 'purple' : 'blue'}`}>{u.role}</span></td>
+                                            <td style={{ fontSize: 11, maxWidth: 200, color: 'var(--text-secondary)' }}>
+                                                {u.role.includes('Admin') ? 'Full Access' : (u.permissions?.length ? u.permissions.map(p => p.split('_')[1]).join(', ') : 'Default')}
+                                            </td>
                                             <td><span className="badge green">{u.status}</span></td>
-                                            <td style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{u.lastLogin}</td>
                                             <td style={{ textAlign: 'right' }}>
                                                 <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
                                                     <button className="btn-outline" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => resetUserPassword(u.id)} title="Reset Password">Reset</button>

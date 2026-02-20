@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'GET') {
         const users = await prisma.user.findMany({
-            select: { id: true, name: true, email: true, role: true, createdAt: true }
+            select: { id: true, name: true, email: true, role: true, createdAt: true, permissions: true }
         });
         return res.status(200).json(users);
     }
@@ -27,10 +27,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         try {
             const user = await prisma.user.create({
-                data: { name, email, password: hashedPassword, role: role.toLowerCase() }
+                data: { name, email, password: hashedPassword, role, permissions: req.body.permissions || [] }
             });
             await touchSync();
-            return res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role });
+            return res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions });
         } catch (error) {
             return res.status(400).json({ error: 'User already exists' });
         }
