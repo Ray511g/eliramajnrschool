@@ -22,7 +22,7 @@ import CloseIcon from '@mui/icons-material/Close';
 export const PERMISSIONS = [
     { code: 'MANAGE_STUDENTS', label: 'Students Module' },
     { code: 'MANAGE_TEACHERS', label: 'Teachers Module' },
-    { code: 'MANAGE_FEES', label: 'Finance/Fees' },
+    { code: 'MANAGE_FINANCE', label: 'Finance & Fees' },
     { code: 'MANAGE_ATTENDANCE', label: 'Attendance' },
     { code: 'MANAGE_EXAMS', label: 'Exams/Grades' },
     { code: 'MANAGE_REPORTS', label: 'Reports' },
@@ -39,7 +39,7 @@ const navItems = [
     { path: '/grades', icon: <GradeIcon />, label: 'Grades', permission: 'MANAGE_EXAMS' },
     { path: '/exams', icon: <AssignmentIcon />, label: 'Exams', permission: 'MANAGE_EXAMS' },
     { path: '/timetable', icon: <ScheduleIcon />, label: 'Timetable', permission: 'MANAGE_TIMETABLE' },
-    { path: '/fees', icon: <PaymentIcon />, label: 'Fees', permission: 'MANAGE_FEES' },
+    { path: '/fees', icon: <PaymentIcon />, label: 'Finance', permission: 'MANAGE_FINANCE' },
     { path: '/results', icon: <AssessmentIcon />, label: 'Results', permission: 'MANAGE_REPORTS' },
     { path: '/reports', icon: <DescriptionIcon />, label: 'Reports', permission: 'MANAGE_REPORTS' },
     { path: '/communication', icon: <EmailIcon />, label: 'Communication', permission: 'MANAGE_COMMUNICATION' },

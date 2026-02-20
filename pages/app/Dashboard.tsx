@@ -76,22 +76,13 @@ export default function Dashboard() {
                     <div className="stat-card-sub">{assignedClasses} classes assigned</div>
                 </div>
 
-                <div className="stat-card dash-purple">
+                <div className="stat-card dash-purple" style={{ gridColumn: 'span 2' }}>
                     <div className="stat-card-header">
                         <span className="stat-card-label">Today's Attendance</span>
                         <CheckCircleIcon className="stat-card-icon" />
                     </div>
                     <div className="stat-card-value">{attendanceRate}%</div>
                     <div className="stat-card-sub">{presentCount} present, {absentCount} absent</div>
-                </div>
-
-                <div className="stat-card dash-red">
-                    <div className="stat-card-header">
-                        <span className="stat-card-label">Fee Collection</span>
-                        <PaymentIcon className="stat-card-icon" />
-                    </div>
-                    <div className="stat-card-value">{collectionRate}%</div>
-                    <div className="stat-card-sub">KSh {collectedFees.toLocaleString()} / {totalFees.toLocaleString()}</div>
                 </div>
             </div>
 
@@ -119,26 +110,6 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                <div className="dashboard-card">
-                    <div className="dashboard-card-title">
-                        <TrendingUpIcon style={{ fontSize: 20 }} /> Fee Collection Status
-                    </div>
-                    <div className="fee-status-row total">
-                        <span>Total Fees</span>
-                        <span>KSh {totalFees.toLocaleString()}</span>
-                    </div>
-                    <div className="fee-status-row">
-                        <span style={{ color: 'var(--accent-green)' }}>Collected</span>
-                        <span style={{ color: 'var(--accent-green)' }}>KSh {collectedFees.toLocaleString()}</span>
-                    </div>
-                    <div className="fee-status-row">
-                        <span style={{ color: 'var(--accent-red)' }}>Pending</span>
-                        <span style={{ color: 'var(--accent-red)' }}>KSh {pendingFees.toLocaleString()}</span>
-                    </div>
-                    <div className="fee-progress">
-                        <div className="fee-progress-bar" style={{ width: `${collectionRate}%` }} />
-                    </div>
-                </div>
             </div>
 
             {/* Quick Actions */}
@@ -158,8 +129,8 @@ export default function Dashboard() {
                 </div>
                 <div className="quick-action-card" onClick={() => router.push('/fees')}>
                     <div className="qa-icon orange"><AttachMoneyIcon /></div>
-                    <h3>Process Fee Payment</h3>
-                    <p>Record student payment</p>
+                    <h3>Finance & Payments</h3>
+                    <p>Manage fees and school accounts</p>
                 </div>
             </div>
 

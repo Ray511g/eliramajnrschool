@@ -17,12 +17,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="app-layout">
             <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
             <main className="main-content">
-                <header className="mobile-header">
-                    <div className="mobile-brand">
-                        {settings.logo && <img src={settings.logo} alt="Logo" style={{ height: 32, marginRight: 10, borderRadius: '50%' }} />}
-                        <h1>{settings.schoolName || 'Elirama'}</h1>
-                    </div>
-                </header>
+                {/* Header removed as it is redundant with sidebar branding */}
                 {children}
             </main>
 
