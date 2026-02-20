@@ -293,6 +293,15 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                     ...(options.headers || {}),
                 },
             });
+
+            if (res.status === 401) {
+                // Token is invalid or expired
+                localStorage.removeItem('elirama_token');
+                setServerStatus('disconnected');
+                window.location.href = '/login'; // Force re-login
+                return null;
+            }
+
             if (res.ok) return res;
             return null;
         } catch {
