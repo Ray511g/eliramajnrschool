@@ -20,8 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const { grade } = req.query;
 
             // 1. Get relevant fee structures
-            const query = grade ? { where: { grade: grade as string } } : {};
-            const structures = await prisma.feeStructure.findMany(query);
+            const structures = await prisma.feeStructure.findMany({
+                where: grade ? { grade: grade as string } : {}
+            });
 
             // 2. Group totals by grade
             const gradeTotals = structures.reduce((acc: any, item) => {
