@@ -11,16 +11,19 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("teacher") // admin, teacher, staff
-  status    String   @default("Active")
-  lastLogin String?
+  id          String   @id @default(cuid())
+  firstName   String?
+  lastName    String?
+  name        String
+  email       String   @unique
+  username    String   @unique @default(cuid())
+  password    String
+  role        String   @default("teacher") // admin, teacher, staff
+  status      String   @default("Active")
+  lastLogin   String?
   permissions String[] // Array of permission codes e.g. ['MANAGE_FEES', 'VIEW_REPORTS']
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Student {

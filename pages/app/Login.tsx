@@ -22,7 +22,7 @@ export default function Login() {
             if (success) {
                 router.push('/');
             } else {
-                setError('Invalid email or password. Try admin@elirama.ac.ke / admin123');
+                setError('Invalid credentials. Please check your email/username and password.');
             }
         } finally {
             setLoading(false);
@@ -53,11 +53,11 @@ export default function Login() {
 
                 <form className="login-form" onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Email Address</label>
+                        <label>Email or Username</label>
                         <input
-                            type="email"
+                            type="text"
                             className="form-control"
-                            placeholder="Enter your email"
+                            placeholder="Enter your email or username"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required

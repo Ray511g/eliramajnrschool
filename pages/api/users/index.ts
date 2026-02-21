@@ -22,19 +22,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, firstName, lastName, username, permissions } = req.body;
         const hashedPassword = await bcrypt.hash(password || 'elirama123', 10);
 
         try {
             const user = await prisma.user.create({
-                data: { name, email, password: hashedPassword, role, permissions: req.body.permissions || [] }
+                data: {
+                    name,
+                    email,
+                    password: hashedPassword,
+                    role,
+                    firstName: firstName || '',
+                    lastName: lastName || '',
+                    username: username || email.split('@')[0],
+                    permissions: permissions || []
+                }
             });
             await touchSync();
             return res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions });
-        } catch (error) {
-            return res.status(400).json({ error: 'User already exists' });
+        } catch (error: any) {
+            if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+                return res.status(400).json({ error: 'User with this email already exists' });
+            }
+            if (error.code === 'P2002' && error.meta?.target?.includes('username')) {
+                return res.status(400).json({ error: 'User with this username already exists' });
+            }
+            console.error("Error creating user:", error);
+            return res.status(500).json({ error: 'Failed to create user' });
         }
     }
-
-    res.status(405).json({ error: 'Method not allowed' });
 }

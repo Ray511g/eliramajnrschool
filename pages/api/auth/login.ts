@@ -9,11 +9,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+    const loginIdentifier = email; // email field from body now used for both email and username
+    if (!loginIdentifier || !password) return res.status(400).json({ error: 'Email/Username and password required' });
 
     try {
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: loginIdentifier },
+                    { username: loginIdentifier }
+                ]
+            }
+        });
         if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
         const valid = await bcrypt.compare(password, user.password);
