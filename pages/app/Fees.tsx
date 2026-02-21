@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useSchool } from '../../context/SchoolContext';
+import { FeePayment } from '../../types';
 import AddIcon from '@mui/icons-material/Add';
 import PaymentIcon from '@mui/icons-material/Payment';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -364,69 +365,71 @@ export default function Fees() {
 
             {/* Fee Balance by Student */}
             {students.length > 0 && (
-                <div className="toolbar" style={{ marginTop: 20 }}>
-                <div className="search-box">
-                    <input
-                        type="text"
-                        placeholder="Search student or receipt..."
-                        className="form-control"
-                        value={searchQuery}
-                        onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                    />
-                </div>
-            </div>
+                <>
+                    <div className="toolbar" style={{ marginTop: 20 }}>
+                        <div className="search-box">
+                            <input
+                                type="text"
+                                placeholder="Search student or receipt..."
+                                className="form-control"
+                                value={searchQuery}
+                                onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                            />
+                        </div>
+                    </div>
 
-            <div className="section" style={{ marginTop: 24 }}>
-                <div className="section-header">
-                    <h3><PaymentIcon style={{ fontSize: 18, marginRight: 8, color: 'var(--accent-blue)' }} />Recent Payments</h3>
-                </div>
-                <div className="table-wrapper">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Receipt No</th>
-                                <th>Student</th>
-                                <th>Term</th>
-                                <th>Amount</th>
-                                <th>Method</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedPayments.length === 0 ? (
-                                <tr>
-                                    <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>No payments found matching your search.</td>
-                                </tr>
-                            ) : (
-                                paginatedPayments.map(payment => (
-                                    <tr key={payment.id}>
-                                        <td>{new Date(payment.date).toLocaleDateString()}</td>
-                                        <td style={{ fontWeight: 600 }}>{payment.receiptNumber}</td>
-                                        <td>{payment.studentName}</td>
-                                        <td>{payment.term}</td>
-                                        <td style={{ fontWeight: 600 }}>KSh {payment.amount.toLocaleString()}</td>
-                                        <td><span className="badge blue">{payment.method}</span></td>
-                                        <td>
-                                            <div className="actions">
-                                                <button className="action-btn" title="View/Print Receipt" onClick={() => setSelectedReceipt(payment)}><ReceiptIcon style={{ fontSize: 16 }} /></button>
-                                                <button className="action-btn delete" title="Delete Entry" onClick={() => { if (window.confirm('Are you sure you want to delete this payment?')) deletePayment(payment.id) }}><DeleteIcon style={{ fontSize: 16 }} /></button>
-                                            </div>
-                                        </td>
+                    <div className="section" style={{ marginTop: 24 }}>
+                        <div className="section-header">
+                            <h3><PaymentIcon style={{ fontSize: 18, marginRight: 8, color: 'var(--accent-blue)' }} />Recent Payments</h3>
+                        </div>
+                        <div className="table-wrapper">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Receipt No</th>
+                                        <th>Student</th>
+                                        <th>Term</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody>
+                                    {paginatedPayments.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>No payments found matching your search.</td>
+                                        </tr>
+                                    ) : (
+                                        paginatedPayments.map(payment => (
+                                            <tr key={payment.id}>
+                                                <td>{new Date(payment.date).toLocaleDateString()}</td>
+                                                <td style={{ fontWeight: 600 }}>{payment.receiptNumber}</td>
+                                                <td>{payment.studentName}</td>
+                                                <td>{payment.term}</td>
+                                                <td style={{ fontWeight: 600 }}>KSh {payment.amount.toLocaleString()}</td>
+                                                <td><span className="badge blue">{payment.method}</span></td>
+                                                <td>
+                                                    <div className="actions">
+                                                        <button className="action-btn" title="View/Print Receipt" onClick={() => setSelectedReceipt(payment)}><ReceiptIcon style={{ fontSize: 16 }} /></button>
+                                                        <button className="action-btn delete" title="Delete Entry" onClick={() => { if (window.confirm('Are you sure you want to delete this payment?')) deletePayment(payment.id) }}><DeleteIcon style={{ fontSize: 16 }} /></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
 
-                <Pagination
-                    totalItems={filteredPayments.length}
-                    itemsPerPage={itemsPerPage}
-                    currentPage={currentPage}
-                    onPageChange={setCurrentPage}
-                />
-            </div>
+                        <Pagination
+                            totalItems={filteredPayments.length}
+                            itemsPerPage={itemsPerPage}
+                            currentPage={currentPage}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                </>
             )}
 
             {/* Student Fee Balances Table (moved outside dashboard-grid) */}

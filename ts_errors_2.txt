@@ -1,0 +1,1 @@
+pages/app/Fees.tsx(19,60): error TS2304: Cannot find name 'FeePayment'.
