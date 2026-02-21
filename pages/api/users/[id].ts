@@ -19,10 +19,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const user = await prisma.user.findUnique({
                 where: { id: id as string },
-                select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true, permissions: true }
+                include: { role: true }
             });
             if (!user) return res.status(404).json({ error: 'User not found' });
-            return res.status(200).json(user);
+            return res.status(200).json({
+                ...user,
+                role: user.role?.name || 'Teacher',
+                permissions: user.role?.permissions || {}
+            });
         } catch (error) {
             return res.status(500).json({ error: 'Failed to fetch user' });
         }
@@ -30,8 +34,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'PUT') {
         try {
-            const { name, email, role, permissions, password } = req.body;
-            const updateData: any = { name, email, role, permissions };
+            const { name, email, roleId, permissions, password } = req.body;
+            const updateData: any = { name, email, roleId, permissions };
 
             if (password) {
                 updateData.password = await bcrypt.hash(password, 10);
@@ -40,8 +44,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const user = await prisma.user.update({
                 where: { id: id as string },
                 data: updateData,
-                select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true, permissions: true }
+                include: { role: true }
             });
+
+            const mappedUser = {
+                ...user,
+                role: user.role?.name || 'Teacher',
+                permissions: user.role?.permissions || {}
+            };
 
             // Audit Log
             await prisma.auditLog.create({
@@ -54,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             });
 
             await touchSync();
-            return res.status(200).json(user);
+            return res.status(200).json(mappedUser);
         } catch (error: any) {
             if (error?.code === 'P2025') {
                 return res.status(404).json({ error: 'User not found' });

@@ -202,9 +202,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const [roles, setRoles] = useState<Role[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
     const [systemUsers, setSystemUsers] = useState<User[]>([
-        { id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', permissions: {}, status: 'Active', lastLogin: '2026-02-15 10:30', updatedAt: '2026-02-18 10:00' },
-        { id: '2', firstName: 'Teacher', lastName: 'Demo', username: 'teacher', name: 'Teacher Demo', email: 'teacher@elirama.ac.ke', role: 'Teacher', permissions: {}, status: 'Active', lastLogin: '2026-02-16 08:45', updatedAt: '2026-02-18 10:00' },
-        { id: '3', firstName: 'Finance', lastName: 'Staff', username: 'finance', name: 'Finance Staff', email: 'finance@elirama.ac.ke', role: 'Finance Officer', permissions: {}, status: 'Active', lastLogin: '2026-02-17 09:15', updatedAt: '2026-02-18 10:00' },
+        { id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', permissions: [], status: 'Active', lastLogin: '2026-02-15 10:30', updatedAt: '2026-02-18 10:00' },
+        { id: '2', firstName: 'Teacher', lastName: 'Demo', username: 'teacher', name: 'Teacher Demo', email: 'teacher@elirama.ac.ke', role: 'Teacher', permissions: [], status: 'Active', lastLogin: '2026-02-16 08:45', updatedAt: '2026-02-18 10:00' },
+        { id: '3', firstName: 'Finance', lastName: 'Staff', username: 'finance', name: 'Finance Staff', email: 'finance@elirama.ac.ke', role: 'Finance Officer', permissions: [], status: 'Active', lastLogin: '2026-02-17 09:15', updatedAt: '2026-02-18 10:00' },
     ]);
     const [toasts, setToasts] = useState<Toast[]>([]);
     const [loading, setLoading] = useState(true);
@@ -960,7 +960,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setPayments([]);
         setTimetable([]);
         setResults([]);
-        setSystemUsers([{ id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: 'Never', updatedAt: new Date().toISOString() }]);
+        setSystemUsers([{ id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', permissions: [], status: 'Active', lastLogin: 'Never', updatedAt: new Date().toISOString() }]);
         setSettings(defaultSettings);
         localStorage.removeItem(STORAGE_KEY);
         showToast('All system data has been cleared', 'info');

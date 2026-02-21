@@ -111,7 +111,7 @@ export interface User {
     role: string;
     roleId?: string;
     roleData?: Role;
-    permissions: Record<string, string[]>;
+    permissions: string[];
     status: 'Active' | 'Inactive';
     lastLogin: string;
     password?: string;

@@ -16,13 +16,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'GET') {
         const users = await prisma.user.findMany({
-            select: { id: true, name: true, email: true, role: true, createdAt: true, permissions: true }
+            include: { role: true }
         });
-        return res.status(200).json(users);
+        const mappedUsers = users.map(u => ({
+            ...u,
+            role: u.role?.name || 'Teacher',
+            permissions: u.role?.permissions || {}
+        }));
+        return res.status(200).json(mappedUsers);
     }
 
     if (req.method === 'POST') {
-        const { name, email, password, role, firstName, lastName, username, permissions } = req.body;
+        const { name, email, password, roleId, firstName, lastName, username, permissions } = req.body;
         const hashedPassword = await bcrypt.hash(password || 'elirama123', 10);
 
         try {
@@ -31,15 +36,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     name,
                     email,
                     password: hashedPassword,
-                    role,
+                    roleId,
                     firstName: firstName || '',
                     lastName: lastName || '',
                     username: username || email.split('@')[0],
                     permissions: permissions || []
-                }
+                },
+                include: { role: true }
             });
             await touchSync();
-            return res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions });
+            return res.status(201).json({
+                ...user,
+                role: user.role?.name || 'Teacher',
+                permissions: user.role?.permissions || {}
+            });
         } catch (error: any) {
             if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
                 return res.status(400).json({ error: 'User with this email already exists' });

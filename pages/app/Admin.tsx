@@ -53,7 +53,8 @@ export default function Admin() {
         password: '',
         name: '',
         email: '',
-        role: 'Staff' as const,
+        role: 'Teacher',
+        roleId: '',
         permissions: [] as string[]
     });
 
@@ -88,12 +89,12 @@ export default function Admin() {
         const submissionData = { ...userForm, name: fullName };
 
         if (editingUser) {
-            updateSystemUser(editingUser.id, userForm);
+            updateSystemUser(editingUser.id, userForm as any);
         } else {
-            addSystemUser(userForm);
+            addSystemUser(userForm as any);
         }
 
-        setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Staff', permissions: [] });
+        setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Teacher', roleId: '', permissions: [] });
         setEditingUser(null);
         setShowAddUser(false);
     };
@@ -108,6 +109,7 @@ export default function Admin() {
             name: u.name,
             email: u.email,
             role: u.role,
+            roleId: u.roleId || '',
             permissions: u.permissions || []
         });
         setShowAddUser(true);
@@ -661,7 +663,7 @@ export default function Admin() {
                             <button className="toolbar-btn" onClick={() => {
                                 setShowAddUser(!showAddUser);
                                 if (!showAddUser) {
-                                    setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Staff', permissions: [] });
+                                    setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Teacher', roleId: '', permissions: [] });
                                 }
                             }}>
                                 <AddIcon style={{ fontSize: 18, color: '#27ae60' }} /> Add

@@ -6,6 +6,23 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('🌱 Seeding database...');
 
+    // Create roles
+    const roles = [
+        { name: 'Super Admin', permissions: { users: ['VIEW', 'CREATE', 'EDIT', 'DELETE'], settings: ['VIEW', 'EDIT'], fees: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'PUBLISH', 'APPROVE', 'REVERT'], academic: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'PUBLISH'], students: ['VIEW', 'CREATE', 'EDIT', 'DELETE'], teachers: ['VIEW', 'CREATE', 'EDIT', 'DELETE'], audit: ['VIEW'] } },
+        { name: 'Principal', permissions: { users: ['VIEW'], settings: ['VIEW'], fees: ['VIEW', 'APPROVE'], academic: ['VIEW', 'PUBLISH'], students: ['VIEW', 'EDIT'], teachers: ['VIEW'], audit: ['VIEW'] } },
+        { name: 'Teacher', permissions: { academic: ['VIEW', 'CREATE', 'EDIT'], students: ['VIEW'] } },
+        { name: 'Bursar', permissions: { fees: ['VIEW', 'CREATE', 'EDIT'], students: ['VIEW'] } }
+    ];
+
+    for (const r of roles) {
+        await prisma.role.upsert({
+            where: { name: r.name },
+            update: { permissions: r.permissions as any },
+            create: { name: r.name, permissions: r.permissions as any },
+        });
+    }
+    console.log('✅ Roles created');
+
     // Create admin user
     const hashedPassword = await bcrypt.hash('admin123', 10);
     await prisma.user.upsert({
@@ -15,7 +32,8 @@ async function main() {
             name: 'Admin User',
             email: 'admin@elirama.ac.ke',
             password: hashedPassword,
-            role: 'Super Admin',
+            role: { connect: { name: 'Super Admin' } },
+            permissions: []
         },
     });
     console.log('✅ Admin user created');
@@ -28,7 +46,8 @@ async function main() {
             name: 'Teacher User',
             email: 'teacher@elirama.ac.ke',
             password: await bcrypt.hash('teacher123', 10),
-            role: 'Teacher',
+            role: { connect: { name: 'Teacher' } },
+            permissions: []
         },
     });
     console.log('✅ Teacher user created');
