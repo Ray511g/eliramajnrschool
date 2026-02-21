@@ -339,7 +339,7 @@ export default function Admin() {
                                             Configure the time intervals for your school. You can define lessons, breaks, lunch times, or other school activities.
                                         </p>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                            {(form.timetableSlots || []).map((slot: any, idx: number) => (
+                                            {(form.timeSlots || []).map((slot: any, idx: number) => (
                                                 <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'var(--bg-card)', padding: 10, borderRadius: 8 }}>
                                                     <div style={{ flex: 1.5 }}>
                                                         <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Time Interval</label>
@@ -348,9 +348,9 @@ export default function Admin() {
                                                             value={slot.label}
                                                             placeholder="e.g. 8:00 - 8:40"
                                                             onChange={e => {
-                                                                const newSlots = [...(form.timetableSlots || [])];
+                                                                const newSlots = [...(form.timeSlots || [])];
                                                                 newSlots[idx].label = e.target.value;
-                                                                setForm({ ...form, timetableSlots: newSlots });
+                                                                setForm({ ...form, timeSlots: newSlots });
                                                             }}
                                                         />
                                                     </div>
@@ -361,9 +361,9 @@ export default function Admin() {
                                                             value={slot.name || ''}
                                                             placeholder="e.g. Mathematics"
                                                             onChange={e => {
-                                                                const newSlots = [...(form.timetableSlots || [])];
+                                                                const newSlots = [...(form.timeSlots || [])];
                                                                 newSlots[idx].name = e.target.value;
-                                                                setForm({ ...form, timetableSlots: newSlots });
+                                                                setForm({ ...form, timeSlots: newSlots });
                                                             }}
                                                         />
                                                     </div>
@@ -374,9 +374,9 @@ export default function Admin() {
                                                             className="form-control"
                                                             value={slot.type}
                                                             onChange={e => {
-                                                                const newSlots = [...(form.timetableSlots || [])];
+                                                                const newSlots = [...(form.timeSlots || [])];
                                                                 newSlots[idx].type = e.target.value as any;
-                                                                setForm({ ...form, timetableSlots: newSlots });
+                                                                setForm({ ...form, timeSlots: newSlots });
                                                             }}
                                                         >
                                                             <option value="Lesson">Lesson</option>
@@ -390,8 +390,8 @@ export default function Admin() {
                                                         title="Remove Slot"
                                                         style={{ marginTop: 18 }}
                                                         onClick={() => {
-                                                            const newSlots = (form.timetableSlots || []).filter((_, i) => i !== idx);
-                                                            setForm({ ...form, timetableSlots: newSlots });
+                                                            const newSlots = (form.timeSlots || []).filter((_, i) => i !== idx);
+                                                            setForm({ ...form, timeSlots: newSlots });
                                                         }}
                                                     >
                                                         <DeleteIcon style={{ fontSize: 18 }} />
@@ -402,8 +402,8 @@ export default function Admin() {
                                                 className="btn-outline"
                                                 style={{ marginTop: 10, alignSelf: 'flex-start' }}
                                                 onClick={() => {
-                                                    const newSlots = [...(form.timetableSlots || []), { id: Date.now().toString(), label: '', type: 'Lesson' as any }];
-                                                    setForm({ ...form, timetableSlots: newSlots });
+                                                    const newSlots = [...(form.timeSlots || []), { id: Date.now().toString(), label: '', type: 'Lesson' as any }];
+                                                    setForm({ ...form, timeSlots: newSlots });
                                                 }}
                                             >
                                                 + Add New Time Slot
@@ -418,7 +418,7 @@ export default function Admin() {
                                     <div className="setting-row">
                                         <span className="setting-label">Timetable Slots</span>
                                         <span className="setting-value">
-                                            {settings.timetableSlots?.length || 0} Slots configured
+                                            {settings.timeSlots?.length || 0} Slots configured
                                         </span>
                                     </div>
                                 </>

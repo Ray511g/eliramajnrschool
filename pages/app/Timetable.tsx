@@ -11,8 +11,8 @@ export default function Timetable() {
     const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
 
     const gradeEntries = timetable.filter(e => e.grade === selectedGrade);
-    const slots: any[] = settings.timetableSlots && settings.timetableSlots.length > 0
-        ? settings.timetableSlots
+    const slots: any[] = settings.timeSlots && settings.timeSlots.length > 0
+        ? settings.timeSlots
         : TIME_SLOTS.map((s, i) => ({ id: String(i), label: s, type: (s === '10:00 - 10:30' ? 'Break' : (s === '12:30 - 1:10' ? 'Lunch' : 'Lesson')) }));
 
     const getEntry = (day: string, slotLabel: string) => {

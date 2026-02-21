@@ -125,7 +125,7 @@ export interface SchoolSettings {
     financeSignature?: string;     // Base64 or URL
     paybillNumber?: string;
     logo?: string;
-    timetableSlots?: TimeSlot[];
+    timeSlots?: TimeSlot[];
 }
 
 export type GradeLevel = 'Play Group' | 'PP1' | 'PP2' | 'Grade 1' | 'Grade 2' | 'Grade 3' | 'Grade 4' | 'Grade 5' | 'Grade 6';

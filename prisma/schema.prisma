@@ -118,19 +118,22 @@ model TimetableEntry {
 }
 
 model Settings {
-  id          String     @id @default(cuid())
-  schoolName  String     @default("ELIRAMA SCHOOL")
-  motto       String     @default("Excellence in Education")
-  phone       String     @default("+254 700 000 000")
-  telephone   String?
-  email       String     @default("info@elirama.ac.ke")
-  address     String     @default("Nairobi, Kenya")
-  poBox       String?
-  currentTerm String     @default("Term 1")
-  currentYear Int        @default(2026)
-  logo        String?    // Base64 or URL
-  updatedAt   DateTime   @updatedAt
-  timeSlots   TimeSlot[]
+  id                   String     @id @default(cuid())
+  schoolName           String     @default("ELIRAMA SCHOOL")
+  motto                String     @default("Excellence in Education")
+  phone                String     @default("+254 700 000 000")
+  telephone            String?
+  email                String     @default("info@elirama.ac.ke")
+  address              String     @default("Nairobi, Kenya")
+  poBox                String?
+  currentTerm          String     @default("Term 1")
+  currentYear          Int        @default(2026)
+  logo                 String?    // Base64 or URL
+  paybillNumber        String?
+  headteacherSignature String?    // Base64 or URL
+  financeSignature     String?    // Base64 or URL
+  updatedAt            DateTime   @updatedAt
+  timeSlots            TimeSlot[]
 }
 
 model TimeSlot {

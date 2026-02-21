@@ -22,6 +22,7 @@ interface SchoolContextType {
     timetable: TimetableEntry[];
     settings: SchoolSettings;
     gradeFees: Record<string, number>;
+    timeSlots: TimeSlot[];
     results: StudentResult[];
     toasts: Toast[];
     loading: boolean;
@@ -98,7 +99,7 @@ const defaultSettings: SchoolSettings = {
     currentTerm: 'Term 1',
     currentYear: 2026,
     paybillNumber: '123456',
-    timetableSlots: defaultTimeSlots
+    timeSlots: defaultTimeSlots
 };
 
 // Default seed data — used when localStorage is empty
@@ -863,9 +864,12 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         showToast('All system data has been cleared', 'info');
     };
 
+    const timeSlots = settings.timeSlots && settings.timeSlots.length > 0 ? settings.timeSlots : defaultTimeSlots;
+
     return (
         <SchoolContext.Provider value={{
             students, teachers, attendance, exams, payments, timetable, settings, gradeFees, results, toasts, loading,
+            timeSlots,
             addStudent, updateStudent, deleteStudent,
             addTeacher, updateTeacher, deleteTeacher,
             saveAttendance,

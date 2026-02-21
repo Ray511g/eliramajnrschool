@@ -13,8 +13,8 @@ interface Props {
 export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
     const { teachers, settings, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useSchool();
 
-    const lessonSlots = settings.timetableSlots && settings.timetableSlots.length > 0
-        ? settings.timetableSlots.filter(s => s.type === 'Lesson')
+    const lessonSlots = settings.timeSlots && settings.timeSlots.length > 0
+        ? settings.timeSlots.filter(s => s.type === 'Lesson')
         : TIME_SLOTS.filter(s => s !== '10:00 - 10:30' && s !== '12:30 - 1:10').map(s => ({ id: s, label: s, type: 'Lesson' as const }));
 
     const [form, setForm] = useState({
