@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSchool, generateId } from '../../context/SchoolContext';
 import { GRADES, StudentResult, PerformanceLevel, Exam } from '../../types';
 import SearchIcon from '@mui/icons-material/Search';
@@ -147,7 +148,7 @@ export default function Results() {
                     <div className="form-row">
                         <div className="form-group" style={{ flex: 1 }}>
                             <label>Grade Level</label>
-                            <select className="form-control" value={selectedGrade} onChange={e => { setSelectedGrade(e.target.value); setSelectedExamId(''); setSelectedAreaId(''); }}>
+                            <select title="Grade Level" className="form-control" value={selectedGrade} onChange={e => { setSelectedGrade(e.target.value); setSelectedExamId(''); setSelectedAreaId(''); }}>
                                 <option value="">Select Grade</option>
                                 {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
                             </select>
@@ -156,7 +157,7 @@ export default function Results() {
                         {activeTab === 'exams' ? (
                             <div className="form-group" style={{ flex: 1 }}>
                                 <label>Exam / Paper</label>
-                                <select className="form-control" value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)} disabled={!selectedGrade}>
+                                <select title="Exam Selection" className="form-control" value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)} disabled={!selectedGrade}>
                                     <option value="">Select Assessment</option>
                                     {filteredExams.map(e => <option key={e.id} value={e.id}>{e.name} ({e.subject})</option>)}
                                 </select>
@@ -165,7 +166,7 @@ export default function Results() {
                             <>
                                 <div className="form-group" style={{ flex: 1 }}>
                                     <label>Learning Area</label>
-                                    <select className="form-control" value={selectedAreaId} onChange={e => setSelectedAreaId(e.target.value)} disabled={!selectedGrade}>
+                                    <select title="Learning Area" className="form-control" value={selectedAreaId} onChange={e => setSelectedAreaId(e.target.value)} disabled={!selectedGrade}>
                                         <option value="">Select Area</option>
                                         {gradeAreas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                     </select>
@@ -173,7 +174,7 @@ export default function Results() {
                                 {selectedAreaId && (
                                     <div className="form-group" style={{ flex: 1 }}>
                                         <label>Strand / Sub-Strand</label>
-                                        <select className="form-control" value={selectedSubStrandId} onChange={e => setSelectedSubStrandId(e.target.value)}>
+                                        <select title="Strand / Sub-Strand" className="form-control" value={selectedSubStrandId} onChange={e => setSelectedSubStrandId(e.target.value)}>
                                             <option value="">Select Sub-Strand</option>
                                             {selectedArea?.strands.flatMap(s => s.subStrands).map(ss => (
                                                 <option key={ss.id} value={ss.id}>{ss.name}</option>
@@ -193,7 +194,7 @@ export default function Results() {
                         <div className="form-row" style={{ marginTop: 12 }}>
                             <div className="form-group" style={{ flex: 1 }}>
                                 <label>Specific Assessment Item</label>
-                                <select className="form-control" value={selectedAssessmentId} onChange={e => setSelectedAssessmentId(e.target.value)}>
+                                <select title="Assessment Item" className="form-control" value={selectedAssessmentId} onChange={e => setSelectedAssessmentId(e.target.value)}>
                                     <option value="">Select Item</option>
                                     {selectedSubStrand?.assessments.map(a => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
                                 </select>
@@ -242,6 +243,7 @@ export default function Results() {
                                                 <td>
                                                     <input
                                                         type="number"
+                                                        title={`Marks for ${student.firstName}`}
                                                         className="form-control-sm"
                                                         style={{ width: 80 }}
                                                         max={selectedExam?.totalMarks}
@@ -253,6 +255,7 @@ export default function Results() {
                                             )}
                                             <td>
                                                 <select
+                                                    title={`Performance Level for ${student.firstName}`}
                                                     className={`level-select ${level || ''}`}
                                                     value={level || ''}
                                                     onChange={e => handleUpdateLevel(student.id, e.target.value as PerformanceLevel)}

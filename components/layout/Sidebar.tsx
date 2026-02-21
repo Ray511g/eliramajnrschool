@@ -137,10 +137,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                     <div className="sidebar-user-card" onClick={() => router.push('/profile')}>
                         <div className="user-avatar-sm">
-                            {user?.firstName?.charAt(0) || <AccountCircleIcon />}
+                            {user?.name?.charAt(0) || <AccountCircleIcon />}
                         </div>
                         <div className="user-details-sm">
-                            <span className="user-name-sm">{user?.firstName || 'My Account'}</span>
+                            <span className="user-name-sm">{user?.name || 'My Account'}</span>
                             <span className="user-role-sm">{user?.role}</span>
                         </div>
                     </div>
