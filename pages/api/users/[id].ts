@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../../../lib/prisma';
 import { requireAuth } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
@@ -29,12 +30,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'PUT') {
         try {
-            const { name, email, role, permissions } = req.body;
+            const { name, email, role, permissions, password } = req.body;
+            const updateData: any = { name, email, role, permissions };
+
+            if (password) {
+                updateData.password = await bcrypt.hash(password, 10);
+            }
+
             const user = await prisma.user.update({
                 where: { id: id as string },
-                data: { name, email, role, permissions },
+                data: updateData,
                 select: { id: true, name: true, email: true, role: true, createdAt: true, lastLogin: true, status: true, permissions: true }
             });
+
+            // Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    userId: currentUser.id,
+                    userName: currentUser.name,
+                    action: 'UPDATE_USER',
+                    details: `Updated user ${user.name} (${user.email}). ${password ? 'Password was reset.' : ''}`
+                }
+            });
+
             await touchSync();
             return res.status(200).json(user);
         } catch (error: any) {
@@ -47,7 +65,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'DELETE') {
         try {
+            const user = await prisma.user.findUnique({ where: { id: id as string } });
             await prisma.user.delete({ where: { id: id as string } });
+
+            // Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    userId: currentUser.id,
+                    userName: currentUser.name,
+                    action: 'DELETE_USER',
+                    details: `Deleted user ${user?.name || id}`
+                }
+            });
+
             await touchSync();
             return res.status(200).json({ success: true });
         } catch (error: any) {

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
 import { requireAuth, corsHeaders } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
+import { logAction } from '../../../lib/audit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     corsHeaders(res);
@@ -21,6 +22,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
         const exam = await prisma.exam.create({ data: req.body });
+
+        await logAction(
+            user.id,
+            user.name,
+            'CREATE_EXAM',
+            `Scheduled new exam: ${exam.name} for ${exam.grade} (${exam.subject})`,
+            (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
+        );
+
         await touchSync();
         return res.status(201).json(exam);
     }

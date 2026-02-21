@@ -18,6 +18,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 export const PERMISSIONS = [
     { code: 'MANAGE_STUDENTS', label: 'Students Module' },
@@ -141,6 +142,15 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             transition: 'background-color 0.3s'
                         }} title={serverStatus === 'connected' ? 'Online' : 'Offline (Local Mode)'} />
                     </div>
+                    <Link
+                        href="/profile"
+                        className={`nav-item ${isActive('/profile') ? 'active' : ''}`}
+                        onClick={() => setIsOpen(false)}
+                        style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, padding: '12px 24px' }}
+                    >
+                        <span className="nav-icon"><AccountCircleIcon /></span>
+                        <span>My Account</span>
+                    </Link>
                     <button className="logout-btn" onClick={handleLogout}>
                         <LogoutIcon />
                         <span>Logout</span>

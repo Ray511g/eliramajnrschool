@@ -9,7 +9,20 @@ interface Props {
 }
 
 export default function FeeStructureModal({ onClose }: Props) {
-    const { gradeFees, settings } = useSchool();
+    const { feeStructures, settings, gradeFees } = useSchool();
+
+    // Group fee structures by grade
+    const groupedStructures = feeStructures.reduce((acc: any, item) => {
+        if (!acc[item.grade]) acc[item.grade] = [];
+        acc[item.grade].push(item);
+        return acc;
+    }, {});
+
+    // Grades that have at least one fee item
+    const activeGrades = Object.keys(groupedStructures).sort((a, b) => {
+        const order = ['Play Group', 'PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
+        return order.indexOf(a) - order.indexOf(b);
+    });
 
     const structureHTML = `
         <!DOCTYPE html>
@@ -61,13 +74,27 @@ export default function FeeStructureModal({ onClose }: Props) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${Object.entries(gradeFees).map(([grade, amount]) => `
-                        <tr>
-                            <td class="grade-col">${grade}</td>
-                            <td class="term-col">Per Term</td>
-                            <td class="amount-col">${amount.toLocaleString()}</td>
-                        </tr>
-                    `).join('')}
+                    ${activeGrades.map(grade => {
+        const items = groupedStructures[grade];
+        const total = items.reduce((sum: number, i: any) => sum + i.amount, 0);
+        return `
+                            <tr style="background: #fdfefe;">
+                                <td colspan="3" style="font-weight: bold; background: #f1f5f9;">${grade}</td>
+                            </tr>
+                            ${items.map((item: any) => `
+                                <tr>
+                                    <td style="padding-left: 30px;">${item.name}</td>
+                                    <td class="term-col">${item.term}</td>
+                                    <td class="amount-col">${item.amount.toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                            <tr style="background: #f8fafc; font-weight: bold;">
+                                <td colspan="2" style="text-align: right;">TOTAL FOR ${grade.toUpperCase()}</td>
+                                <td class="amount-col">${total.toLocaleString()}</td>
+                            </tr>
+                            <tr><td colspan="3" style="height: 10px; border: none;"></td></tr>
+                        `;
+    }).join('')}
                 </tbody>
             </table>
 
@@ -137,19 +164,40 @@ export default function FeeStructureModal({ onClose }: Props) {
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th>Grade</th>
+                                    <th>Grade / Item</th>
                                     <th>Period</th>
                                     <th style={{ textAlign: 'right' }}>Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(gradeFees).map(([grade, amount]) => (
-                                    <tr key={grade}>
-                                        <td style={{ fontWeight: 500 }}>{grade}</td>
-                                        <td>Per Term</td>
-                                        <td style={{ textAlign: 'right', fontWeight: 600 }}>KSh {amount.toLocaleString()}</td>
+                                {activeGrades.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={3} style={{ textAlign: 'center', padding: 30, color: 'var(--text-secondary)' }}>
+                                            No fee items configured. Go to Admin {'>'} Fee Structure to add items.
+                                        </td>
                                     </tr>
-                                ))}
+                                ) : activeGrades.map(grade => {
+                                    const items = groupedStructures[grade];
+                                    const total = items.reduce((sum: number, i: any) => sum + i.amount, 0);
+                                    return (
+                                        <React.Fragment key={grade}>
+                                            <tr style={{ background: 'var(--bg-body)' }}>
+                                                <td colSpan={3} style={{ fontWeight: 700, color: 'var(--primary-color)' }}>{grade}</td>
+                                            </tr>
+                                            {items.map((item: any) => (
+                                                <tr key={item.id}>
+                                                    <td style={{ paddingLeft: 24, fontSize: 13 }}>{item.name}</td>
+                                                    <td style={{ fontSize: 13 }}>{item.term}</td>
+                                                    <td style={{ textAlign: 'right', fontWeight: 500 }}>KSh {item.amount.toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                            <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                                                <td colSpan={2} style={{ textAlign: 'right', fontWeight: 700, fontSize: 12 }}>TOTAL</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--accent-blue)' }}>KSh {total.toLocaleString()}</td>
+                                            </tr>
+                                        </React.Fragment>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

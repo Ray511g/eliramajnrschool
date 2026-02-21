@@ -39,11 +39,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
 
+    if (req.method === 'PUT') {
+        const { id } = req.query;
+        if (!id) return res.status(400).json({ error: 'ID required' });
+
+        try {
+            const { grade, name, amount, term } = req.body;
+            const feeAmount = parseFloat(amount);
+            const feeStructure = await prisma.feeStructure.update({
+                where: { id: id as string },
+                data: { grade, name, amount: feeAmount, term }
+            });
+
+            // Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    userId: user.id || 'unknown',
+                    userName: user.name || 'Unknown',
+                    action: 'UPDATE_FEE_STRUCTURE',
+                    details: `Updated draft fee item: ${name} (${feeAmount}) for ${grade}. Changes pending publication.`
+                }
+            });
+
+            await touchSync();
+            return res.status(200).json(feeStructure);
+        } catch (error) {
+            console.error('Update fee structure error:', error);
+            return res.status(500).json({ error: 'Failed to update fee structure' });
+        }
+    }
+
     if (req.method === 'POST') {
         try {
             const { grade, name, amount, term } = req.body;
+            const feeAmount = parseFloat(amount);
             const feeStructure = await prisma.feeStructure.create({
-                data: { grade, name, amount: parseFloat(amount), term }
+                data: { grade, name, amount: feeAmount, term }
             });
 
             // Audit Log
@@ -52,13 +83,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     userId: user.id || 'unknown',
                     userName: user.name || 'Unknown',
                     action: 'CREATE_FEE_STRUCTURE',
-                    details: `Created fee item: ${name} (${amount}) for ${grade}`
+                    details: `Created draft fee item: ${name} (${feeAmount}) for ${grade}. Changes pending publication.`
                 }
             });
 
             await touchSync();
             return res.status(201).json(feeStructure);
         } catch (error) {
+            console.error('Create fee structure error:', error);
             return res.status(500).json({ error: 'Failed to create fee structure' });
         }
     }
@@ -68,19 +100,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!id) return res.status(400).json({ error: 'ID required' });
 
         try {
+            const existing = await prisma.feeStructure.findUnique({ where: { id: id as string } });
+            if (!existing) return res.status(404).json({ error: 'Fee item not found' });
+
             await prisma.feeStructure.delete({ where: { id: id as string } });
+
             // Audit Log
             await prisma.auditLog.create({
                 data: {
                     userId: user.id || 'unknown',
                     userName: user.name || 'Unknown',
                     action: 'DELETE_FEE_STRUCTURE',
-                    details: `Deleted fee structure item ${id}`
+                    details: `Deleted draft fee item: ${existing.name} (${existing.amount}) for ${existing.grade}. Changes pending publication.`
                 }
             });
             await touchSync();
             return res.status(200).json({ success: true });
         } catch (error) {
+            console.error('Delete fee structure error:', error);
             return res.status(500).json({ error: 'Failed to delete fee structure' });
         }
     }

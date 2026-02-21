@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
 import { requireAuth, corsHeaders } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
+import { logAction } from '../../../lib/audit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // corsHeaders(res); // Handled by next.config.js but we add cache control here
@@ -27,6 +28,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
         const teacher = await prisma.teacher.create({ data: req.body });
+
+        await logAction(
+            user.id,
+            user.name,
+            'CREATE_TEACHER',
+            `Registered new teacher: ${teacher.firstName} ${teacher.lastName} (${teacher.email})`,
+            (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
+        );
+
         await touchSync();
         return res.status(201).json(teacher);
     }

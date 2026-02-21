@@ -60,7 +60,9 @@ interface SchoolContextType {
     feeStructures: FeeStructureItem[];
     auditLogs: AuditLogItem[];
     addFeeStructure: (item: Omit<FeeStructureItem, 'id' | 'createdAt'>) => void;
+    updateFeeStructure: (id: string, updates: Partial<FeeStructureItem>) => void;
     deleteFeeStructure: (id: string) => void;
+    applyFeeStructure: () => Promise<void>;
     fetchAuditLogs: () => void;
     isSyncing: boolean;
     serverStatus: 'connected' | 'disconnected' | 'checking';
@@ -791,14 +793,38 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const data = await apiRes.json();
             setFeeStructures(prev => [...prev, data]);
-            showToast('Fee item added');
+            showToast('Fee item added to draft');
+        }
+    };
+
+    const updateFeeStructure = async (id: string, updates: Partial<FeeStructureItem>) => {
+        const apiRes = await tryApi(`${API_URL}/fees/structure?id=${id}`, { method: 'PUT', body: JSON.stringify(updates) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setFeeStructures(prev => prev.map(f => f.id === id ? data : f));
+            showToast('Fee item updated in draft');
         }
     };
 
     const deleteFeeStructure = async (id: string) => {
-        await tryApi(`${API_URL}/fees/structure?id=${id}`, { method: 'DELETE' });
-        setFeeStructures(prev => prev.filter(f => f.id !== id));
-        showToast('Fee item deleted');
+        const apiRes = await tryApi(`${API_URL}/fees/structure?id=${id}`, { method: 'DELETE' });
+        if (apiRes) {
+            setFeeStructures(prev => prev.filter(f => f.id !== id));
+            showToast('Fee item removed from draft');
+        }
+    };
+
+    const applyFeeStructure = async () => {
+        setLoading(true);
+        const apiRes = await tryApi(`${API_URL}/fees/apply`, { method: 'POST' });
+        if (apiRes) {
+            const data = await apiRes.json();
+            showToast(`Fee structure published! Updated ${data.updatedCount} students.`);
+            await fetchData(true); // Pull fresh student data with new balances
+        } else {
+            showToast('Failed to publish fee structure', 'error');
+        }
+        setLoading(false);
     };
 
     // AUDIT LOGS
@@ -849,7 +875,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             uploadStudents, uploadTeachers, uploadExams,
             systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword, changeUserPassword,
             showToast, refreshData, clearAllData,
-            feeStructures, auditLogs, addFeeStructure, deleteFeeStructure, fetchAuditLogs,
+            feeStructures, auditLogs, addFeeStructure, updateFeeStructure, deleteFeeStructure, applyFeeStructure, fetchAuditLogs,
             isSyncing, serverStatus
         }}>
             {children}

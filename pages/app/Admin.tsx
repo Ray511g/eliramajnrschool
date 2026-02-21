@@ -20,7 +20,7 @@ export default function Admin() {
     const {
         settings, updateSettings, uploadStudents, uploadTeachers, uploadExams,
         systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword, clearAllData,
-        feeStructures, addFeeStructure, deleteFeeStructure, auditLogs, fetchAuditLogs
+        feeStructures, addFeeStructure, updateFeeStructure, deleteFeeStructure, applyFeeStructure, auditLogs, fetchAuditLogs
     } = useSchool();
     const { user } = useAuth();
     const [editing, setEditing] = useState(false);
@@ -29,6 +29,8 @@ export default function Admin() {
 
     // Fee Structure State
     const [feeForm, setFeeForm] = useState({ grade: 'Grade 1', name: '', amount: 0, term: 'Term 1' });
+    const [editingFeeItem, setEditingFeeItem] = useState<string | null>(null);
+    const [isPublishing, setIsPublishing] = useState(false);
 
     // User Management State
     const [showAddUser, setShowAddUser] = useState(false);
@@ -57,9 +59,9 @@ export default function Admin() {
         const submissionData = { ...userForm, name: fullName };
 
         if (editingUser) {
-            updateSystemUser(editingUser.id, submissionData);
+            updateSystemUser(editingUser.id, userForm);
         } else {
-            addSystemUser(submissionData);
+            addSystemUser(userForm);
         }
 
         setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Staff', permissions: [] });
@@ -90,8 +92,34 @@ export default function Admin() {
 
     const handleAddFeeItem = () => {
         if (!feeForm.name || feeForm.amount <= 0) return;
-        addFeeStructure(feeForm);
+        if (editingFeeItem) {
+            updateFeeStructure(editingFeeItem, feeForm);
+            setEditingFeeItem(null);
+        } else {
+            addFeeStructure(feeForm);
+        }
         setFeeForm({ ...feeForm, name: '', amount: 0 });
+    };
+
+    const startEditFeeItem = (item: any) => {
+        setEditingFeeItem(item.id);
+        setFeeForm({
+            grade: item.grade,
+            name: item.name,
+            amount: item.amount,
+            term: item.term
+        });
+    };
+
+    const handleApplyFees = async () => {
+        if (confirm('Are you sure you want to PUBLISH this fee structure? This will update all student total fees and current balances based on the active structure. This action is irreversible.')) {
+            setIsPublishing(true);
+            try {
+                await applyFeeStructure();
+            } finally {
+                setIsPublishing(false);
+            }
+        }
     };
 
     const downloadTemplate = (type: 'students' | 'teachers' | 'exams') => {
@@ -587,11 +615,11 @@ export default function Admin() {
                                             onClick={() => setSelectedUserId(u.id === selectedUserId ? null : u.id)}
                                             style={{ cursor: 'pointer' }}
                                         >
-                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.firstName}</td>
-                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.lastName}</td>
+                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.firstName || u.name.split(' ')[0]}</td>
+                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.lastName || u.name.split(' ').slice(1).join(' ')}</td>
                                             <td style={{ color: selectedUserId === u.id ? 'white' : 'var(--accent-blue)', textTransform: 'uppercase' }}>{u.username}</td>
                                             <td>{u.email}</td>
-                                            <td>{u.updatedAt || '01/01/2026'}</td>
+                                            <td>{u.updatedAt ? new Date(u.updatedAt).toLocaleDateString() : '01/01/2026'}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -603,7 +631,20 @@ export default function Admin() {
                 {activeTab === 'fees' && (
                     <div className="admin-section" style={{ gridColumn: 'span 2' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                            <h3 style={{ margin: 0 }}>Fee Structure Breakdown</h3>
+                            <div>
+                                <h3 style={{ margin: 0 }}>Fee Structure Breakdown</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
+                                    Changes here are saved as <strong>drafts</strong>. Click "Publish Structure" to update student balances.
+                                </p>
+                            </div>
+                            <button
+                                className="btn-primary"
+                                style={{ background: 'var(--accent-blue)', borderColor: 'var(--accent-blue)' }}
+                                onClick={handleApplyFees}
+                                disabled={isPublishing}
+                            >
+                                {isPublishing ? 'Publishing...' : 'Publish Fee Structure'}
+                            </button>
                         </div>
                         <div className="card" style={{ background: 'var(--bg-surface)', marginBottom: 20 }}>
                             <h4 style={{ margin: '0 0 10px' }}>Add Fee Item</h4>
@@ -640,8 +681,13 @@ export default function Admin() {
                                         <option>Term 3</option>
                                     </select>
                                 </div>
-                                <div style={{ alignSelf: 'flex-end', paddingBottom: 10 }}>
-                                    <button className="btn-primary" onClick={handleAddFeeItem}>Add Item</button>
+                                <div style={{ alignSelf: 'flex-end', paddingBottom: 10, display: 'flex', gap: 10 }}>
+                                    {editingFeeItem && (
+                                        <button className="btn-outline" onClick={() => { setEditingFeeItem(null); setFeeForm({ ...feeForm, name: '', amount: 0 }); }}>Cancel</button>
+                                    )}
+                                    <button className="btn-primary" onClick={handleAddFeeItem}>
+                                        {editingFeeItem ? 'Update Item' : 'Add Item'}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -664,7 +710,8 @@ export default function Admin() {
                                             <td>{item.term}</td>
                                             <td>{item.name}</td>
                                             <td>KES {item.amount.toLocaleString()}</td>
-                                            <td style={{ textAlign: 'right' }}>
+                                            <td style={{ textAlign: 'right', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                <button className="table-action-btn primary" onClick={() => startEditFeeItem(item)}><EditIcon style={{ fontSize: 16 }} /></button>
                                                 <button className="table-action-btn danger" onClick={() => deleteFeeStructure(item.id)}><DeleteIcon style={{ fontSize: 16 }} /></button>
                                             </td>
                                         </tr>
