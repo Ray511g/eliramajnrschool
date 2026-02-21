@@ -20,7 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     { email: loginIdentifier },
                     { username: loginIdentifier }
                 ]
-            }
+            },
+            include: { role: true }
         });
         if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -30,9 +31,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const token = signToken({
             id: user.id,
             email: user.email,
-            role: user.role,
+            role: user.role?.name || 'Teacher',
             name: user.name,
-            permissions: user.permissions // Include permissions in token
+            permissions: user.role?.permissions || {}
         });
 
         // Audit Log
@@ -41,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 userId: user.id,
                 userName: user.name,
                 action: 'LOGIN',
-                details: 'User logged in successfully',
+                details: `User logged in successfully as ${user.role?.name || 'Teacher'}`,
                 ipAddress: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
             }
         });
@@ -52,8 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role,
-                permissions: user.permissions
+                role: user.role?.name || 'Teacher',
+                permissions: user.role?.permissions || {}
             },
         });
     } catch (err) {

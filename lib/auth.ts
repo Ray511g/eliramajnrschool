@@ -31,6 +31,25 @@ export function requireAuth(req: NextApiRequest, res: NextApiResponse): any {
     return user;
 }
 
+export function checkPermission(user: any, module: string, action: string, res?: NextApiResponse): boolean {
+    if (!user) {
+        if (res) res.status(401).json({ error: 'Unauthorized' });
+        return false;
+    }
+
+    if (user.role === 'Super Admin') return true;
+
+    const permissions = user.permissions || {};
+    const modulePermissions = permissions[module] || [];
+    const hasPerm = modulePermissions.includes(action.toUpperCase());
+
+    if (!hasPerm && res) {
+        res.status(403).json({ error: `Forbidden: Missing ${action} permission for ${module}` });
+    }
+
+    return hasPerm;
+}
+
 export function corsHeaders(res: NextApiResponse) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');

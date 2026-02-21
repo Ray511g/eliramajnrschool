@@ -9,8 +9,11 @@ import PeopleIcon from '@mui/icons-material/People';
 import AddStudentModal from '../../components/modals/AddStudentModal';
 import Pagination from '../../components/common/Pagination';
 
+import { useAuth } from '../../context/AuthContext';
+
 export default function Students() {
-    const { students, deleteStudent } = useSchool();
+    const { students, deleteStudent, activeGrades } = useSchool();
+    const { hasPermission } = useAuth();
     const [search, setSearch] = useState('');
     const [gradeFilter, setGradeFilter] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
@@ -48,9 +51,11 @@ export default function Students() {
                     <p>Manage student information and records</p>
                 </div>
                 <div className="page-header-right">
-                    <button className="btn-primary green" onClick={() => setShowAddModal(true)}>
-                        <AddIcon style={{ fontSize: 18 }} /> Add Student
-                    </button>
+                    {hasPermission('students', 'CREATE') && (
+                        <button className="btn-primary green" onClick={() => setShowAddModal(true)}>
+                            <AddIcon style={{ fontSize: 18 }} /> Add Student
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -91,7 +96,7 @@ export default function Students() {
                     onChange={e => setGradeFilter(e.target.value)}
                 >
                     <option value="">All Grades</option>
-                    {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                    {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
             </div>
 
@@ -127,12 +132,16 @@ export default function Students() {
                                     <td>KSh {student.feeBalance.toLocaleString()}</td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" title="Edit" onClick={() => handleEdit(student)}>
-                                                <EditIcon style={{ fontSize: 16 }} />
-                                            </button>
-                                            <button className="table-action-btn danger" title="Delete" onClick={() => deleteStudent(student.id)}>
-                                                <DeleteIcon style={{ fontSize: 16 }} />
-                                            </button>
+                                            {hasPermission('students', 'EDIT') && (
+                                                <button className="table-action-btn" title="Edit" onClick={() => handleEdit(student)}>
+                                                    <EditIcon style={{ fontSize: 16 }} />
+                                                </button>
+                                            )}
+                                            {hasPermission('students', 'DELETE') && (
+                                                <button className="table-action-btn danger" title="Delete" onClick={() => deleteStudent(student.id)}>
+                                                    <DeleteIcon style={{ fontSize: 16 }} />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

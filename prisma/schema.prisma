@@ -18,10 +18,20 @@ model User {
   email       String   @unique
   username    String   @unique @default(cuid())
   password    String
-  role        String   @default("teacher") // admin, teacher, staff
+  roleId      String?
+  role        Role?    @relation(fields: [roleId], references: [id])
   status      String   @default("Active")
   lastLogin   String?
-  permissions String[] // Array of permission codes e.g. ['MANAGE_FEES', 'VIEW_REPORTS']
+  permissions String[] // Granular overrides if needed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "Finance Officer"
+  permissions Json     // Granular permissions per module
+  users       User[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -136,6 +146,9 @@ model Settings {
   paybillNumber        String?
   headteacherSignature String?    // Base64 or URL
   financeSignature     String?    // Base64 or URL
+  primaryEnabled       Boolean    @default(true)
+  jssEnabled           Boolean    @default(false)
+  sssEnabled           Boolean    @default(false)
   updatedAt            DateTime   @updatedAt
   timeSlots            TimeSlot[]
 }

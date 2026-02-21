@@ -19,7 +19,10 @@ export default function Timetable() {
 
     const getEntry = (day: string, slotId: string, slotLabel: string) => {
         // Try finding by slotId first (new system), fallback to timeSlot label (legacy)
-        return gradeEntries.find(e => (e.slotId === slotId) || (!e.slotId && e.timeSlot === slotLabel));
+        return gradeEntries.find(e =>
+            e.day === day &&
+            ((e.slotId === slotId) || (!e.slotId && e.timeSlot === slotLabel))
+        );
     };
 
     const handleEdit = (entry: TimetableEntry) => {
@@ -137,19 +140,40 @@ export default function Timetable() {
 
             <style jsx>{`
                 @media print {
+                    @page { 
+                        size: landscape;
+                        margin: 10mm;
+                    }
                     .no-print { display: none !important; }
                     .sidebar, .sidebar-overlay, .mobile-header { display: none !important; }
-                    .main-content { margin: 0 !important; padding: 0 !important; }
-                    .page-container { padding: 0 !important; background: white !important; }
+                    .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; height: auto !important; overflow: visible !important; }
+                    .page-container { padding: 0 !important; background: white !important; width: 100% !important; }
                     .page-header { display: none !important; }
-                    .timetable-wrapper { margin: 0 !important; border: none !important; box-shadow: none !important; }
-                    .timetable-grid { border: 1px solid #000 !important; }
-                    .timetable-cell { border: 1px solid #000 !important; color: #000 !important; }
-                    .timetable-cell.header { background: #eee !important; font-weight: bold !important; }
-                    .timetable-entry { background: none !important; border: none !important; box-shadow: none !important; padding: 2px !important; }
-                    .subject { font-weight: bold !important; color: #000 !important; }
-                    .teacher { color: #333 !important; }
-                    .break-row { background: #f9f9f9 !important; font-weight: bold !important; border: 1px solid #000 !important; }
+                    .timetable-wrapper { margin: 0 !important; border: none !important; box-shadow: none !important; width: 100% !important; }
+                    .timetable-grid { 
+                        border: 1px solid #000 !important; 
+                        grid-template-columns: 120px repeat(5, 1fr) !important;
+                        width: 100% !important;
+                    }
+                    .timetable-cell { 
+                        border: 1px solid #000 !important; 
+                        color: #000 !important; 
+                        padding: 8px 4px !important;
+                        min-height: 50px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        justify-content: center !important;
+                    }
+                    .timetable-cell.header { background: #eee !important; font-weight: bold !important; text-align: center !important; }
+                    .timetable-entry { background: none !important; border: none !important; box-shadow: none !important; padding: 2px !important; text-align: center !important; }
+                    .subject { font-weight: bold !important; color: #000 !important; font-size: 14px !important; }
+                    .teacher { color: #333 !important; font-size: 12px !important; }
+                    .break-row { 
+                        background: #f9f9f9 !important; 
+                        font-weight: bold !important; 
+                        border: 1px solid #000 !important;
+                        text-align: center !important;
+                    }
                 }
             `}</style>
         </div>

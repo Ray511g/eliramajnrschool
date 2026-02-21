@@ -21,12 +21,13 @@ export default function Admin() {
         students, settings, feeStructures, auditLogs, systemUsers,
         addFeeStructure, updateFeeStructure, deleteFeeStructure, applyFeeStructure, revertFeeStructure,
         fetchAuditLogs, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword,
-        showToast, updateSettings, uploadStudents, uploadTeachers, uploadExams, clearAllData
+        showToast, updateSettings, uploadStudents, uploadTeachers, uploadExams, clearAllData,
+        activeGrades, roles, addRole, updateRole, deleteRole
     } = useSchool();
     const { user } = useAuth();
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState(settings);
-    const [activeTab, setActiveTab] = useState<'settings' | 'users' | 'fees' | 'audit' | 'timetable'>('settings');
+    const [activeTab, setActiveTab] = useState<'settings' | 'users' | 'roles' | 'fees' | 'audit' | 'timetable'>('settings');
 
     useEffect(() => {
         if (!editing) {
@@ -55,6 +56,26 @@ export default function Admin() {
         role: 'Staff' as const,
         permissions: [] as string[]
     });
+
+    // Role Management State
+    const [showAddRole, setShowAddRole] = useState(false);
+    const [editingRole, setEditingRole] = useState<any>(null);
+    const [roleForm, setRoleForm] = useState({
+        name: '',
+        permissions: {} as Record<string, string[]>
+    });
+
+    const MODULES = [
+        { id: 'users', label: 'User Management' },
+        { id: 'settings', label: 'School Settings' },
+        { id: 'fees', label: 'Finance & Fees' },
+        { id: 'academic', label: 'Academic (Exams/Results)' },
+        { id: 'students', label: 'Student Records' },
+        { id: 'teachers', label: 'Teacher Management' },
+        { id: 'audit', label: 'Audit Logs' }
+    ];
+
+    const ACTIONS = ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'PUBLISH', 'APPROVE', 'REVERT'];
 
     useEffect(() => {
         if (activeTab === 'audit') fetchAuditLogs();
@@ -182,6 +203,7 @@ export default function Admin() {
                 <div className={`tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'settings' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Settings</div>
                 <div className={`tab ${activeTab === 'timetable' ? 'active' : ''}`} onClick={() => setActiveTab('timetable')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'timetable' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Timetable Structure</div>
                 <div className={`tab ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'users' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>User Management</div>
+                <div className={`tab ${activeTab === 'roles' ? 'active' : ''}`} onClick={() => setActiveTab('roles')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'roles' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Roles</div>
                 <div className={`tab ${activeTab === 'fees' ? 'active' : ''}`} onClick={() => setActiveTab('fees')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'fees' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Fee Structure</div>
                 <div className={`tab ${activeTab === 'audit' ? 'active' : ''}`} onClick={() => setActiveTab('audit')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'audit' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Audit Trail</div>
             </div>
@@ -245,6 +267,23 @@ export default function Admin() {
                                     <div className="form-group">
                                         <label htmlFor="paybill-number">Lipa na M-Pesa Paybill</label>
                                         <input id="paybill-number" className="form-control" value={form.paybillNumber} onChange={e => setForm({ ...form, paybillNumber: e.target.value })} placeholder="e.g. 123456" />
+                                    </div>
+                                    <div className="form-group" style={{ gridColumn: 'span 2', marginTop: 10 }}>
+                                        <label style={{ display: 'block', marginBottom: 15, fontWeight: 'bold' }}>Enabled School Levels</label>
+                                        <div style={{ display: 'flex', gap: 30 }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.primaryEnabled} onChange={e => setForm({ ...form, primaryEnabled: e.target.checked })} />
+                                                Primary (Play Group - Grade 6)
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.jssEnabled} onChange={e => setForm({ ...form, jssEnabled: e.target.checked })} />
+                                                Junior Secondary (Grade 7 - Grade 9)
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.sssEnabled} onChange={e => setForm({ ...form, sssEnabled: e.target.checked })} />
+                                                Senior Secondary (Form 1 - Form 4)
+                                            </label>
+                                        </div>
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="headteacher-signature">Digital Signature (Headteacher)</label>
@@ -349,6 +388,16 @@ export default function Admin() {
                                 <>
                                     <div className="setting-row"><span className="setting-label">Current Term</span><span className="setting-value">{settings.currentTerm}</span></div>
                                     <div className="setting-row"><span className="setting-label">Current Year</span><span className="setting-value">{settings.currentYear}</span></div>
+                                    <div className="setting-row">
+                                        <span className="setting-label">Active Levels</span>
+                                        <span className="setting-value">
+                                            {[
+                                                settings.primaryEnabled && 'Primary',
+                                                settings.jssEnabled && 'JSS',
+                                                settings.sssEnabled && 'SSS'
+                                            ].filter(Boolean).join(', ') || 'None'}
+                                        </span>
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -675,12 +724,21 @@ export default function Admin() {
                                         <label>Email Address</label>
                                         <input className="form-control" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} placeholder="ann@spa-limited.com" />
                                     </div>
-                                    <div className="form-group" style={{ flex: 1 }}>
-                                        <label>Role</label>
-                                        <select title="Select User Role" className="form-control" value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value as any })}>
-                                            <option value="Admin">Admin</option>
-                                            <option value="Teacher">Teacher</option>
-                                            <option value="Staff">Staff</option>
+                                    <div className="form-group">
+                                        <label htmlFor="user-role">Role</label>
+                                        <select
+                                            id="user-role"
+                                            className="form-control"
+                                            value={userForm.roleId || ''}
+                                            onChange={e => {
+                                                const selectedRole = roles.find(r => r.id === e.target.value);
+                                                setUserForm({ ...userForm, roleId: e.target.value, role: selectedRole?.name || '' });
+                                            }}
+                                        >
+                                            <option value="">Select Role</option>
+                                            {roles.map(r => (
+                                                <option key={r.id} value={r.id}>{r.name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -1037,6 +1095,128 @@ export default function Admin() {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'roles' && (
+                    <div className="admin-section" style={{ gridColumn: 'span 2' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <h3 style={{ margin: 0 }}><SecurityIcon style={{ fontSize: 22 }} /> Role & Permission Management</h3>
+                            <button className="btn-primary" onClick={() => { setEditingRole(null); setRoleForm({ name: '', permissions: {} }); setShowAddRole(true); }}>
+                                <AddIcon style={{ fontSize: 18 }} /> Add Custom Role
+                            </button>
+                        </div>
+
+                        {showAddRole && (
+                            <div className="card" style={{ background: 'var(--bg-surface)', marginBottom: 25, border: '1px solid var(--primary-color)' }}>
+                                <h4 style={{ marginTop: 0 }}>{editingRole ? 'Edit Role' : 'Create New Role'}</h4>
+                                <div className="form-grid">
+                                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                        <label>Role Name</label>
+                                        <input className="form-control" value={roleForm.name} onChange={e => setRoleForm({ ...roleForm, name: e.target.value })} placeholder="e.g. Finance Manager" />
+                                    </div>
+                                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                        <label style={{ marginBottom: 15, display: 'block' }}>Permissions per Module</label>
+                                        <div className="table-responsive">
+                                            <table className="data-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Module</th>
+                                                        {ACTIONS.map(a => <th key={a} style={{ textAlign: 'center', fontSize: 10 }}>{a}</th>)}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {MODULES.map(m => (
+                                                        <tr key={m.id}>
+                                                            <td style={{ fontWeight: 500 }}>{m.label}</td>
+                                                            {ACTIONS.map(a => (
+                                                                <td key={a} style={{ textAlign: 'center' }}>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={roleForm.permissions[m.id]?.includes(a)}
+                                                                        onChange={e => {
+                                                                            const current = roleForm.permissions[m.id] || [];
+                                                                            const next = e.target.checked
+                                                                                ? [...current, a]
+                                                                                : current.filter(x => x !== a);
+                                                                            setRoleForm({
+                                                                                ...roleForm,
+                                                                                permissions: { ...roleForm.permissions, [m.id]: next }
+                                                                            });
+                                                                        }}
+                                                                    />
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                                    <button className="btn-primary" onClick={async () => {
+                                        const success = editingRole
+                                            ? await updateRole(editingRole.id, roleForm)
+                                            : await addRole(roleForm);
+                                        if (success) setShowAddRole(false);
+                                    }}>
+                                        <SaveIcon style={{ fontSize: 18 }} /> {editingRole ? 'Update Role' : 'Create Role'}
+                                    </button>
+                                    <button className="btn-outline" onClick={() => setShowAddRole(false)}>Cancel</button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="card" style={{ background: 'var(--bg-surface)' }}>
+                            <div className="table-responsive">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Role Name</th>
+                                            <th>Permissions Summary</th>
+                                            <th>Assigned Users</th>
+                                            <th style={{ width: 100 }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {roles.map(r => (
+                                            <tr key={r.id}>
+                                                <td style={{ fontWeight: 'bold' }}>{r.name}</td>
+                                                <td>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                                        {Object.entries(r.permissions).map(([mod, perms]) => (
+                                                            perms.length > 0 && (
+                                                                <span key={mod} className="badge blue" style={{ fontSize: 10 }}>
+                                                                    {mod}: {perms.length}
+                                                                </span>
+                                                            )
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                                <td>{r._count?.users || 0}</td>
+                                                <td>
+                                                    <div style={{ display: 'flex', gap: 8 }}>
+                                                        <button className="table-action-btn" title="Edit" onClick={() => {
+                                                            setEditingRole(r);
+                                                            setRoleForm({ name: r.name, permissions: r.permissions });
+                                                            setShowAddRole(true);
+                                                        }}>
+                                                            <EditIcon style={{ fontSize: 18 }} />
+                                                        </button>
+                                                        {r.name !== 'Super Admin' && (r._count?.users || 0) === 0 && (
+                                                            <button className="table-action-btn danger" title="Delete" onClick={() => deleteRole(r.id)}>
+                                                                <DeleteIcon style={{ fontSize: 18 }} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}

@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import {
     Student, Teacher, AttendanceRecord, Exam, StudentResult, FeePayment, TimetableEntry,
-    SchoolSettings, GradeLevel, GRADES, SUBJECTS, TERMS, PerformanceLevel, User,
+    SchoolSettings, GradeLevel, GRADES, SUBJECTS, TERMS, PerformanceLevel, User, Role,
     FeeStructureItem, AuditLogItem, TimeSlot // New types
 } from '../types';
 import * as XLSX from 'xlsx';
@@ -68,6 +68,11 @@ interface SchoolContextType {
     fetchAuditLogs: () => Promise<void>;
     isSyncing: boolean;
     serverStatus: 'connected' | 'disconnected' | 'checking';
+    activeGrades: GradeLevel[];
+    roles: Role[];
+    addRole: (role: Omit<Role, 'id'>) => Promise<boolean>;
+    updateRole: (id: string, updates: Partial<Role>) => Promise<boolean>;
+    deleteRole: (id: string) => Promise<boolean>;
 }
 
 const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
@@ -100,7 +105,10 @@ const defaultSettings: SchoolSettings = {
     currentTerm: 'Term 1',
     currentYear: 2026,
     paybillNumber: '123456',
-    timeSlots: defaultTimeSlots
+    timeSlots: defaultTimeSlots,
+    primaryEnabled: true,
+    jssEnabled: false,
+    sssEnabled: false
 };
 
 // Default seed data — used when localStorage is empty
@@ -191,11 +199,12 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const [results, setResults] = useState<StudentResult[]>([]);
     // New Features State
     const [feeStructures, setFeeStructures] = useState<FeeStructureItem[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
     const [systemUsers, setSystemUsers] = useState<User[]>([
-        { id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', status: 'Active', lastLogin: '2026-02-15 10:30', updatedAt: '2026-02-18 10:00' },
-        { id: '2', firstName: 'Teacher', lastName: 'User', username: 'teacher', name: 'Teacher User', email: 'teacher@elirama.ac.ke', role: 'Teacher', status: 'Active', lastLogin: '2026-02-16 09:15', updatedAt: '2026-02-18 10:00' },
-        { id: '3', firstName: 'Zion', lastName: 'Elirama', username: 'zion', name: 'Zion Elirama', email: 'zion@elirama.ac.ke', role: 'Admin', status: 'Active', lastLogin: '2026-02-17 11:00', updatedAt: '2026-02-18 10:00' },
+        { id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', permissions: {}, status: 'Active', lastLogin: '2026-02-15 10:30', updatedAt: '2026-02-18 10:00' },
+        { id: '2', firstName: 'Teacher', lastName: 'Demo', username: 'teacher', name: 'Teacher Demo', email: 'teacher@elirama.ac.ke', role: 'Teacher', permissions: {}, status: 'Active', lastLogin: '2026-02-16 08:45', updatedAt: '2026-02-18 10:00' },
+        { id: '3', firstName: 'Finance', lastName: 'Staff', username: 'finance', name: 'Finance Staff', email: 'finance@elirama.ac.ke', role: 'Finance Officer', permissions: {}, status: 'Active', lastLogin: '2026-02-17 09:15', updatedAt: '2026-02-18 10:00' },
     ]);
     const [toasts, setToasts] = useState<Toast[]>([]);
     const [loading, setLoading] = useState(true);
@@ -868,11 +877,67 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // AUDIT LOGS
     const fetchAuditLogs = async () => {
-        const apiRes = await tryApi(`${API_URL}/audit`, { method: 'GET' });
-        if (apiRes) {
-            const data = await apiRes.json();
-            setAuditLogs(data);
+        try {
+            const res = await fetch(`${API_URL}/audit`);
+            if (res.ok) setAuditLogs(await res.json());
+        } catch (error) {
+            console.error('Failed to fetch audit logs:', error);
         }
+    };
+
+    const addRole = async (role: Omit<Role, 'id'>) => {
+        try {
+            const res = await fetch(`${API_URL}/roles`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(role)
+            });
+            if (res.ok) {
+                const newRole = await res.json();
+                setRoles(prev => [...prev, newRole]);
+                showToast('Role created successfully', 'success');
+                return true;
+            }
+        } catch (error) {
+            showToast('Failed to create role', 'error');
+        }
+        return false;
+    };
+
+    const updateRole = async (id: string, updates: Partial<Role>) => {
+        try {
+            const res = await fetch(`${API_URL}/roles`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, ...updates })
+            });
+            if (res.ok) {
+                const updatedRole = await res.json();
+                setRoles(prev => prev.map(r => r.id === id ? updatedRole : r));
+                showToast('Role updated successfully', 'success');
+                return true;
+            }
+        } catch (error) {
+            showToast('Failed to update role', 'error');
+        }
+        return false;
+    };
+
+    const deleteRole = async (id: string) => {
+        try {
+            const res = await fetch(`${API_URL}/roles?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setRoles(prev => prev.filter(r => r.id !== id));
+                showToast('Role deleted successfully', 'success');
+                return true;
+            } else {
+                const data = await res.json();
+                showToast(data.error || 'Failed to delete role', 'error');
+            }
+        } catch (error) {
+            showToast('Failed to delete role', 'error');
+        }
+        return false;
     };
 
     const clearAllData = async () => {
@@ -903,22 +968,80 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     const timeSlots = settings.timeSlots && settings.timeSlots.length > 0 ? settings.timeSlots : defaultTimeSlots;
 
+    const activeGrades = useMemo(() => {
+        const grades: GradeLevel[] = [];
+        if (settings.primaryEnabled) {
+            grades.push('Play Group', 'PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6');
+        }
+        if (settings.jssEnabled) {
+            grades.push('Grade 7', 'Grade 8', 'Grade 9');
+        }
+        if (settings.sssEnabled) {
+            grades.push('Form 1', 'Form 2', 'Form 3', 'Form 4');
+        }
+        return grades;
+    }, [settings.primaryEnabled, settings.jssEnabled, settings.sssEnabled]);
+
     return (
         <SchoolContext.Provider value={{
-            students, teachers, attendance, exams, payments, timetable, settings, gradeFees, results, toasts, loading,
-            timeSlots,
-            addStudent, updateStudent, deleteStudent,
-            addTeacher, updateTeacher, deleteTeacher,
+            students,
+            teachers,
+            attendance,
+            exams,
+            payments,
+            timetable,
+            settings,
+            gradeFees,
+            timeSlots: settings.timeSlots || defaultTimeSlots,
+            results,
+            toasts,
+            loading,
+            addStudent,
+            updateStudent,
+            deleteStudent,
+            addTeacher,
+            updateTeacher,
+            deleteTeacher,
             saveAttendance,
-            addExam, updateExam, deleteExam,
-            addPayment, deletePayment, addResult, saveBulkResults,
-            addTimetableEntry, updateTimetableEntry, deleteTimetableEntry,
-            updateSettings, updateGradeFees,
-            uploadStudents, uploadTeachers, uploadExams,
-            systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword, changeUserPassword,
-            showToast, refreshData, clearAllData,
-            feeStructures, auditLogs, addFeeStructure, updateFeeStructure, deleteFeeStructure, applyFeeStructure, revertFeeStructure, fetchAuditLogs,
-            isSyncing, serverStatus
+            addExam,
+            updateExam,
+            deleteExam,
+            addPayment,
+            deletePayment,
+            addResult,
+            saveBulkResults,
+            addTimetableEntry,
+            updateTimetableEntry,
+            deleteTimetableEntry,
+            updateSettings,
+            updateGradeFees,
+            uploadStudents,
+            uploadTeachers,
+            uploadExams,
+            systemUsers,
+            addSystemUser,
+            updateSystemUser,
+            deleteSystemUser,
+            resetUserPassword,
+            changeUserPassword,
+            showToast,
+            refreshData,
+            clearAllData,
+            feeStructures,
+            auditLogs,
+            addFeeStructure,
+            updateFeeStructure,
+            deleteFeeStructure,
+            applyFeeStructure,
+            revertFeeStructure,
+            fetchAuditLogs,
+            isSyncing,
+            serverStatus,
+            activeGrades,
+            roles,
+            addRole,
+            updateRole,
+            deleteRole
         }}>
             {children}
         </SchoolContext.Provider>

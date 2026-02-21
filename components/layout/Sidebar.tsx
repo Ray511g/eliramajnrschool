@@ -53,7 +53,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-    const { logout, user } = useAuth();
+    const { logout, user, hasPermission } = useAuth();
     const { serverStatus, settings } = useSchool();
     const router = useRouter();
 
@@ -67,32 +67,26 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         return router.pathname.startsWith(path);
     };
 
-    // Robust RBAC filtering
     const filteredNavItems = navItems.filter(item => {
-        // Dashboard is always visible to everyone
         if (item.path === '/') return true;
+        if (!user) return false;
+        if (user.role === 'Super Admin') return true;
+        if (!item.permission) return true;
 
-        const role = user?.role;
-        if (!role) return false;
+        const modMap: Record<string, string> = {
+            'MANAGE_STUDENTS': 'students',
+            'MANAGE_TEACHERS': 'teachers',
+            'MANAGE_FINANCE': 'fees',
+            'MANAGE_ATTENDANCE': 'academic',
+            'MANAGE_EXAMS': 'academic',
+            'MANAGE_REPORTS': 'academic',
+            'MANAGE_COMMUNICATION': 'academic', // Map to academic for now
+            'MANAGE_TIMETABLE': 'academic',
+            'MANAGE_ADMIN': 'settings'
+        };
 
-        const upperRole = role.toUpperCase();
-
-        // Force full access for any Admin role (case-insensitive)
-        if (upperRole.includes('ADMIN')) return true;
-
-        // Specific rights/permissions
-        if (item.permission && user?.permissions?.includes(item.permission)) return true;
-
-        // Role-based defaults (if no specific permissions defined)
-        if (upperRole === 'TEACHER') {
-            return ['/students', '/attendance', '/grades', '/exams', '/timetable', '/results', '/reports'].includes(item.path);
-        }
-
-        if (upperRole === 'STAFF') {
-            return ['/students', '/fees', '/communication'].includes(item.path);
-        }
-
-        return false;
+        const module = modMap[item.permission];
+        return hasPermission(module, 'VIEW');
     });
 
     return (

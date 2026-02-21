@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
-import { requireAuth, corsHeaders } from '../../../lib/auth';
+import { requireAuth, corsHeaders, checkPermission } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
 import { logAction } from '../../../lib/audit';
 
@@ -13,6 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!user) return;
 
     if (req.method === 'GET') {
+        if (!checkPermission(user, 'students', 'VIEW', res)) return;
         const { grade, search } = req.query;
         const where: any = {};
         if (grade) where.grade = grade as string;
@@ -28,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
+        if (!checkPermission(user, 'students', 'CREATE', res)) return;
         const data = req.body;
         const student = await prisma.student.create({
             data: {

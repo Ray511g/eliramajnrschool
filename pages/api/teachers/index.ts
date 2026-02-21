@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
-import { requireAuth, corsHeaders } from '../../../lib/auth';
+import { requireAuth, corsHeaders, checkPermission } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
 import { logAction } from '../../../lib/audit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // corsHeaders(res); // Handled by next.config.js but we add cache control here
+    corsHeaders(res);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -13,6 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!user) return;
 
     if (req.method === 'GET') {
+        if (!checkPermission(user, 'teachers', 'VIEW', res)) return;
         const { search } = req.query;
         const where: any = {};
         if (search) {
@@ -27,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
+        if (!checkPermission(user, 'teachers', 'CREATE', res)) return;
         const teacher = await prisma.teacher.create({ data: req.body });
 
         await logAction(

@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
-import { requireAuth, corsHeaders } from '../../../lib/auth';
+import { requireAuth, corsHeaders, checkPermission } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
 import { logAction } from '../../../lib/audit';
 
@@ -13,11 +13,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!user) return;
 
     if (req.method === 'GET') {
+        if (!checkPermission(user, 'fees', 'VIEW', res)) return;
         const payments = await prisma.payment.findMany({ orderBy: { createdAt: 'desc' } });
         return res.status(200).json(payments);
     }
 
     if (req.method === 'POST') {
+        if (!checkPermission(user, 'fees', 'CREATE', res)) return;
         const { studentId, amount, method, reference, date, term, studentName, grade } = req.body;
         const receiptNumber = `RCT-${Date.now().toString().slice(-6)}`;
 

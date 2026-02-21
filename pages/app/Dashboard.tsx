@@ -13,8 +13,11 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 import AddStudentModal from '../../components/modals/AddStudentModal';
 
+import { useAuth } from '../../context/AuthContext';
+
 export default function Dashboard() {
-    const { students, teachers, attendance, payments, settings } = useSchool();
+    const { students, teachers, attendance, payments, settings, activeGrades } = useSchool();
+    const { hasPermission } = useAuth();
     const router = useRouter();
     const [showAddStudent, setShowAddStudent] = useState(false);
 
@@ -96,7 +99,7 @@ export default function Dashboard() {
                         <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>No students enrolled yet</p>
                     ) : (
                         <div>
-                            {['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8'].map(grade => {
+                            {activeGrades.map(grade => {
                                 const count = students.filter(s => s.grade === grade).length;
                                 if (count === 0) return null;
                                 return (
@@ -117,21 +120,27 @@ export default function Dashboard() {
                 <WidgetsIcon style={{ fontSize: 20 }} /> Quick Actions
             </div>
             <div className="quick-actions-grid">
-                <div className="quick-action-card" onClick={() => setShowAddStudent(true)}>
-                    <div className="qa-icon blue"><PersonAddIcon /></div>
-                    <h3>Add New Student</h3>
-                    <p>Register a new student</p>
-                </div>
-                <div className="quick-action-card" onClick={() => router.push('/attendance')}>
-                    <div className="qa-icon green"><EventAvailableIcon /></div>
-                    <h3>Mark Attendance</h3>
-                    <p>Record today's attendance</p>
-                </div>
-                <div className="quick-action-card" onClick={() => router.push('/fees')}>
-                    <div className="qa-icon orange"><AttachMoneyIcon /></div>
-                    <h3>Finance & Payments</h3>
-                    <p>Manage fees and school accounts</p>
-                </div>
+                {hasPermission('students', 'CREATE') && (
+                    <div className="quick-action-card" onClick={() => setShowAddStudent(true)}>
+                        <div className="qa-icon blue"><PersonAddIcon /></div>
+                        <h3>Add New Student</h3>
+                        <p>Register a new student</p>
+                    </div>
+                )}
+                {hasPermission('academic', 'EDIT') && (
+                    <div className="quick-action-card" onClick={() => router.push('/attendance')}>
+                        <div className="qa-icon green"><EventAvailableIcon /></div>
+                        <h3>Mark Attendance</h3>
+                        <p>Record today's attendance</p>
+                    </div>
+                )}
+                {hasPermission('fees', 'VIEW') && (
+                    <div className="quick-action-card" onClick={() => router.push('/fees')}>
+                        <div className="qa-icon orange"><AttachMoneyIcon /></div>
+                        <h3>Finance & Payments</h3>
+                        <p>Manage fees and school accounts</p>
+                    </div>
+                )}
             </div>
 
             {showAddStudent && <AddStudentModal onClose={() => setShowAddStudent(false)} />}

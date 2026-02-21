@@ -108,11 +108,24 @@ export interface User {
     username: string;
     name: string; // Keep as fullName for display
     email: string;
-    role: 'Super Admin' | 'Admin' | 'Teacher' | 'Staff';
-    permissions?: string[];
+    role: string;
+    roleId?: string;
+    roleData?: Role;
+    permissions: Record<string, string[]>;
     status: 'Active' | 'Inactive';
     lastLogin: string;
     password?: string;
+    updatedAt?: string;
+}
+
+export interface Role {
+    id: string;
+    name: string;
+    permissions: Record<string, string[]>;
+    _count?: {
+        users: number;
+    };
+    createdAt?: string;
     updatedAt?: string;
 }
 
@@ -131,11 +144,23 @@ export interface SchoolSettings {
     paybillNumber?: string;
     logo?: string;
     timeSlots?: TimeSlot[];
+    primaryEnabled: boolean;
+    jssEnabled: boolean;
+    sssEnabled: boolean;
 }
 
-export type GradeLevel = 'Play Group' | 'PP1' | 'PP2' | 'Grade 1' | 'Grade 2' | 'Grade 3' | 'Grade 4' | 'Grade 5' | 'Grade 6';
+export type GradeLevel =
+    | 'Play Group' | 'PP1' | 'PP2'
+    | 'Grade 1' | 'Grade 2' | 'Grade 3' | 'Grade 4' | 'Grade 5' | 'Grade 6'
+    | 'Grade 7' | 'Grade 8' | 'Grade 9'
+    | 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4';
 
-export const GRADES: GradeLevel[] = ['Play Group', 'PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
+export const GRADES: GradeLevel[] = [
+    'Play Group', 'PP1', 'PP2',
+    'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+    'Grade 7', 'Grade 8', 'Grade 9',
+    'Form 1', 'Form 2', 'Form 3', 'Form 4'
+];
 
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
