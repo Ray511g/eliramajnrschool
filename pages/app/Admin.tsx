@@ -27,6 +27,12 @@ export default function Admin() {
     const [form, setForm] = useState(settings);
     const [activeTab, setActiveTab] = useState<'settings' | 'users' | 'fees' | 'audit'>('settings');
 
+    useEffect(() => {
+        if (!editing) {
+            setForm(settings);
+        }
+    }, [settings, editing]);
+
     // Fee Structure State
     const [feeForm, setFeeForm] = useState({ grade: 'Grade 1', name: '', amount: 0, term: 'Term 1' });
     const [editingFeeItem, setEditingFeeItem] = useState<string | null>(null);
@@ -316,8 +322,11 @@ export default function Admin() {
                             )}
                         </div>
 
-                        <div className="admin-section">
-                            <h3><SettingsIcon style={{ fontSize: 22 }} /> Academic Settings</h3>
+                        <div className="admin-section academic-settings-container">
+                            <h3 style={{ color: 'var(--primary-color)', borderBottom: '2px solid var(--primary-color)', paddingBottom: 10, marginBottom: 20 }}>
+                                <SettingsIcon style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 8 }} />
+                                Academic & Timetable Configuration
+                            </h3>
                             {editing ? (
                                 <>
                                     <div className="form-group" style={{ marginBottom: 15 }}>
