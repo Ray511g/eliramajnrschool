@@ -5,9 +5,9 @@ import GradeIcon from '@mui/icons-material/Grade';
 import PeopleIcon from '@mui/icons-material/People';
 
 export default function Grades() {
-    const { students } = useSchool();
+    const { students, activeGrades } = useSchool();
 
-    const gradeData = GRADES.map(grade => {
+    const gradeData = activeGrades.map(grade => {
         const gradeStudents = students.filter(s => s.grade === grade);
         const male = gradeStudents.filter(s => s.gender === 'Male').length;
         const female = gradeStudents.filter(s => s.gender === 'Female').length;

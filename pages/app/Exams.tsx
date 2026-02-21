@@ -10,7 +10,7 @@ import ScheduleExamModal from '../../components/modals/ScheduleExamModal';
 import Pagination from '../../components/common/Pagination';
 
 export default function Exams() {
-    const { exams, deleteExam } = useSchool();
+    const { exams, deleteExam, activeGrades } = useSchool();
     const [gradeFilter, setGradeFilter] = useState('');
     const [termFilter, setTermFilter] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
@@ -91,7 +91,7 @@ export default function Exams() {
                     <label htmlFor="exam-grade">Grade Level</label>
                     <select id="exam-grade" title="Filter exams by grade" className="filter-select" value={gradeFilter} onChange={e => setGradeFilter(e.target.value)} style={{ width: '100%' }}>
                         <option value="">All Grades</option>
-                        {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                        {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0, minWidth: 180 }}>

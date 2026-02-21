@@ -112,17 +112,20 @@ export default function Layout({ children }: LayoutProps) {
                                 <div className="dropdown-header">
                                     <p className="dropdown-user-name">{user?.name}</p>
                                     <p className="dropdown-user-email">{user?.email}</p>
-                                    {user?.role === 'Super Admin' && (
-                                        <span className="badge gold-badge" style={{ marginTop: 8, display: 'inline-block' }}>SUPER ADMIN</span>
-                                    )}
+                                    <div style={{ marginTop: 8, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                        {user?.role === 'Super Admin' && (
+                                            <span className="badge gold-badge">SUPER ADMIN</span>
+                                        )}
+                                        <span className="badge version-badge">v1.5.0</span>
+                                    </div>
                                 </div>
                                 <div className="dropdown-divider"></div>
                                 <div className="dropdown-item" onClick={() => { setShowChangePassword(true); setShowProfileMenu(false); }}>
-                                    <LockIcon style={{ fontSize: 18 }} /> Security Settings
+                                    Security Settings
                                 </div>
                                 <div className="dropdown-divider"></div>
                                 <div className="dropdown-item logout-accent" onClick={logout}>
-                                    <LogoutIcon style={{ fontSize: 18 }} /> Sign Out
+                                    Sign Out
                                 </div>
                             </div>
                         )}

@@ -1,0 +1,30 @@
+
+> elirama-web@0.0.0 build
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+Γ£ö Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 239ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+
+  Γû▓ Next.js 14.2.35
+  - Environments: .env
+
+   Linting and checking validity of types ...
+Failed to compile.
+
+./pages/app/Exams.tsx:94:26
+Type error: Cannot find name 'activeGrades'.
+
+  92 |                     <select id="exam-grade" title="Filter exams by grade" className="filter-select" value={gradeFilter} onChange={e => setGradeFilter(e.target.value)} style={{ width: '100%' }}>
+  93 |                         <option value="">All Grades</option>
+> 94 |                         {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
+     |                          ^
+  95 |                     </select>
+  96 |                 </div>
+  97 |                 <div className="form-group" style={{ marginBottom: 0, minWidth: 180 }}>
+Next.js build worker exited with code: 1 and signal: null

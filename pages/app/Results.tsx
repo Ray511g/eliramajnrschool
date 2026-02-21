@@ -26,7 +26,7 @@ const getLevelColor = (level: PerformanceLevel) => {
 };
 
 export default function Results() {
-    const { students, exams, results, saveBulkResults, showToast, learningAreas, assessmentScores, saveBulkAssessmentScores } = useSchool();
+    const { students, exams, results, saveBulkResults, showToast, learningAreas, assessmentScores, saveBulkAssessmentScores, activeGrades } = useSchool();
     const [activeTab, setActiveTab] = useState<'exams' | 'cbc'>('exams');
     const [selectedGrade, setSelectedGrade] = useState('');
     const [selectedExamId, setSelectedExamId] = useState('');
@@ -150,7 +150,7 @@ export default function Results() {
                             <label>Grade Level</label>
                             <select title="Grade Level" className="form-control" value={selectedGrade} onChange={e => { setSelectedGrade(e.target.value); setSelectedExamId(''); setSelectedAreaId(''); }}>
                                 <option value="">Select Grade</option>
-                                {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                                {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
                             </select>
                         </div>
 

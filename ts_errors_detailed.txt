@@ -1,0 +1,2 @@
+pages/app/Exams.tsx(94,26): error TS2304: Cannot find name 'activeGrades'.
+pages/app/Results.tsx(153,34): error TS2304: Cannot find name 'activeGrades'.

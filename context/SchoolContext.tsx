@@ -148,6 +148,20 @@ const seedTeachers: Teacher[] = [
     { id: 't5', firstName: 'Eunice', lastName: 'Waweru', email: 'eunice@elirama.ac.ke', phone: '0755555555', qualification: 'B.Ed Kiswahili', subjects: ['Kiswahili', 'CRE'], grades: ['Grade 2', 'Grade 6'], status: 'Active', joinDate: '2021-05-15', maxLessonsDay: 8, maxLessonsWeek: 40 },
 ];
 
+export const CBC_SUBJECTS_MAP: Record<string, string[]> = {
+    'Early Years': ['Language Activities', 'Mathematical Activities', 'Environmental Activities', 'Psycho-motor Activities', 'Religious Education'],
+    'Primary': ['English', 'Kiswahili', 'Mathematics', 'Science & Technology', 'Social Studies', 'CRE/IRE/HRE', 'Creative Arts', 'Physical & Health Education', 'Agriculture & Nutrition'],
+    'JSS': ['Mathematics', 'English', 'Kiswahili', 'Integrated Science', 'Health Education', 'Pre-Technical Studies', 'Social Studies', 'CRE/IRE/HRE', 'Creative Arts & Sports', 'Agriculture & Nutrition', 'Life Skills Education', 'Computer Science'],
+    'SSS': ['Mathematics', 'English', 'Kiswahili', 'Chemistry', 'Biology', 'Physics', 'History', 'Geography', 'Business Studies', 'Computer Science']
+};
+
+const getLevelForGrade = (grade: string): string => {
+    if (['Play Group', 'PP1', 'PP2'].includes(grade)) return 'Early Years';
+    if (grade.startsWith('Grade') && parseInt(grade.split(' ')[1]) <= 6) return 'Primary';
+    if (['Grade 7', 'Grade 8', 'Grade 9'].includes(grade)) return 'JSS';
+    return 'SSS';
+};
+
 const seedExams: Exam[] = [
     { id: 'e1', name: 'Term 1 Mid-Term Mathematics', subject: 'Mathematics', grade: 'Grade 6', date: '2026-03-15', type: 'Midterm', term: 'Term 1', status: 'Scheduled', totalMarks: 100 },
     { id: 'e2', name: 'Science Quiz - Grade 3', subject: 'Science', grade: 'Grade 3', date: '2026-02-20', type: 'Quiz', term: 'Term 1', status: 'Completed', totalMarks: 50 },
@@ -1006,6 +1020,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const clearAllData = async () => {
+        if (!confirm('This will permanently delete ALL students, teachers, results, and settings. This cannot be undone. Are you sure?')) return;
+
+        setLoading(true);
         const token = localStorage.getItem('elirama_token');
         if (token) {
             try {
@@ -1028,7 +1045,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setSystemUsers([{ id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', permissions: [], status: 'Active', lastLogin: 'Never', updatedAt: new Date().toISOString() }]);
         setSettings(defaultSettings);
         localStorage.removeItem(STORAGE_KEY);
+        setLoading(false);
         showToast('All system data has been cleared', 'info');
+        window.location.reload();
     };
 
     const timeSlots = settings.timeSlots && settings.timeSlots.length > 0 ? settings.timeSlots : defaultTimeSlots;

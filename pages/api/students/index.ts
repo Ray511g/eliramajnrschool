@@ -31,9 +31,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
         if (!checkPermission(user, 'students', 'CREATE', res)) return;
         const data = req.body;
+
+        let admissionNumber = data.admissionNumber;
+        if (!admissionNumber) {
+            const count = await prisma.student.count();
+            const year = new Date().getFullYear();
+            admissionNumber = `ELR/${year}/${(count + 1).toString().padStart(3, '0')}`;
+        }
+
         const student = await prisma.student.create({
             data: {
                 ...data,
+                admissionNumber,
                 feeBalance: data.totalFees - (data.paidFees || 0),
             },
         });

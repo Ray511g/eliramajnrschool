@@ -154,6 +154,7 @@ export interface SchoolSettings {
     autoTimetableEnabled: boolean;
     manualTimetableBuilderEnabled: boolean;
     headOfSchoolTitle?: 'Headteacher' | 'Principal' | 'Chief Principal';
+    sssNaming?: 'Form' | 'Grade';
 }
 
 export type GradeLevel =

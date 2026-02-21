@@ -29,18 +29,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
         if (!checkPermission(user, 'teachers', 'CREATE', res)) return;
-        const teacher = await prisma.teacher.create({ data: req.body });
 
-        await logAction(
-            user.id,
-            user.name,
-            'CREATE_TEACHER',
-            `Registered new teacher: ${teacher.firstName} ${teacher.lastName} (${teacher.email})`,
-            (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
-        );
+        const { firstName, lastName, email, phone, joinDate } = req.body;
 
-        await touchSync();
-        return res.status(201).json(teacher);
+        // Basic validation
+        if (!firstName || !lastName || !email || !phone || !joinDate) {
+            return res.status(400).json({ error: 'Missing required fields: firstName, lastName, email, phone, and joinDate are mandatory.' });
+        }
+
+        try {
+            const teacher = await prisma.teacher.create({ data: req.body });
+
+            await logAction(
+                user.id,
+                user.name,
+                'CREATE_TEACHER',
+                `Registered new teacher: ${teacher.firstName} ${teacher.lastName} (${teacher.email})`,
+                (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
+            );
+
+            await touchSync();
+            return res.status(201).json(teacher);
+        } catch (error: any) {
+            console.error('Error creating teacher:', error);
+            if (error.code === 'P2002') {
+                return res.status(400).json({ error: 'A teacher with this email already exists.' });
+            }
+            return res.status(500).json({ error: 'Failed to register teacher. Please ensure all fields are correct.' });
+        }
     }
 
     res.status(405).json({ error: 'Method not allowed' });

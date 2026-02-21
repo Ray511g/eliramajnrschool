@@ -295,8 +295,23 @@ export default function Admin() {
                                             </label>
                                             <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                                                 <input type="checkbox" checked={form.sssEnabled} onChange={e => setForm({ ...form, sssEnabled: e.target.checked })} />
-                                                Senior Secondary (Form 1 - Form 4)
+                                                Senior Secondary ({form.sssNaming === 'Grade' ? 'Grade 10 - Grade 12' : 'Form 1 - Form 4'})
                                             </label>
+
+                                            {form.sssEnabled && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginLeft: 20 }}>
+                                                    <span style={{ fontSize: 13, opacity: 0.8 }}>Naming:</span>
+                                                    <select
+                                                        title="SSS Naming"
+                                                        className="form-control-sm"
+                                                        value={form.sssNaming || 'Form'}
+                                                        onChange={e => setForm({ ...form, sssNaming: e.target.value as any })}
+                                                    >
+                                                        <option value="Form">Form 1-4</option>
+                                                        <option value="Grade">Grade 10-12</option>
+                                                    </select>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="form-group" style={{ gridColumn: 'span 2' }}>

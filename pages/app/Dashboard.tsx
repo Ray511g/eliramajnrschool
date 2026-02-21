@@ -23,17 +23,17 @@ export default function Dashboard() {
     const [showAddStudent, setShowAddStudent] = useState(false);
 
     const stats = [
-        { label: 'Total Students', value: students.length, icon: <PeopleIcon />, color: 'blue', sub: `${students.filter(s => s.status === 'Active').length} Active` },
-        { label: 'Staff Members', value: teachers.length, icon: <SchoolIcon />, color: 'purple', sub: 'Teaching & Admin' },
-        { label: 'Academic Year', value: '2025/26', icon: <EventNoteIcon />, color: 'green', sub: 'Term 1 Active' },
-        { label: 'Exams Active', value: exams.filter(e => (e as any).status === 'Active' || (e as any).status === 'Scheduled').length, icon: <AssignmentIcon />, color: 'orange', sub: 'Ongoing Assessments' },
+        { label: 'Total Students', value: students.length, color: 'blue', sub: `${students.filter(s => s.status === 'Active').length} Active` },
+        { label: 'Staff Members', value: teachers.length, color: 'purple', sub: 'Teaching & Admin' },
+        { label: 'Academic Year', value: '2025/26', color: 'green', sub: 'Term 1 Active' },
+        { label: 'Exams Active', value: exams.filter(e => (e as any).status === 'Active' || (e as any).status === 'Scheduled').length, color: 'orange', sub: 'Ongoing Assessments' },
     ];
 
     const quickActions = [
-        { label: 'Add Student', icon: <PeopleIcon />, path: '/students?action=add', color: 'var(--accent-blue)', desc: 'Register a new learner', permission: { module: 'students', action: 'CREATE' } },
-        { label: 'Record Fees', icon: <PaymentIcon />, path: '/fees?action=record', color: 'var(--accent-green)', desc: 'Process payment', permission: { module: 'fees', action: 'CREATE' } },
-        { label: 'Mark Attendance', icon: <EventNoteIcon />, path: '/attendance', color: 'var(--accent-purple)', desc: 'Daily roll call', permission: { module: 'academic', action: 'EDIT' } },
-        { label: 'Enter Results', icon: <AssessmentIcon />, path: '/results', color: 'var(--accent-orange)', desc: 'CBC Assessment', permission: { module: 'academic', action: 'EDIT' } },
+        { label: 'Add Student', path: '/students?action=add', color: 'var(--accent-blue)', desc: 'Register a new learner', permission: { module: 'students', action: 'CREATE' } },
+        { label: 'Record Fees', path: '/fees?action=record', color: 'var(--accent-green)', desc: 'Process payment', permission: { module: 'fees', action: 'CREATE' } },
+        { label: 'Mark Attendance', path: '/attendance', color: 'var(--accent-purple)', desc: 'Daily roll call', permission: { module: 'academic', action: 'EDIT' } },
+        { label: 'Enter Results', path: '/results', color: 'var(--accent-orange)', desc: 'CBC Assessment', permission: { module: 'academic', action: 'EDIT' } },
     ];
 
     return (
@@ -53,7 +53,6 @@ export default function Dashboard() {
                             <div key={i} className={`stat-card dash-${stat.color}`}>
                                 <div className="stat-card-header">
                                     <span className="stat-card-label">{stat.label}</span>
-                                    <div className="stat-card-icon">{stat.icon}</div>
                                 </div>
                                 <div className="stat-card-value">{stat.value}</div>
                                 <div className="stat-card-sub">{stat.sub}</div>
@@ -69,7 +68,6 @@ export default function Dashboard() {
                             <div key={i} className={`stat-card dash-${stat.color}`}>
                                 <div className="stat-card-header">
                                     <span className="stat-card-label">{stat.label}</span>
-                                    <div className="stat-card-icon">{stat.icon}</div>
                                 </div>
                                 <div className="stat-card-value">{stat.value}</div>
                                 <div className="stat-card-sub">{stat.sub}</div>
@@ -89,11 +87,8 @@ export default function Dashboard() {
                         if (action.permission && !hasAuthPermission(action.permission.module, action.permission.action)) return null;
                         return (
                             <div key={i} className="quick-action-card-modern" onClick={() => router.push(action.path)}>
-                                <div className="action-icon-wrapper" style={{ boxShadow: `0 8px 16px ${action.color}30` }}>
-                                    {React.cloneElement(action.icon as React.ReactElement, { style: { color: action.color, fontSize: 24 } })}
-                                </div>
                                 <div className="action-info">
-                                    <h3>{action.label}</h3>
+                                    <h3 style={{ borderLeft: `3px solid ${action.color}`, paddingLeft: 10 }}>{action.label}</h3>
                                     <p>{action.desc}</p>
                                 </div>
                             </div>
@@ -103,7 +98,7 @@ export default function Dashboard() {
             </section>
 
             <div className="dashboard-main-grid" style={{ marginTop: '40px' }}>
-                <div className="card glass-card span-2">
+                <div className="card glass-card span-3">
                     <div className="flex-between section-header-horizontal">
                         <div className="title-group">
                             <h3 className="card-title">Recent Audit Activities</h3>
@@ -113,25 +108,6 @@ export default function Dashboard() {
                     </div>
                     <div className="activity-feed-container custom-scrollbar">
                         <p className="empty-state-text">Synchronizing audit data...</p>
-                    </div>
-                </div>
-
-                <div className="card glass-card">
-                    <div className="flex-between section-header-horizontal">
-                        <div className="title-group">
-                            <h3 className="card-title">Fee Collection Progress</h3>
-                            <p className="card-subtitle">Termly revenue tracking</p>
-                        </div>
-                        <div className="status-indicator-positive">+12%</div>
-                    </div>
-                    <div className="chart-placeholder">
-                        <div className="revenue-stat">
-                            <span className="revenue-label">Total Collected</span>
-                            <span className="revenue-value">KES 1.2M</span>
-                        </div>
-                        <div className="progress-bar-container">
-                            <div className="progress-bar" style={{ width: '65%' }}></div>
-                        </div>
                     </div>
                 </div>
             </div>
