@@ -17,8 +17,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
         try {
-            // 1. Get all fee structures
-            const structures = await prisma.feeStructure.findMany();
+            const { grade } = req.query;
+
+            // 1. Get relevant fee structures
+            const query = grade ? { where: { grade: grade as string } } : {};
+            const structures = await prisma.feeStructure.findMany(query);
 
             // 2. Group totals by grade
             const gradeTotals = structures.reduce((acc: any, item) => {
@@ -27,15 +30,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return acc;
             }, {});
 
-            // 3. Process each grade
-            const grades = Object.keys(gradeTotals);
+            // 3. Process grades
+            const gradesToUpdate = Object.keys(gradeTotals);
             let totalUpdated = 0;
 
-            for (const grade of grades) {
-                const totalForGrade = gradeTotals[grade];
+            for (const g of gradesToUpdate) {
+                const totalForGrade = gradeTotals[g];
 
                 // Update all students in this grade
-                const students = await prisma.student.findMany({ where: { grade } });
+                const students = await prisma.student.findMany({ where: { grade: g } });
 
                 for (const student of students) {
                     await prisma.student.update({
@@ -55,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     userId: user.id || 'unknown',
                     userName: user.name || 'Unknown',
                     action: 'PUBLISH_FEE_STRUCTURE',
-                    details: `Published fee structure. Updated ${totalUpdated} student balances across ${grades.length} grades.`
+                    details: `Published fee structure${grade ? ` for ${grade}` : ''}. Updated ${totalUpdated} student balances.`
                 }
             });
 

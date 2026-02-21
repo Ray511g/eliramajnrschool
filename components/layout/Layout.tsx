@@ -41,7 +41,6 @@ export default function Layout({ children }: LayoutProps) {
             <main className="main-content">
                 <header className="top-bar">
                     <div className="top-bar-left">
-                        <span className="school-breadcrumb">{settings?.schoolName || 'Elirama School'} / Dashboard</span>
                     </div>
                     <div className="top-bar-right">
                         <NotificationsIcon className="top-bar-icon" />

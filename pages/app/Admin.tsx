@@ -111,16 +111,25 @@ export default function Admin() {
         });
     };
 
-    const handleApplyFees = async () => {
-        if (confirm('Are you sure you want to PUBLISH this fee structure? This will update all student total fees and current balances based on the active structure. This action is irreversible.')) {
+    const handleApplyFees = async (grade?: string) => {
+        if (confirm(`Are you sure you want to PUBLISH ${grade ? `fees for ${grade}` : 'all fees'}? This will update students' total fees and current balances for the selected grade(s).`)) {
             setIsPublishing(true);
             try {
-                await applyFeeStructure();
+                await applyFeeStructure(grade);
             } finally {
                 setIsPublishing(false);
             }
         }
     };
+
+    // Group fee structures by grade
+    const groupedFees = feeStructures.reduce((acc: any, item) => {
+        if (!acc[item.grade]) acc[item.grade] = [];
+        acc[item.grade].push(item);
+        return acc;
+    }, {});
+
+    const sortedGrades = Object.keys(groupedFees).sort();
 
     const downloadTemplate = (type: 'students' | 'teachers' | 'exams') => {
         let headers: string[] = [];
@@ -634,17 +643,9 @@ export default function Admin() {
                             <div>
                                 <h3 style={{ margin: 0 }}>Fee Structure Breakdown</h3>
                                 <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
-                                    Changes here are saved as <strong>drafts</strong>. Click "Publish Structure" to update student balances.
+                                    Changes are saved as <strong>drafts</strong>. Use the "Publish" button under each grade to apply them.
                                 </p>
                             </div>
-                            <button
-                                className="btn-primary"
-                                style={{ background: 'var(--accent-blue)', borderColor: 'var(--accent-blue)' }}
-                                onClick={handleApplyFees}
-                                disabled={isPublishing}
-                            >
-                                {isPublishing ? 'Publishing...' : 'Publish Fee Structure'}
-                            </button>
                         </div>
                         <div className="card" style={{ background: 'var(--bg-surface)', marginBottom: 20 }}>
                             <h4 style={{ margin: '0 0 10px' }}>Add Fee Item</h4>
@@ -692,33 +693,59 @@ export default function Admin() {
                             </div>
                         </div>
 
-                        <div className="table-container">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Grade</th>
-                                        <th>Term</th>
-                                        <th>Item Name</th>
-                                        <th>Amount</th>
-                                        <th style={{ textAlign: 'right' }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {feeStructures.map(item => (
-                                        <tr key={item.id}>
-                                            <td>{item.grade}</td>
-                                            <td>{item.term}</td>
-                                            <td>{item.name}</td>
-                                            <td>KES {item.amount.toLocaleString()}</td>
-                                            <td style={{ textAlign: 'right', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                                <button className="table-action-btn primary" onClick={() => startEditFeeItem(item)}><EditIcon style={{ fontSize: 16 }} /></button>
-                                                <button className="table-action-btn danger" onClick={() => deleteFeeStructure(item.id)}><DeleteIcon style={{ fontSize: 16 }} /></button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        {sortedGrades.map(grade => {
+                            const gradeItems = groupedFees[grade];
+                            const total = gradeItems.reduce((sum: number, item: any) => sum + item.amount, 0);
+                            return (
+                                <div key={grade} className="card" style={{ marginBottom: 20, background: 'var(--bg-surface)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+                                        <h4 style={{ margin: 0 }}>{grade} Structure</h4>
+                                        <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
+                                            <span style={{ fontWeight: 'bold', color: 'var(--accent-blue)' }}>Total: KES {total.toLocaleString()}</span>
+                                            <button
+                                                className="btn-primary"
+                                                style={{ fontSize: 12, padding: '6px 12px' }}
+                                                onClick={() => handleApplyFees(grade as string)}
+                                                disabled={isPublishing}
+                                            >
+                                                Publish {grade} Fees
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="table-responsive">
+                                        <table className="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Term</th>
+                                                    <th>Item Name</th>
+                                                    <th>Amount</th>
+                                                    <th style={{ textAlign: 'right' }}>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {gradeItems.map((item: any) => (
+                                                    <tr key={item.id}>
+                                                        <td>{item.term}</td>
+                                                        <td>{item.name}</td>
+                                                        <td>KES {item.amount.toLocaleString()}</td>
+                                                        <td style={{ textAlign: 'right', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                            <button className="table-action-btn primary" onClick={() => startEditFeeItem(item)}><EditIcon style={{ fontSize: 16 }} /></button>
+                                                            <button className="table-action-btn danger" onClick={() => deleteFeeStructure(item.id)}><DeleteIcon style={{ fontSize: 16 }} /></button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {feeStructures.length === 0 && (
+                            <div className="empty-state">
+                                <p>No fee items added yet. Use the form above to build the structure.</p>
+                            </div>
+                        )}
                     </div>
                 )}
 

@@ -62,7 +62,7 @@ interface SchoolContextType {
     addFeeStructure: (item: Omit<FeeStructureItem, 'id' | 'createdAt'>) => void;
     updateFeeStructure: (id: string, updates: Partial<FeeStructureItem>) => void;
     deleteFeeStructure: (id: string) => void;
-    applyFeeStructure: () => Promise<void>;
+    applyFeeStructure: (grade?: string) => Promise<void>;
     fetchAuditLogs: () => void;
     isSyncing: boolean;
     serverStatus: 'connected' | 'disconnected' | 'checking';
@@ -814,12 +814,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const applyFeeStructure = async () => {
+    const applyFeeStructure = async (grade?: string) => {
         setLoading(true);
-        const apiRes = await tryApi(`${API_URL}/fees/apply`, { method: 'POST' });
+        const url = grade ? `${API_URL}/fees/apply?grade=${encodeURIComponent(grade)}` : `${API_URL}/fees/apply`;
+        const apiRes = await tryApi(url, { method: 'POST' });
         if (apiRes) {
             const data = await apiRes.json();
-            showToast(`Fee structure published! Updated ${data.updatedCount} students.`);
+            showToast(`Fee structure published${grade ? ` for ${grade}` : ''}! Updated ${data.updatedCount} students.`);
             await fetchData(true); // Pull fresh student data with new balances
         } else {
             showToast('Failed to publish fee structure', 'error');
