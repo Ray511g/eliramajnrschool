@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import {
     Student, Teacher, AttendanceRecord, Exam, StudentResult, FeePayment, TimetableEntry,
     SchoolSettings, GradeLevel, GRADES, SUBJECTS, TERMS, PerformanceLevel, User, Role,
-    FeeStructureItem, AuditLogItem, TimeSlot // New types
+    FeeStructureItem, AuditLogItem, TimeSlot,
+    LearningArea, Strand, SubStrand, AssessmentItem, AssessmentScore // CBC
 } from '../types';
 import * as XLSX from 'xlsx';
 
@@ -26,6 +27,9 @@ interface SchoolContextType {
     results: StudentResult[];
     toasts: Toast[];
     loading: boolean;
+    // CBC State
+    learningAreas: LearningArea[];
+    assessmentScores: AssessmentScore[];
     addStudent: (student: Omit<Student, 'id'>) => void;
     updateStudent: (id: string, data: Partial<Student>) => void;
     deleteStudent: (id: string) => void;
@@ -67,6 +71,10 @@ interface SchoolContextType {
     applyFeeStructure: (grade?: string) => Promise<void>;
     revertFeeStructure: (grade: string) => Promise<void>;
     fetchAuditLogs: () => Promise<void>;
+    // CBC Methods
+    saveLearningArea: (area: Omit<LearningArea, 'id'>) => Promise<boolean>;
+    saveAssessmentScore: (score: AssessmentScore) => Promise<boolean>;
+    saveBulkAssessmentScores: (scores: AssessmentScore[]) => Promise<boolean>;
     isSyncing: boolean;
     serverStatus: 'connected' | 'disconnected' | 'checking';
     activeGrades: GradeLevel[];
@@ -78,7 +86,7 @@ interface SchoolContextType {
 
 const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
 
-function generateId() {
+export function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
@@ -201,6 +209,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         'Grade 6': 18000,
     });
     const [results, setResults] = useState<StudentResult[]>([]);
+    // CBC State
+    const [learningAreas, setLearningAreas] = useState<LearningArea[]>([]);
+    const [assessmentScores, setAssessmentScores] = useState<AssessmentScore[]>([]);
     // New Features State
     const [feeStructures, setFeeStructures] = useState<FeeStructureItem[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
@@ -592,6 +603,54 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // CBC METHODS
+    const saveLearningArea = async (area: Omit<LearningArea, 'id'>) => {
+        if (serverStatus !== 'connected') {
+            showToast('System Offline: Cannot save learning area.', 'error');
+            return false;
+        }
+        const apiRes = await tryApi(`${API_URL}/cbc/learning-areas`, { method: 'POST', body: JSON.stringify(area) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setLearningAreas(prev => [...prev.filter(a => a.id !== data.id), data]);
+            showToast('Learning Area saved');
+            return true;
+        }
+        return false;
+    };
+
+    const saveAssessmentScore = async (score: AssessmentScore) => {
+        if (serverStatus !== 'connected') {
+            showToast('System Offline: Cannot save score.', 'error');
+            return false;
+        }
+        const apiRes = await tryApi(`${API_URL}/cbc/scores`, { method: 'POST', body: JSON.stringify(score) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setAssessmentScores(prev => [...prev.filter(s => !(s.studentId === data.studentId && s.assessmentItemId === data.assessmentItemId)), data]);
+            return true;
+        }
+        return false;
+    };
+
+    const saveBulkAssessmentScores = async (scores: AssessmentScore[]) => {
+        if (serverStatus !== 'connected') {
+            showToast('System Offline: Cannot save scores.', 'error');
+            return false;
+        }
+        const apiRes = await tryApi(`${API_URL}/cbc/scores/bulk`, { method: 'POST', body: JSON.stringify(scores) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setAssessmentScores(prev => {
+                const filtered = prev.filter(s => !scores.some(ns => ns.studentId === s.studentId && ns.assessmentItemId === s.assessmentItemId));
+                return [...filtered, ...data];
+            });
+            showToast(`Saved ${scores.length} scores`);
+            return true;
+        }
+        return false;
+    };
+
     const uploadResults = async (newResults: Omit<StudentResult, 'id'>[]) => {
         if (serverStatus !== 'connected') {
             showToast('System Offline: Cannot upload results.', 'error');
@@ -901,11 +960,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // AUDIT LOGS
     const fetchAuditLogs = async () => {
-        try {
-            const res = await fetch(`${API_URL}/audit`);
-            if (res.ok) setAuditLogs(await res.json());
-        } catch (error) {
-            console.error('Failed to fetch audit logs:', error);
+        const apiRes = await tryApi(`${API_URL}/audit`, { method: 'GET' });
+        if (apiRes) {
+            setAuditLogs(await apiRes.json());
         }
     };
 
@@ -1069,7 +1126,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             roles,
             addRole,
             updateRole,
-            deleteRole
+            deleteRole,
+            // CBC
+            learningAreas,
+            assessmentScores,
+            saveLearningArea,
+            saveAssessmentScore,
+            saveBulkAssessmentScores
         }}>
             {children}
         </SchoolContext.Provider>

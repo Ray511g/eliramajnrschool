@@ -194,9 +194,14 @@ export interface AuditLogItem {
     id: string;
     userId: string;
     userName: string;
+    userRole?: string;
     action: string;
+    module?: string;
     details: string;
+    oldValue?: any;
+    newValue?: any;
     ipAddress?: string;
+    deviceInfo?: string;
     createdAt: string;
 }
 
@@ -207,4 +212,43 @@ export interface FeeStructureItem {
     amount: number;
     term: string;
     status: 'Draft' | 'Published';
+}
+
+// CBC Infrastructure
+export interface LearningArea {
+    id: string;
+    name: string;
+    grade: string;
+    strands: Strand[];
+}
+
+export interface Strand {
+    id: string;
+    name: string;
+    learningAreaId: string;
+    subStrands: SubStrand[];
+}
+
+export interface SubStrand {
+    id: string;
+    name: string;
+    strandId: string;
+    assessments: AssessmentItem[];
+}
+
+export interface AssessmentItem {
+    id: string;
+    name: string;
+    type: 'Formative' | 'Summative' | 'Project';
+    weight: number;
+    subStrandId: string;
+}
+
+export interface AssessmentScore {
+    id: string;
+    studentId: string;
+    assessmentItemId: string;
+    score?: number;
+    level?: PerformanceLevel;
+    remarks?: string;
 }

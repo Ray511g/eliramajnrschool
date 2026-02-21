@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { useSchool } from '../../context/SchoolContext';
+import { useSchool, generateId } from '../../context/SchoolContext';
 import { GRADES, StudentResult, PerformanceLevel, Exam } from '../../types';
 import SearchIcon from '@mui/icons-material/Search';
 import SaveIcon from '@mui/icons-material/Save';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import ReportFormModal from '../../components/modals/ReportFormModal';
+import CBCProgressReportModal from '../../components/modals/CBCProgressReportModal';
 import Pagination from '../../components/common/Pagination';
 
 const calculateLevel = (marks: number): PerformanceLevel => {
@@ -25,33 +25,65 @@ const getLevelColor = (level: PerformanceLevel) => {
 };
 
 export default function Results() {
-    const { students, exams, results, saveBulkResults, showToast } = useSchool();
+    const { students, exams, results, saveBulkResults, showToast, learningAreas, assessmentScores, saveBulkAssessmentScores } = useSchool();
+    const [activeTab, setActiveTab] = useState<'exams' | 'cbc'>('exams');
     const [selectedGrade, setSelectedGrade] = useState('');
     const [selectedExamId, setSelectedExamId] = useState('');
-    const [localResults, setLocalResults] = useState<Record<string, { marks: number, remarks: string }>>({});
+
+    // CBC Hierarchy Selection
+    const [selectedAreaId, setSelectedAreaId] = useState('');
+    const [selectedStrandId, setSelectedStrandId] = useState('');
+    const [selectedSubStrandId, setSelectedSubStrandId] = useState('');
+    const [selectedAssessmentId, setSelectedAssessmentId] = useState('');
+
+    const [localResults, setLocalResults] = useState<Record<string, { marks: number, remarks: string, level?: PerformanceLevel }>>({});
     const [viewingStudentId, setViewingStudentId] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     const filteredExams = exams.filter(e => e.grade === selectedGrade);
     const gradeStudents = students.filter(s => s.grade === selectedGrade);
+
+    // CBC Filtering
+    const gradeAreas = learningAreas.filter(a => a.grade === selectedGrade);
+    const selectedArea = gradeAreas.find(a => a.id === selectedAreaId);
+    const selectedStrand = selectedArea?.strands.find(s => s.id === selectedStrandId);
+    const selectedSubStrand = selectedStrand?.subStrands.find(ss => ss.id === selectedSubStrandId);
+    const selectedAssessment = selectedSubStrand?.assessments.find(a => a.id === selectedAssessmentId);
+
     const paginatedStudents = gradeStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const selectedExam = exams.find(e => e.id === selectedExamId);
 
     const handleLoadResults = () => {
-        if (!selectedExamId) return;
-        const existing = results.filter(r => r.examId === selectedExamId);
-        const newLocal: Record<string, { marks: number, remarks: string }> = {};
-        existing.forEach(r => {
-            newLocal[r.studentId] = { marks: r.marks, remarks: r.remarks };
-        });
-        setLocalResults(newLocal);
+        if (activeTab === 'exams' && selectedExamId) {
+            const existing = results.filter(r => r.examId === selectedExamId);
+            const newLocal: Record<string, { marks: number, remarks: string }> = {};
+            existing.forEach(r => {
+                newLocal[r.studentId] = { marks: r.marks, remarks: r.remarks };
+            });
+            setLocalResults(newLocal);
+        } else if (activeTab === 'cbc' && selectedAssessmentId) {
+            const existing = assessmentScores.filter(s => s.assessmentItemId === selectedAssessmentId);
+            const newLocal: Record<string, { marks: number, remarks: string, level: PerformanceLevel }> = {};
+            existing.forEach(s => {
+                newLocal[s.studentId] = { marks: s.score || 0, remarks: s.remarks || '', level: s.level as PerformanceLevel };
+            });
+            setLocalResults(newLocal);
+        }
     };
 
     const handleUpdateMark = (studentId: string, marks: number) => {
+        const level = calculateLevel(marks);
         setLocalResults(prev => ({
             ...prev,
-            [studentId]: { ...prev[studentId], marks }
+            [studentId]: { ...prev[studentId], marks, level }
+        }));
+    };
+
+    const handleUpdateLevel = (studentId: string, level: PerformanceLevel) => {
+        setLocalResults(prev => ({
+            ...prev,
+            [studentId]: { ...prev[studentId], level }
         }));
     };
 
@@ -62,131 +94,192 @@ export default function Results() {
         }));
     };
 
-    const handleSave = () => {
-        if (!selectedExam) return;
-        const toSave = gradeStudents.map(s => ({
-            studentId: s.id,
-            studentName: `${s.firstName} ${s.lastName}`,
-            examId: selectedExam.id,
-            subject: selectedExam.subject,
-            marks: localResults[s.id]?.marks || 0,
-            level: calculateLevel(localResults[s.id]?.marks || 0),
-            remarks: localResults[s.id]?.remarks || '',
-        }));
-        saveBulkResults(toSave as any);
+    const handleSave = async () => {
+        if (activeTab === 'exams' && selectedExam) {
+            const toSave = gradeStudents.map(s => ({
+                studentId: s.id,
+                studentName: `${s.firstName} ${s.lastName}`,
+                examId: selectedExam.id,
+                subject: selectedExam.subject,
+                marks: localResults[s.id]?.marks || 0,
+                level: calculateLevel(localResults[s.id]?.marks || 0),
+                remarks: localResults[s.id]?.remarks || '',
+            }));
+            saveBulkResults(toSave as any);
+        } else if (activeTab === 'cbc' && selectedAssessmentId) {
+            const toSave = gradeStudents.map(s => ({
+                id: generateId(),
+                studentId: s.id,
+                assessmentItemId: selectedAssessmentId,
+                score: localResults[s.id]?.marks || 0,
+                level: localResults[s.id]?.level || calculateLevel(localResults[s.id]?.marks || 0),
+                remarks: localResults[s.id]?.remarks || '',
+            }));
+            await saveBulkAssessmentScores(toSave as any);
+        }
     };
 
+    const generateId = () => Math.random().toString(36).substring(2, 9);
+
     return (
-        <div className="page-container">
+        <div className="page-container glass-overlay">
             <div className="page-header">
                 <div>
-                    <h1 className="page-title">CBC Results Management</h1>
-                    <p className="page-subtitle">Track student competencies and learning outcomes</p>
+                    <h1 className="page-title">Assessment Engine</h1>
+                    <p className="page-subtitle">Standardized Exam & Competency Based Assessment Management</p>
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
-                    <button className="btn-primary" onClick={handleSave} disabled={!selectedExamId}>
+                    <button className="btn-primary" onClick={handleSave} disabled={activeTab === 'exams' ? !selectedExamId : !selectedAssessmentId}>
                         <SaveIcon style={{ fontSize: 18, marginRight: 8 }} />
-                        Save All Results
+                        Confirm & Save Scores
                     </button>
                 </div>
             </div>
 
-            <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-                <div className="stat-card">
-                    <h3 style={{ marginBottom: 16 }}>Class Selection</h3>
+            <div className="tabs-container">
+                <button className={`tab-btn ${activeTab === 'exams' ? 'active' : ''}`} onClick={() => setActiveTab('exams')}>Traditional Exams</button>
+                <button className={`tab-btn ${activeTab === 'cbc' ? 'active' : ''}`} onClick={() => setActiveTab('cbc')}>CBC Competencies</button>
+            </div>
+
+            <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', marginTop: 20 }}>
+                <div className="stat-card glass-card">
+                    <h3 className="card-title">Subject & Assessment Selection</h3>
                     <div className="form-row">
                         <div className="form-group" style={{ flex: 1 }}>
-                            <label htmlFor="results-grade">Select Grade</label>
-                            <select id="results-grade" title="Select grade to manage results" className="form-control" value={selectedGrade} onChange={e => setSelectedGrade(e.target.value)}>
+                            <label>Grade Level</label>
+                            <select className="form-control" value={selectedGrade} onChange={e => { setSelectedGrade(e.target.value); setSelectedExamId(''); setSelectedAreaId(''); }}>
                                 <option value="">Select Grade</option>
                                 {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
                             </select>
                         </div>
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label htmlFor="results-exam">Select Exam/Assessment</label>
-                            <select id="results-exam" title="Select assessment to manage marks" className="form-control" value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)} disabled={!selectedGrade}>
-                                <option value="">Select Assessment</option>
-                                {filteredExams.map(e => <option key={e.id} value={e.id}>{e.name} ({e.subject})</option>)}
-                            </select>
-                        </div>
+
+                        {activeTab === 'exams' ? (
+                            <div className="form-group" style={{ flex: 1 }}>
+                                <label>Exam / Paper</label>
+                                <select className="form-control" value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)} disabled={!selectedGrade}>
+                                    <option value="">Select Assessment</option>
+                                    {filteredExams.map(e => <option key={e.id} value={e.id}>{e.name} ({e.subject})</option>)}
+                                </select>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Learning Area</label>
+                                    <select className="form-control" value={selectedAreaId} onChange={e => setSelectedAreaId(e.target.value)} disabled={!selectedGrade}>
+                                        <option value="">Select Area</option>
+                                        {gradeAreas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                    </select>
+                                </div>
+                                {selectedAreaId && (
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label>Strand / Sub-Strand</label>
+                                        <select className="form-control" value={selectedSubStrandId} onChange={e => setSelectedSubStrandId(e.target.value)}>
+                                            <option value="">Select Sub-Strand</option>
+                                            {selectedArea?.strands.flatMap(s => s.subStrands).map(ss => (
+                                                <option key={ss.id} value={ss.id}>{ss.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
                         <div style={{ alignSelf: 'flex-end', paddingBottom: 12 }}>
-                            <button className="btn-outline" onClick={handleLoadResults} disabled={!selectedExamId}>Load</button>
+                            <button className="btn-outline" onClick={handleLoadResults} disabled={activeTab === 'exams' ? !selectedExamId : !selectedSubStrandId}>Load Sync</button>
                         </div>
                     </div>
+
+                    {activeTab === 'cbc' && selectedSubStrandId && (
+                        <div className="form-row" style={{ marginTop: 12 }}>
+                            <div className="form-group" style={{ flex: 1 }}>
+                                <label>Specific Assessment Item</label>
+                                <select className="form-control" value={selectedAssessmentId} onChange={e => setSelectedAssessmentId(e.target.value)}>
+                                    <option value="">Select Item</option>
+                                    {selectedSubStrand?.assessments.map(a => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
+                                </select>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {selectedExam && (
-                <div className="card" style={{ marginTop: 24 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                        <h2 style={{ fontSize: 18 }}>Mark Entry: {selectedExam.name}</h2>
-                        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                            EE (80-100) | ME (50-79) | AE (30-49) | BE (0-29)
+            {(selectedExam || selectedAssessmentId) && (
+                <div className="card glass-card" style={{ marginTop: 24 }}>
+                    <div className="section-header-horizontal">
+                        <div className="title-group">
+                            <h3 className="card-title">Score Entry: {activeTab === 'exams' ? selectedExam?.name : selectedAssessment?.name}</h3>
+                            <p className="card-subtitle">Showing {paginatedStudents.length} learners for {selectedGrade}</p>
+                        </div>
+                        <div className="legend-strip">
+                            <span className="badge green">EE: 80-100</span>
+                            <span className="badge blue">ME: 50-79</span>
+                            <span className="badge orange">AE: 30-49</span>
+                            <span className="badge red">BE: 0-29</span>
                         </div>
                     </div>
 
-                    <div className="table-container">
+                    <div className="table-container overhaul-table">
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th>Student Name</th>
-                                    <th style={{ width: 120 }}>Marks / {selectedExam.totalMarks}</th>
-                                    <th style={{ width: 150 }}>CBC Level</th>
+                                    <th>Learner Name</th>
+                                    {activeTab === 'exams' && <th style={{ width: 120 }}>Marks / {selectedExam?.totalMarks}</th>}
+                                    <th style={{ width: 220 }}>CBC Performance Level</th>
                                     <th>Teacher's Remarks</th>
-                                    <th style={{ width: 100 }}>Actions</th>
+                                    <th style={{ width: 80 }}>Status</th>
+                                    <th style={{ width: 80 }}>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginatedStudents.map(student => {
-                                    const res = localResults[student.id] || { marks: 0, remarks: '' };
-                                    const level = calculateLevel(res.marks);
+                                    const res = localResults[student.id] || { marks: 0, remarks: '', level: undefined };
+                                    const level = res.level || (activeTab === 'exams' ? calculateLevel(res.marks) : undefined);
+
                                     return (
-                                        <tr key={student.id}>
-                                            <td style={{ fontWeight: 500 }}>{student.firstName} {student.lastName}</td>
+                                        <tr key={student.id} className="interactive-row">
+                                            <td style={{ fontWeight: 600 }}>{student.firstName} {student.lastName}</td>
+                                            {activeTab === 'exams' && (
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        className="form-control-sm"
+                                                        style={{ width: 80 }}
+                                                        max={selectedExam?.totalMarks}
+                                                        min={0}
+                                                        value={res.marks || ''}
+                                                        onChange={e => handleUpdateMark(student.id, Number(e.target.value))}
+                                                    />
+                                                </td>
+                                            )}
                                             <td>
-                                                <input
-                                                    type="number"
-                                                    title={`Marks for ${student.firstName}`}
-                                                    aria-label={`Marks for ${student.firstName}`}
-                                                    className="form-control"
-                                                    style={{ width: 80 }}
-                                                    max={selectedExam.totalMarks}
-                                                    min={0}
-                                                    value={res.marks || ''}
-                                                    onChange={e => handleUpdateMark(student.id, Number(e.target.value))}
-                                                />
-                                            </td>
-                                            <td>
-                                                <span style={{
-                                                    padding: '4px 8px',
-                                                    borderRadius: 4,
-                                                    fontSize: 12,
-                                                    fontWeight: 600,
-                                                    backgroundColor: `${getLevelColor(level)}22`,
-                                                    color: getLevelColor(level),
-                                                    border: `1px solid ${getLevelColor(level)}44`
-                                                }}>
-                                                    {level === 'EE' && 'Exceeding Expectations (EE)'}
-                                                    {level === 'ME' && 'Meeting Expectations (ME)'}
-                                                    {level === 'AE' && 'Approaching Expectations (AE)'}
-                                                    {level === 'BE' && 'Below Expectations (BE)'}
-                                                </span>
+                                                <select
+                                                    className={`level-select ${level || ''}`}
+                                                    value={level || ''}
+                                                    onChange={e => handleUpdateLevel(student.id, e.target.value as PerformanceLevel)}
+                                                >
+                                                    <option value="">Assess Level...</option>
+                                                    <option value="EE">Exceeding Expectations (EE)</option>
+                                                    <option value="ME">Meeting Expectations (ME)</option>
+                                                    <option value="AE">Approaching Expectations (AE)</option>
+                                                    <option value="BE">Below Expectations (BE)</option>
+                                                </select>
                                             </td>
                                             <td>
                                                 <input
-                                                    className="form-control"
+                                                    className="form-control-sm full-width"
                                                     placeholder="Teacher's comments..."
                                                     value={res.remarks}
                                                     onChange={e => handleUpdateRemark(student.id, e.target.value)}
                                                 />
                                             </td>
                                             <td>
-                                                <button
-                                                    className="table-action-btn"
-                                                    onClick={() => setViewingStudentId(student.id)}
-                                                    title="View Report Form"
-                                                >
-                                                    <FileDownloadIcon style={{ fontSize: 16 }} />
+                                                <div className={`status-pill ${res.marks || res.level ? 'success' : 'pending'}`}>
+                                                    {res.marks || res.level ? 'Draft' : 'Pending'}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button className="icon-btn-sm" onClick={() => setViewingStudentId(student.id)} title="Generate Report">
+                                                    <FileDownloadIcon fontSize="small" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -205,7 +298,7 @@ export default function Results() {
                 </div>
             )}
 
-            {!selectedExam && (
+            {!(selectedExam || selectedAssessmentId) && (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
                     <SearchIcon style={{ fontSize: 48, opacity: 0.2, marginBottom: 16 }} />
                     <p>Select a Grade and Assessment to start entering results</p>
@@ -213,10 +306,17 @@ export default function Results() {
             )}
 
             {viewingStudentId && (
-                <ReportFormModal
-                    studentId={viewingStudentId}
-                    onClose={() => setViewingStudentId(null)}
-                />
+                activeTab === 'exams' ? (
+                    <ReportFormModal
+                        studentId={viewingStudentId}
+                        onClose={() => setViewingStudentId(null)}
+                    />
+                ) : (
+                    <CBCProgressReportModal
+                        studentId={viewingStudentId}
+                        onClose={() => setViewingStudentId(null)}
+                    />
+                )
             )}
         </div>
     );

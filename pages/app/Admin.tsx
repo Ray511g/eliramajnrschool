@@ -74,6 +74,10 @@ export default function Admin() {
         permissions: {} as Record<string, string[]>
     });
 
+    // Audit State
+    const [auditFilters, setAuditFilters] = useState({ module: '', action: '' });
+    const [selectedLog, setSelectedLog] = useState<any>(null);
+
     const MODULES = [
         { id: 'users', label: 'User Management' },
         { id: 'settings', label: 'School Settings' },
@@ -1123,32 +1127,186 @@ export default function Admin() {
                 {activeTab === 'audit' && (
                     <div className="admin-section" style={{ gridColumn: 'span 2' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                            <h3 style={{ margin: 0 }}><SecurityIcon style={{ fontSize: 22 }} /> System Audit Trail</h3>
-                            <button className="btn-outline" onClick={fetchAuditLogs}>Refresh Logs</button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                                <h3 style={{ margin: 0 }}><SecurityIcon style={{ fontSize: 22 }} /> System Audit Trail</h3>
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <select
+                                        title="Filter by Module"
+                                        className="form-control"
+                                        style={{ width: 150, height: 35, fontSize: 13 }}
+                                        value={auditFilters.module}
+                                        onChange={e => setAuditFilters({ ...auditFilters, module: e.target.value })}
+                                    >
+                                        <option value="">All Modules</option>
+                                        <option value="students">Students</option>
+                                        <option value="teachers">Teachers</option>
+                                        <option value="fees">Fees</option>
+                                        <option value="exams">Exams</option>
+                                        <option value="users">Users</option>
+                                        <option value="settings">Settings</option>
+                                    </select>
+                                    <select
+                                        title="Filter by Action"
+                                        className="form-control"
+                                        style={{ width: 130, height: 35, fontSize: 13 }}
+                                        value={auditFilters.action}
+                                        onChange={e => setAuditFilters({ ...auditFilters, action: e.target.value })}
+                                    >
+                                        <option value="">All Actions</option>
+                                        {ACTIONS.map(a => <option key={a} value={a}>{a}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button className="btn-outline" onClick={() => {
+                                    const headers = ['Timestamp', 'UserName', 'Role', 'Module', 'Action', 'Details', 'IP Address'];
+                                    const data = auditLogs.map(log => [
+                                        new Date(log.createdAt).toLocaleString(),
+                                        log.userName,
+                                        log.userRole || '',
+                                        log.module || '',
+                                        log.action,
+                                        log.details,
+                                        log.ipAddress || ''
+                                    ]);
+                                    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+                                    const wb = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(wb, ws, "AuditLogs");
+                                    XLSX.writeFile(wb, "audit_logs.xlsx");
+                                }}>
+                                    Export to Excel
+                                </button>
+                                <button className="btn-outline" onClick={fetchAuditLogs}>Refresh</button>
+                            </div>
                         </div>
                         <div className="table-container">
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Timestamp</th>
-                                        <th>User</th>
+                                        <th style={{ width: 160 }}>Timestamp</th>
+                                        <th>User & Role</th>
+                                        <th>Module</th>
                                         <th>Action</th>
                                         <th>Details</th>
+                                        <th style={{ width: 80 }}>Details</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {auditLogs.length > 0 ? auditLogs.map(log => (
-                                        <tr key={log.id}>
-                                            <td style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{new Date(log.createdAt).toLocaleString()}</td>
-                                            <td style={{ fontWeight: 500 }}>{log.userName}</td>
-                                            <td><span className="badge blue">{log.action}</span></td>
-                                            <td style={{ fontSize: 13 }}>{log.details}</td>
-                                        </tr>
-                                    )) : (
-                                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: 20, color: 'var(--text-secondary)' }}>No audit logs found.</td></tr>
+                                    {auditLogs
+                                        .filter(log => !auditFilters.module || log.module === auditFilters.module)
+                                        .filter(log => !auditFilters.action || log.action === auditFilters.action)
+                                        .length > 0 ? auditLogs
+                                            .filter(log => !auditFilters.module || log.module === auditFilters.module)
+                                            .filter(log => !auditFilters.action || log.action === auditFilters.action)
+                                            .map(log => (
+                                                <tr key={log.id}>
+                                                    <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                                                        {new Date(log.createdAt).toLocaleString()}
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ fontWeight: 600 }}>{log.userName}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{log.userRole || 'User'}</div>
+                                                    </td>
+                                                    <td>
+                                                        {log.module ? <span className="badge blue" style={{ fontSize: 10 }}>{log.module.toUpperCase()}</span> : '-'}
+                                                    </td>
+                                                    <td>
+                                                        <span className={`badge ${log.action === 'DELETE' ? 'red' :
+                                                            log.action === 'CREATE' ? 'green' :
+                                                                log.action === 'EDIT' ? 'orange' : 'blue'
+                                                            }`}>
+                                                            {log.action}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ fontSize: 13 }}>
+                                                        {log.details}
+                                                        {log.ipAddress && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>IP: {log.ipAddress}</div>}
+                                                    </td>
+                                                    <td>
+                                                        {(log.oldValue || log.newValue) && (
+                                                            <button
+                                                                className="table-action-btn primary"
+                                                                title="View Changes"
+                                                                onClick={() => setSelectedLog(log)}
+                                                            >
+                                                                <SearchIcon style={{ fontSize: 18 }} />
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            )) : (
+                                        <tr><td colSpan={6} style={{ textAlign: 'center', padding: 30, color: 'var(--text-secondary)' }}>No audit logs found matching criteria.</td></tr>
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                )}
+
+                {selectedLog && (
+                    <div className="modal-overlay" onClick={() => setSelectedLog(null)}>
+                        <div className="modal-content" style={{ maxWidth: 800 }} onClick={e => e.stopPropagation()}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                                <h3 style={{ margin: 0 }}>Audit Event Details</h3>
+                                <button className="table-action-btn danger" onClick={() => setSelectedLog(null)}><DeleteIcon style={{ rotate: '45deg' }} /></button>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+                                <div className="card" style={{ background: 'var(--bg-surface)', padding: 15 }}>
+                                    <h5 style={{ margin: '0 0 10px', color: 'var(--text-secondary)' }}>Event Info</h5>
+                                    <div className="setting-row"><span className="setting-label">Timestamp</span><span className="setting-value">{new Date(selectedLog.createdAt).toLocaleString()}</span></div>
+                                    <div className="setting-row"><span className="setting-label">Action</span><span className="setting-value">{selectedLog.action}</span></div>
+                                    <div className="setting-row"><span className="setting-label">Module</span><span className="setting-value">{selectedLog.module || 'System'}</span></div>
+                                </div>
+                                <div className="card" style={{ background: 'var(--bg-surface)', padding: 15 }}>
+                                    <h5 style={{ margin: '0 0 10px', color: 'var(--text-secondary)' }}>User Info</h5>
+                                    <div className="setting-row"><span className="setting-label">User</span><span className="setting-value">{selectedLog.userName}</span></div>
+                                    <div className="setting-row"><span className="setting-label">Role</span><span className="setting-value">{selectedLog.userRole || 'N/A'}</span></div>
+                                    <div className="setting-row"><span className="setting-label">IP Address</span><span className="setting-value">{selectedLog.ipAddress || 'Unknown'}</span></div>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Action Details</label>
+                                <div style={{ padding: 10, background: 'var(--bg-secondary)', borderRadius: 4, fontSize: 14 }}>
+                                    {selectedLog.details}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 20 }}>
+                                <div className="form-group">
+                                    <label>Old Value</label>
+                                    <pre style={{
+                                        padding: 10,
+                                        background: 'var(--bg-secondary)',
+                                        borderRadius: 4,
+                                        fontSize: 12,
+                                        maxHeight: 200,
+                                        overflow: 'auto',
+                                        color: '#e74c3c'
+                                    }}>
+                                        {selectedLog.oldValue ? JSON.stringify(selectedLog.oldValue, null, 2) : 'None'}
+                                    </pre>
+                                </div>
+                                <div className="form-group">
+                                    <label>New Value</label>
+                                    <pre style={{
+                                        padding: 10,
+                                        background: 'var(--bg-secondary)',
+                                        borderRadius: 4,
+                                        fontSize: 12,
+                                        maxHeight: 200,
+                                        overflow: 'auto',
+                                        color: '#27ae60'
+                                    }}>
+                                        {selectedLog.newValue ? JSON.stringify(selectedLog.newValue, null, 2) : 'None'}
+                                    </pre>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 30 }}>
+                                <button className="btn-primary" onClick={() => setSelectedLog(null)}>Close Details</button>
+                            </div>
                         </div>
                     </div>
                 )}

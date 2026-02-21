@@ -10,10 +10,12 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import PrintIcon from '@mui/icons-material/Print';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import CBCProgressReportModal from '../../components/modals/CBCProgressReportModal';
 
 export default function Reports() {
     const { students, teachers, attendance, exams, payments, results, settings, gradeFees } = useSchool();
     const [selectedReport, setSelectedReport] = useState<string>('dashboard');
+    const [viewingCBCStudentId, setViewingCBCStudentId] = useState<string | null>(null);
     const [reportFilter, setReportFilter] = useState({
         studentId: '',
         term: settings.currentTerm,
@@ -362,6 +364,16 @@ export default function Reports() {
                 'Receipt': p.receiptNumber,
             })), 'fees_report'),
         },
+        {
+            id: 'cbc',
+            title: 'CBC Progress Report',
+            description: 'Competency-based reporting showing learning areas, strands, and performance levels.',
+            icon: <AssignmentIcon />,
+            color: 'var(--accent-cyan)',
+            bg: 'rgba(6,182,212,0.15)',
+            count: 0, // We could count assessment scores
+            onAction: () => setSelectedReport('cbc-assessment'),
+        },
     ];
 
     if (selectedReport === 'assessment') {
@@ -470,6 +482,64 @@ export default function Reports() {
                             </table>
                         </div>
                     </div>
+                )}
+            </div>
+        );
+    }
+
+    if (selectedReport === 'cbc-assessment') {
+        return (
+            <div className="page-container">
+                <div className="page-header">
+                    <div className="page-header-left">
+                        <button className="btn-outline" style={{ marginBottom: 15 }} onClick={() => setSelectedReport('dashboard')}>
+                            ← Back to Reports
+                        </button>
+                        <h1>CBC Progress Report</h1>
+                        <p>Generate detailed competency reports for the CBC curriculum</p>
+                    </div>
+                </div>
+
+                <div className="card glass-card" style={{ padding: 25 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 20, alignItems: 'end' }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label>Search and Select Learner</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Start typing name or admission number..."
+                                value={studentSearch}
+                                onChange={e => setStudentSearch(e.target.value)}
+                                style={{ marginBottom: 12 }}
+                            />
+                            <select
+                                title="Learner selection"
+                                className="form-control"
+                                value={reportFilter.studentId}
+                                onChange={(e) => setReportFilter({ ...reportFilter, studentId: e.target.value })}
+                            >
+                                <option value="">Choose a student...</option>
+                                {filteredStudents.map(s => (
+                                    <option key={s.id} value={s.id}>{s.firstName} {s.lastName} ({s.admissionNumber})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <button
+                            className="btn-primary"
+                            disabled={!reportFilter.studentId}
+                            onClick={() => setViewingCBCStudentId(reportFilter.studentId)}
+                        >
+                            <DescriptionIcon style={{ fontSize: 18, marginRight: 8 }} />
+                            View Competency Report
+                        </button>
+                    </div>
+                </div>
+
+                {viewingCBCStudentId && (
+                    <CBCProgressReportModal
+                        studentId={viewingCBCStudentId}
+                        onClose={() => setViewingCBCStudentId(null)}
+                    />
                 )}
             </div>
         );

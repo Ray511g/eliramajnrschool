@@ -8,6 +8,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LockIcon from '@mui/icons-material/Lock';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 interface LayoutProps {
     children: ReactNode;
@@ -41,33 +42,51 @@ export default function Layout({ children }: LayoutProps) {
             <main className="main-content">
                 <header className="top-bar">
                     <div className="top-bar-left">
+                        <div className="school-breadcrumb">
+                            {settings?.schoolName} • <span style={{ color: 'var(--accent-blue)' }}>Dashboard</span>
+                        </div>
                     </div>
                     <div className="top-bar-right">
-                        <NotificationsIcon className="top-bar-icon" />
+                        <div className="top-bar-actions">
+                            <div className="icon-badge-wrapper">
+                                <NotificationsIcon className="top-bar-icon" />
+                                <span className="icon-badge"></span>
+                            </div>
+                        </div>
+
                         <div className="user-profile-trigger" onClick={() => setShowProfileMenu(!showProfileMenu)}>
-                            <div className="user-avatar">
-                                {user?.name.charAt(0)}
+                            <div className="user-avatar-wrapper">
+                                <div className="user-avatar">
+                                    {user?.name.charAt(0) || <AccountCircleIcon />}
+                                </div>
+                                <div className="status-dot online"></div>
                             </div>
                             <div className="user-info-text">
-                                <span className="user-name">{user?.name}</span>
-                                <span className="user-role">{user?.role}</span>
+                                <span className="user-name">{user?.name || 'User'}</span>
+                                <span className="user-role">{user?.role || 'Staff'}</span>
                             </div>
                         </div>
 
                         {showProfileMenu && (
-                            <div className="profile-dropdown">
-                                <div className="dropdown-item" onClick={() => { setShowChangePassword(true); setShowProfileMenu(false); }}>
-                                    <LockIcon style={{ fontSize: 18 }} /> Change Password
+                            <div className="profile-dropdown glass-overlay">
+                                <div className="dropdown-header">
+                                    <p className="dropdown-user-email">{user?.email}</p>
                                 </div>
                                 <div className="dropdown-divider"></div>
-                                <div className="dropdown-item logout" onClick={logout}>
-                                    Logout
+                                <div className="dropdown-item" onClick={() => { setShowChangePassword(true); setShowProfileMenu(false); }}>
+                                    <LockIcon style={{ fontSize: 18 }} /> Security Settings
+                                </div>
+                                <div className="dropdown-divider"></div>
+                                <div className="dropdown-item logout-accent" onClick={logout}>
+                                    <LogoutIcon style={{ fontSize: 18 }} /> Sign Out
                                 </div>
                             </div>
                         )}
                     </div>
                 </header>
-                {children}
+                <div className="page-wrapper">
+                    {children}
+                </div>
             </main>
 
             {showChangePassword && (

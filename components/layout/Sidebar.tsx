@@ -80,7 +80,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             'MANAGE_ATTENDANCE': 'academic',
             'MANAGE_EXAMS': 'academic',
             'MANAGE_REPORTS': 'academic',
-            'MANAGE_COMMUNICATION': 'academic', // Map to academic for now
+            'MANAGE_COMMUNICATION': 'academic',
             'MANAGE_TIMETABLE': 'academic',
             'MANAGE_ADMIN': 'settings'
         };
@@ -99,18 +99,22 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <div className="sidebar-logo">
-                        {settings?.logo ? (
-                            <img src={settings.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
-                        ) : 'E'}
+                    <div className="sidebar-logo-container">
+                        <div className="sidebar-logo">
+                            {settings?.logo ? (
+                                <img src={settings.logo} alt="Logo" className="logo-img" />
+                            ) : 'E'}
+                        </div>
+                        <div className="logo-glow"></div>
                     </div>
                     <div className="sidebar-brand">
                         <h2>{settings?.schoolName || 'ELIRAMA'}</h2>
-                        <p>School Management</p>
+                        <p>Academic Excellence</p>
                     </div>
                 </div>
 
-                <nav className="sidebar-nav">
+                <nav className="sidebar-nav custom-scrollbar">
+                    <div className="nav-section-label">Main Menu</div>
                     {filteredNavItems.map((item) => (
                         <Link
                             key={item.path}
@@ -119,35 +123,31 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             onClick={() => setIsOpen(false)}
                         >
                             <span className="nav-icon">{item.icon}</span>
-                            <span>{item.label}</span>
+                            <span className="nav-label">{item.label}</span>
+                            {isActive(item.path) && <div className="active-indicator"></div>}
                         </Link>
                     ))}
                 </nav>
 
-                <div className="logout-section">
-                    <div style={{ padding: '0 24px 10px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>v1.3.2 (RBAC+)</span>
-                        <span style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: serverStatus === 'connected' ? '#00c853' : serverStatus === 'checking' ? '#ffb300' : '#ff3d00',
-                            boxShadow: serverStatus === 'connected' ? '0 0 5px #00c853' : 'none',
-                            transition: 'background-color 0.3s'
-                        }} title={serverStatus === 'connected' ? 'Online' : 'Offline (Local Mode)'} />
+                <div className="sidebar-footer">
+                    <div className="server-status-pill">
+                        <span className={`status-dot ${serverStatus}`} />
+                        <span>v1.5.0 • {serverStatus === 'connected' ? 'SECURED' : 'OFFLINE'}</span>
                     </div>
-                    <Link
-                        href="/profile"
-                        className={`nav-item ${isActive('/profile') ? 'active' : ''}`}
-                        onClick={() => setIsOpen(false)}
-                        style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, padding: '12px 24px' }}
-                    >
-                        <span className="nav-icon"><AccountCircleIcon /></span>
-                        <span>My Account</span>
-                    </Link>
-                    <button className="logout-btn" onClick={handleLogout}>
-                        <LogoutIcon />
-                        <span>Logout</span>
+
+                    <div className="sidebar-user-card" onClick={() => router.push('/profile')}>
+                        <div className="user-avatar-sm">
+                            {user?.firstName?.charAt(0) || <AccountCircleIcon />}
+                        </div>
+                        <div className="user-details-sm">
+                            <span className="user-name-sm">{user?.firstName || 'My Account'}</span>
+                            <span className="user-role-sm">{user?.role}</span>
+                        </div>
+                    </div>
+
+                    <button className="logout-action" onClick={handleLogout}>
+                        <LogoutIcon style={{ fontSize: 18 }} />
+                        <span>Sign Out</span>
                     </button>
                 </div>
             </aside>

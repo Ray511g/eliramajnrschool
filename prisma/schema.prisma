@@ -58,6 +58,7 @@ model Student {
   attendance      Attendance[]
   payments        Payment[]
   results         Result[]
+  assessmentScores AssessmentScore[]
 }
 
 model Teacher {
@@ -193,13 +194,18 @@ model SyncStatus {
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  userName  String
-  action    String
-  details   String
-  ipAddress String?
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  userName   String
+  userRole   String?
+  action     String
+  module     String?
+  details    String
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  deviceInfo String?
+  createdAt  DateTime @default(now())
 }
 
 model FeeStructure {
@@ -211,4 +217,55 @@ model FeeStructure {
   status    String   @default("Draft") // Draft, Published
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model LearningArea {
+  id        String   @id @default(cuid())
+  name      String   // e.g., "Mathematics"
+  grade     String   // e.g., "Grade 1"
+  strands   Strand[]
+  createdAt DateTime @default(now())
+}
+
+model Strand {
+  id              String         @id @default(cuid())
+  name            String         // e.g., "Numbers"
+  learningArea    LearningArea   @relation(fields: [learningAreaId], references: [id], onDelete: Cascade)
+  learningAreaId  String
+  subStrands      SubStrand[]
+  createdAt       DateTime       @default(now())
+}
+
+model SubStrand {
+  id        String   @id @default(cuid())
+  name      String   // e.g., "Counting"
+  strand    Strand   @relation(fields: [strandId], references: [id], onDelete: Cascade)
+  strandId  String
+  assessments AssessmentItem[]
+  createdAt DateTime @default(now())
+}
+
+model AssessmentItem {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Class Project 1"
+  type        String   // Formative, Summative, Project
+  weight      Float    @default(1.0)
+  subStrand   SubStrand @relation(fields: [subStrandId], references: [id], onDelete: Cascade)
+  subStrandId String
+  scores      AssessmentScore[]
+  createdAt   DateTime @default(now())
+}
+
+model AssessmentScore {
+  id               String         @id @default(cuid())
+  studentId        String
+  assessmentItemId String
+  score            Float?         // Percentage or Raw
+  level            String?        // EE, ME, AE, BE
+  remarks          String?
+  assessmentItem   AssessmentItem @relation(fields: [assessmentItemId], references: [id], onDelete: Cascade)
+  student          Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@unique([studentId, assessmentItemId])
 }

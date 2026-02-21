@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -117,6 +117,73 @@ async function main() {
         create: { id: 'global' },
     });
     console.log('✅ Sync status created');
+
+    // Create CBC Initial Data
+    console.log('🌱 Seeding CBC Infrastructure...');
+    const learningAreas = [
+        {
+            name: 'Mathematics',
+            grade: 'Grade 1',
+            strands: {
+                create: [
+                    {
+                        name: 'Numbers',
+                        subStrands: {
+                            create: [
+                                {
+                                    name: 'Counting',
+                                    assessments: {
+                                        create: [
+                                            { name: 'Class Project: Counting Objects', type: 'Project', weight: 1.0 },
+                                            { name: 'Mid-Term Assessment', type: 'Summative', weight: 1.0 }
+                                        ]
+                                    }
+                                },
+                                {
+                                    name: 'Addition',
+                                    assessments: {
+                                        create: [
+                                            { name: 'Mental Math Quiz', type: 'Formative', weight: 1.0 }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            name: 'English Language',
+            grade: 'Grade 1',
+            strands: {
+                create: [
+                    {
+                        name: 'Listening and Speaking',
+                        subStrands: {
+                            create: [
+                                {
+                                    name: 'Greeting and Self-introduction',
+                                    assessments: {
+                                        create: [
+                                            { name: 'Role Play', type: 'Formative', weight: 1.0 }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ];
+
+    for (const la of learningAreas) {
+        await prisma.learningArea.create({
+            data: la
+        });
+    }
+    console.log('✅ CBC initial data created');
 
     console.log('🌱 Seeding complete!');
 }
