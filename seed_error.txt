@@ -1,0 +1,3 @@
+≡ƒî▒ Cleaning existing data and seeding roles/admin...
+Environment cleanup failed: TypeError: Cannot read properties of undefined (reading 'deleteMany')
+    at main (C:\Users\PC\Desktop\elirama-web\prisma\seed.ts:16:29)
