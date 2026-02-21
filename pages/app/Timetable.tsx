@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { GRADES, DAYS, TIME_SLOTS, TimetableEntry } from '../../types';
+import { GRADES, DAYS, TIME_SLOTS, TimetableEntry, TimeSlot } from '../../types';
 import AddIcon from '@mui/icons-material/Add';
 import TimetableEntryModal from '../../components/modals/TimetableEntryModal';
 

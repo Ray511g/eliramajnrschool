@@ -60,7 +60,7 @@ interface SchoolContextType {
     // New Features
     feeStructures: FeeStructureItem[];
     auditLogs: AuditLogItem[];
-    addFeeStructure: (item: Omit<FeeStructureItem, 'id' | 'createdAt'>) => void;
+    addFeeStructure: (item: Omit<FeeStructureItem, 'id' | 'status'>) => void;
     updateFeeStructure: (id: string, updates: Partial<FeeStructureItem>) => void;
     deleteFeeStructure: (id: string) => void;
     applyFeeStructure: (grade?: string) => Promise<void>;
@@ -811,7 +811,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     // FEE STRUCTURE
-    const addFeeStructure = async (item: Omit<FeeStructureItem, 'id' | 'createdAt'>) => {
+    const addFeeStructure = async (item: Omit<FeeStructureItem, 'id' | 'status'>) => {
         const apiRes = await tryApi(`${API_URL}/fees/structure`, { method: 'POST', body: JSON.stringify(item) });
         if (apiRes) {
             const data = await apiRes.json();
