@@ -18,14 +18,15 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 export default function Admin() {
     const {
-        settings, updateSettings, uploadStudents, uploadTeachers, uploadExams,
-        systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword, clearAllData,
-        feeStructures, addFeeStructure, updateFeeStructure, deleteFeeStructure, applyFeeStructure, auditLogs, fetchAuditLogs
+        students, settings, feeStructures, auditLogs, systemUsers,
+        addFeeStructure, updateFeeStructure, deleteFeeStructure, applyFeeStructure, revertFeeStructure,
+        fetchAuditLogs, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword,
+        showToast, updateSettings, uploadStudents, uploadTeachers, uploadExams, clearAllData
     } = useSchool();
     const { user } = useAuth();
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState(settings);
-    const [activeTab, setActiveTab] = useState<'settings' | 'users' | 'fees' | 'audit'>('settings');
+    const [activeTab, setActiveTab] = useState<'settings' | 'users' | 'fees' | 'audit' | 'timetable'>('settings');
 
     useEffect(() => {
         if (!editing) {
@@ -36,6 +37,7 @@ export default function Admin() {
     // Fee Structure State
     const [feeForm, setFeeForm] = useState({ grade: 'Grade 1', name: '', amount: 0, term: 'Term 1' });
     const [editingFeeItem, setEditingFeeItem] = useState<string | null>(null);
+    const [previewGrade, setPreviewGrade] = useState<string | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
 
     // User Management State
@@ -149,9 +151,9 @@ export default function Admin() {
         XLSX.writeFile(wb, `${type}_template.xlsx`);
     };
 
-    const handleSave = () => {
-        updateSettings(form);
-        setEditing(false);
+    const handleSave = async () => {
+        const success = await updateSettings(form);
+        if (success) setEditing(false);
     };
 
     return (
@@ -162,22 +164,23 @@ export default function Admin() {
                     <p>Manage system settings, users, fees, and security</p>
                 </div>
                 <div className="page-header-right">
-                    {!editing && activeTab === 'settings' ? (
-                        <button className="btn-primary" onClick={() => setEditing(true)}>
-                            <EditIcon style={{ fontSize: 18 }} /> Edit Settings
-                        </button>
-                    ) : (
-                        editing && activeTab === 'settings' && (
+                    {activeTab === 'settings' || activeTab === 'timetable' ? (
+                        !editing ? (
+                            <button className="btn-primary" onClick={() => setEditing(true)}>
+                                <EditIcon style={{ fontSize: 18 }} /> Edit Configuration
+                            </button>
+                        ) : (
                             <button className="btn-primary green" onClick={handleSave}>
                                 <SaveIcon style={{ fontSize: 18 }} /> Save Changes
                             </button>
                         )
-                    )}
+                    ) : null}
                 </div>
             </div>
 
             <div className="tabs" style={{ display: 'flex', gap: 20, borderBottom: '1px solid var(--border-color)', marginBottom: 20 }}>
                 <div className={`tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'settings' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Settings</div>
+                <div className={`tab ${activeTab === 'timetable' ? 'active' : ''}`} onClick={() => setActiveTab('timetable')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'timetable' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Timetable Structure</div>
                 <div className={`tab ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'users' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>User Management</div>
                 <div className={`tab ${activeTab === 'fees' ? 'active' : ''}`} onClick={() => setActiveTab('fees')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'fees' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Fee Structure</div>
                 <div className={`tab ${activeTab === 'audit' ? 'active' : ''}`} onClick={() => setActiveTab('audit')} style={{ padding: '10px 0', cursor: 'pointer', borderBottom: activeTab === 'audit' ? '2px solid var(--primary-color)' : 'none', fontWeight: 500 }}>Audit Trail</div>
@@ -325,7 +328,7 @@ export default function Admin() {
                         <div className="admin-section academic-settings-container">
                             <h3 style={{ color: 'var(--primary-color)', borderBottom: '2px solid var(--primary-color)', paddingBottom: 10, marginBottom: 20 }}>
                                 <SettingsIcon style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 8 }} />
-                                Academic & Timetable Configuration
+                                Academic Cycle
                             </h3>
                             {editing ? (
                                 <>
@@ -341,95 +344,11 @@ export default function Admin() {
                                         <label htmlFor="current-year">Current Year</label>
                                         <input id="current-year" className="form-control" type="number" value={form.currentYear} onChange={e => setForm({ ...form, currentYear: parseInt(e.target.value) })} />
                                     </div>
-
-                                    <div style={{ marginTop: 20, borderTop: '1px solid var(--border-color)', paddingTop: 20 }}>
-                                        <h4 style={{ marginBottom: 15 }}>Timetable Slots & Breaks</h4>
-                                        <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 15 }}>
-                                            Configure the time intervals for your school. You can define lessons, breaks, lunch times, or other school activities.
-                                        </p>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                            {(form.timeSlots || []).map((slot: any, idx: number) => (
-                                                <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'var(--bg-card)', padding: 10, borderRadius: 8 }}>
-                                                    <div style={{ flex: 1.5 }}>
-                                                        <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Time Interval</label>
-                                                        <input
-                                                            className="form-control"
-                                                            value={slot.label}
-                                                            placeholder="e.g. 8:00 - 8:40"
-                                                            onChange={e => {
-                                                                const newSlots = [...(form.timeSlots || [])];
-                                                                newSlots[idx].label = e.target.value;
-                                                                setForm({ ...form, timeSlots: newSlots });
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <div style={{ flex: 1.5 }}>
-                                                        <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Label/Name (Optional)</label>
-                                                        <input
-                                                            className="form-control"
-                                                            value={slot.name || ''}
-                                                            placeholder="e.g. Mathematics"
-                                                            onChange={e => {
-                                                                const newSlots = [...(form.timeSlots || [])];
-                                                                newSlots[idx].name = e.target.value;
-                                                                setForm({ ...form, timeSlots: newSlots });
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <div style={{ flex: 1.2 }}>
-                                                        <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>Slot Type</label>
-                                                        <select
-                                                            title="Select Slot Type"
-                                                            className="form-control"
-                                                            value={slot.type}
-                                                            onChange={e => {
-                                                                const newSlots = [...(form.timeSlots || [])];
-                                                                newSlots[idx].type = e.target.value as any;
-                                                                setForm({ ...form, timeSlots: newSlots });
-                                                            }}
-                                                        >
-                                                            <option value="Lesson">Lesson</option>
-                                                            <option value="Break">Break</option>
-                                                            <option value="Lunch">Lunch</option>
-                                                            <option value="Other">Other (e.g. Assembly)</option>
-                                                        </select>
-                                                    </div>
-                                                    <button
-                                                        className="table-action-btn danger"
-                                                        title="Remove Slot"
-                                                        style={{ marginTop: 18 }}
-                                                        onClick={() => {
-                                                            const newSlots = (form.timeSlots || []).filter((_, i) => i !== idx);
-                                                            setForm({ ...form, timeSlots: newSlots });
-                                                        }}
-                                                    >
-                                                        <DeleteIcon style={{ fontSize: 18 }} />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                            <button
-                                                className="btn-outline"
-                                                style={{ marginTop: 10, alignSelf: 'flex-start' }}
-                                                onClick={() => {
-                                                    const newSlots = [...(form.timeSlots || []), { id: Date.now().toString(), label: '', type: 'Lesson' as any }];
-                                                    setForm({ ...form, timeSlots: newSlots });
-                                                }}
-                                            >
-                                                + Add New Time Slot
-                                            </button>
-                                        </div>
-                                    </div>
                                 </>
                             ) : (
                                 <>
                                     <div className="setting-row"><span className="setting-label">Current Term</span><span className="setting-value">{settings.currentTerm}</span></div>
                                     <div className="setting-row"><span className="setting-label">Current Year</span><span className="setting-value">{settings.currentYear}</span></div>
-                                    <div className="setting-row">
-                                        <span className="setting-label">Timetable Slots</span>
-                                        <span className="setting-value">
-                                            {settings.timeSlots?.length || 0} Slots configured
-                                        </span>
-                                    </div>
                                 </>
                             )}
                         </div>
@@ -478,6 +397,200 @@ export default function Admin() {
                             </div>
                         </div>
                     </>
+                )}
+
+                {activeTab === 'timetable' && (
+                    <div className="admin-section" style={{ gridColumn: 'span 2' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <h3 style={{ margin: 0 }}><SchoolIcon style={{ fontSize: 22 }} /> Timetable Structure Setup</h3>
+                        </div>
+
+                        {editing ? (
+                            <div className="card" style={{ background: 'var(--bg-surface)' }}>
+                                <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20 }}>
+                                    Define your school's daily periods, breaks, and lunch times. These will be used to render the timetable grid for all grades.
+                                </p>
+                                <div className="table-responsive">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: 80 }}>Order</th>
+                                                <th>Start Time</th>
+                                                <th>End Time</th>
+                                                <th>Label/Name</th>
+                                                <th>Type</th>
+                                                <th style={{ width: 100 }}>Status</th>
+                                                <th style={{ width: 60 }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(form.timeSlots || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)).map((slot: any, idx: number) => (
+                                                <tr key={slot.id || idx}>
+                                                    <td>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            style={{ padding: '4px 8px' }}
+                                                            title="Sort Order"
+                                                            value={slot.order || idx + 1}
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timeSlots || [])];
+                                                                newSlots[idx].order = parseInt(e.target.value);
+                                                                setForm({ ...form, timeSlots: newSlots });
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="time"
+                                                            className="form-control"
+                                                            title="Start Time"
+                                                            value={slot.startTime || ''}
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timeSlots || [])];
+                                                                newSlots[idx].startTime = e.target.value;
+                                                                newSlots[idx].label = `${e.target.value} - ${newSlots[idx].endTime || ''}`;
+                                                                setForm({ ...form, timeSlots: newSlots });
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="time"
+                                                            className="form-control"
+                                                            title="End Time"
+                                                            value={slot.endTime || ''}
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timeSlots || [])];
+                                                                newSlots[idx].endTime = e.target.value;
+                                                                newSlots[idx].label = `${newSlots[idx].startTime || ''} - ${e.target.value}`;
+                                                                setForm({ ...form, timeSlots: newSlots });
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            className="form-control"
+                                                            placeholder="e.g. Morning Break"
+                                                            title="Slot Label"
+                                                            value={slot.name || ''}
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timeSlots || [])];
+                                                                newSlots[idx].name = e.target.value;
+                                                                setForm({ ...form, timeSlots: newSlots });
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <select
+                                                            title="Slot Type"
+                                                            className="form-control"
+                                                            value={slot.type}
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timeSlots || [])];
+                                                                newSlots[idx].type = e.target.value as any;
+                                                                setForm({ ...form, timeSlots: newSlots });
+                                                            }}
+                                                        >
+                                                            <option value="Lesson">Lesson</option>
+                                                            <option value="Break">Break</option>
+                                                            <option value="Lunch">Lunch</option>
+                                                            <option value="Assembly">Assembly</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select
+                                                            title="Status"
+                                                            className="form-control"
+                                                            value={slot.isActive === false ? 'false' : 'true'}
+                                                            onChange={e => {
+                                                                const newSlots = [...(form.timeSlots || [])];
+                                                                newSlots[idx].isActive = e.target.value === 'true';
+                                                                setForm({ ...form, timeSlots: newSlots });
+                                                            }}
+                                                        >
+                                                            <option value="true">Active</option>
+                                                            <option value="false">Inactive</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            title="Delete Slot"
+                                                            className="table-action-btn danger"
+                                                            onClick={() => {
+                                                                const newSlots = (form.timeSlots || []).filter((_: any, i: number) => i !== idx);
+                                                                setForm({ ...form, timeSlots: newSlots });
+                                                            }}
+                                                        >
+                                                            <DeleteIcon style={{ fontSize: 18 }} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button
+                                    className="btn-outline"
+                                    style={{ marginTop: 20 }}
+                                    onClick={() => {
+                                        const nextOrder = (form.timeSlots || []).length + 1;
+                                        const newSlots = [...(form.timeSlots || []), {
+                                            id: `new-${Date.now()}`,
+                                            startTime: '08:00',
+                                            endTime: '08:40',
+                                            label: '08:00 - 08:40',
+                                            type: 'Lesson' as any,
+                                            order: nextOrder,
+                                            isActive: true
+                                        }];
+                                        setForm({ ...form, timeSlots: newSlots });
+                                    }}
+                                >
+                                    + Add New Time Slot
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="card" style={{ background: 'var(--bg-surface)' }}>
+                                <div className="table-responsive">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: 80 }}>Order</th>
+                                                <th>Time Range</th>
+                                                <th>Label/Name</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(settings.timeSlots || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)).map((slot: any) => (
+                                                <tr key={slot.id} style={{ opacity: slot.isActive === false ? 0.5 : 1 }}>
+                                                    <td>{slot.order}</td>
+                                                    <td>{slot.startTime} - {slot.endTime}</td>
+                                                    <td>{slot.name || '-'}</td>
+                                                    <td><span className={`badge ${slot.type === 'Lesson' ? 'blue' : 'green'}`}>{slot.type}</span></td>
+                                                    <td>
+                                                        <span className={`badge ${slot.isActive !== false ? 'green' : 'gray'}`}>
+                                                            {slot.isActive !== false ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {(!settings.timeSlots || settings.timeSlots.length === 0) && (
+                                                <tr>
+                                                    <td colSpan={5} style={{ textAlign: 'center', padding: 30, color: 'var(--text-secondary)' }}>
+                                                        No time slots configured. Click "Edit Configuration" to start.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {activeTab === 'users' && (
@@ -675,8 +788,8 @@ export default function Admin() {
                                     <input className="form-control" value={feeForm.name} onChange={e => setFeeForm({ ...feeForm, name: e.target.value })} placeholder="e.g. Transport" />
                                 </div>
                                 <div className="form-group" style={{ width: 120 }}>
-                                    <label>Amount (KSh)</label>
-                                    <input className="form-control" type="number" value={feeForm.amount} onChange={e => setFeeForm({ ...feeForm, amount: parseInt(e.target.value) })} />
+                                    <label htmlFor="fee-amount">Amount (KSh)</label>
+                                    <input id="fee-amount" className="form-control" type="number" title="Fee Amount" value={feeForm.amount} onChange={e => setFeeForm({ ...feeForm, amount: parseInt(e.target.value) })} />
                                 </div>
                                 <div className="form-group">
                                     <label>Term</label>
@@ -704,51 +817,188 @@ export default function Admin() {
 
                         {sortedGrades.map(grade => {
                             const gradeItems = groupedFees[grade];
-                            const total = gradeItems.reduce((sum: number, item: any) => sum + item.amount, 0);
+                            const grandTotal = gradeItems.reduce((sum: number, item: any) => sum + item.amount, 0);
+                            const terms = ['Term 1', 'Term 2', 'Term 3'];
+                            const isPublished = gradeItems.some((item: any) => item.status === 'Published');
+
                             return (
                                 <div key={grade} className="card" style={{ marginBottom: 20, background: 'var(--bg-surface)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
-                                        <h4 style={{ margin: 0 }}>{grade} Structure</h4>
+                                        <div>
+                                            <h4 style={{ margin: 0 }}>{grade} Structure</h4>
+                                            {isPublished ? (
+                                                <span className="badge green" style={{ fontSize: 10, marginTop: 4 }}>Published</span>
+                                            ) : (
+                                                <span className="badge gray" style={{ fontSize: 10, marginTop: 4 }}>Draft</span>
+                                            )}
+                                        </div>
                                         <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
-                                            <span style={{ fontWeight: 'bold', color: 'var(--accent-blue)' }}>Total: KES {total.toLocaleString()}</span>
                                             <button
-                                                className="btn-primary"
+                                                className="btn-outline"
                                                 style={{ fontSize: 12, padding: '6px 12px' }}
-                                                onClick={() => handleApplyFees(grade as string)}
-                                                disabled={isPublishing}
+                                                onClick={() => setPreviewGrade(grade as string)}
                                             >
-                                                Publish {grade} Fees
+                                                Preview
                                             </button>
+                                            {isPublished ? (
+                                                <button
+                                                    className="btn-outline danger"
+                                                    style={{ fontSize: 12, padding: '6px 12px' }}
+                                                    onClick={async () => {
+                                                        if (confirm(`Are you sure you want to revert ${grade} fees to draft? This will lock editing but not change student balances until re-published.`)) {
+                                                            await revertFeeStructure(grade as string);
+                                                        }
+                                                    }}
+                                                >
+                                                    Revert to Draft
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="btn-primary"
+                                                    style={{ fontSize: 12, padding: '6px 12px' }}
+                                                    onClick={async () => {
+                                                        if (confirm(`Are you sure you want to publish the fee structure for ${grade}? This will update all student balances.`)) {
+                                                            setIsPublishing(true);
+                                                            await applyFeeStructure(grade as string);
+                                                            setIsPublishing(false);
+                                                        }
+                                                    }}
+                                                    disabled={isPublishing || gradeItems.length === 0}
+                                                >
+                                                    Publish {grade} Fees
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="table-responsive">
-                                        <table className="data-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Term</th>
-                                                    <th>Item Name</th>
-                                                    <th>Amount</th>
-                                                    <th style={{ textAlign: 'right' }}>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {gradeItems.map((item: any) => (
-                                                    <tr key={item.id}>
-                                                        <td>{item.term}</td>
-                                                        <td>{item.name}</td>
-                                                        <td>KES {item.amount.toLocaleString()}</td>
-                                                        <td style={{ textAlign: 'right', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                                            <button className="table-action-btn primary" onClick={() => startEditFeeItem(item)}><EditIcon style={{ fontSize: 16 }} /></button>
-                                                            <button className="table-action-btn danger" onClick={() => deleteFeeStructure(item.id)}><DeleteIcon style={{ fontSize: 16 }} /></button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+
+                                    {terms.map(term => {
+                                        const termItems = gradeItems.filter((item: any) => item.term === term);
+                                        if (termItems.length === 0) return null;
+                                        const subtotal = termItems.reduce((sum: number, item: any) => sum + item.amount, 0);
+
+                                        return (
+                                            <div key={term} style={{ marginBottom: 20 }}>
+                                                <h5 style={{ margin: '0 0 10px', color: 'var(--text-secondary)', fontSize: 14 }}>{term}</h5>
+                                                <div className="table-responsive">
+                                                    <table className="data-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Item Name</th>
+                                                                <th>Amount</th>
+                                                                <th style={{ textAlign: 'right' }}>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {termItems.map((item: any) => (
+                                                                <tr key={item.id}>
+                                                                    <td>{item.name}</td>
+                                                                    <td>KES {item.amount.toLocaleString()}</td>
+                                                                    <td style={{ textAlign: 'right', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                                        <button
+                                                                            title="Edit Fee Item"
+                                                                            className="table-action-btn primary"
+                                                                            onClick={() => startEditFeeItem(item)}
+                                                                            disabled={isPublished}
+                                                                        >
+                                                                            <EditIcon style={{ fontSize: 16 }} />
+                                                                        </button>
+                                                                        <button
+                                                                            title="Delete Fee Item"
+                                                                            className="table-action-btn danger"
+                                                                            onClick={() => {
+                                                                                if (confirm('Delete this fee item?')) deleteFeeStructure(item.id);
+                                                                            }}
+                                                                            disabled={isPublished}
+                                                                        >
+                                                                            <DeleteIcon style={{ fontSize: 16 }} />
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                            <tr style={{ background: 'rgba(52, 152, 219, 0.05)', fontWeight: 'bold' }}>
+                                                                <td>{term} Subtotal</td>
+                                                                <td colSpan={2}>KES {subtotal.toLocaleString()}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    <div style={{
+                                        marginTop: 10,
+                                        padding: '15px',
+                                        background: 'var(--accent-blue)',
+                                        color: 'white',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <span style={{ fontWeight: 600 }}>GRAND TOTAL ({grade})</span>
+                                        <span style={{ fontSize: 20, fontWeight: 800 }}>KES {grandTotal.toLocaleString()}</span>
                                     </div>
                                 </div>
                             );
                         })}
+
+                        {previewGrade && (
+                            <div className="modal-overlay">
+                                <div className="modal-content" style={{ maxWidth: 600 }}>
+                                    <div style={{ textAlign: 'center', borderBottom: '2px solid #eee', paddingBottom: 20, marginBottom: 20 }}>
+                                        <h2 style={{ margin: 0, color: 'var(--accent-blue)' }}>{settings.schoolName}</h2>
+                                        <p style={{ margin: '5px 0', fontSize: 14 }}>{settings.motto}</p>
+                                        <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
+                                            {settings.address} | Tel: {settings.phone}
+                                        </p>
+                                    </div>
+                                    <h3 style={{ textAlign: 'center', textTransform: 'uppercase' }}>Official Fee Structure - {previewGrade}</h3>
+
+                                    {['Term 1', 'Term 2', 'Term 3'].map(term => {
+                                        const termItems = groupedFees[previewGrade!].filter((item: any) => item.term === term);
+                                        if (termItems.length === 0) return null;
+                                        const subtotal = termItems.reduce((sum: number, item: any) => sum + item.amount, 0);
+
+                                        return (
+                                            <div key={term} style={{ marginBottom: 15 }}>
+                                                <h4 style={{ borderBottom: '1px solid #ddd', paddingBottom: 5 }}>{term}</h4>
+                                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                    {termItems.map((item: any) => (
+                                                        <tr key={item.id} style={{ borderBottom: '1px dashed #eee' }}>
+                                                            <td style={{ padding: '8px 0' }}>{item.name}</td>
+                                                            <td style={{ padding: '8px 0', textAlign: 'right' }}>KES {item.amount.toLocaleString()}</td>
+                                                        </tr>
+                                                    ))}
+                                                    <tr style={{ fontWeight: 'bold' }}>
+                                                        <td style={{ padding: '10px 0' }}>Total for {term}</td>
+                                                        <td style={{ padding: '10px 0', textAlign: 'right' }}>KES {subtotal.toLocaleString()}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        );
+                                    })}
+
+                                    <div style={{
+                                        marginTop: 30,
+                                        borderTop: '2px solid var(--accent-blue)',
+                                        paddingTop: 15,
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <h3 style={{ margin: 0 }}>ANNUAL GRAND TOTAL</h3>
+                                        <h3 style={{ margin: 0, color: 'var(--accent-blue)' }}>
+                                            KES {groupedFees[previewGrade!].reduce((sum: number, item: any) => sum + item.amount, 0).toLocaleString()}
+                                        </h3>
+                                    </div>
+
+                                    <div style={{ marginTop: 40, display: 'flex', justifyContent: 'flex-end' }}>
+                                        <button className="btn-primary" onClick={() => setPreviewGrade(null)}>Close Preview</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {feeStructures.length === 0 && (
                             <div className="empty-state">

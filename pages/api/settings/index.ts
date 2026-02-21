@@ -49,6 +49,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'PUT') {
         const { timeSlots, ...otherData } = req.body;
+
+        // Validation for time slots
+        if (timeSlots && Array.isArray(timeSlots)) {
+            const activeSlots = timeSlots.filter((s: any) => s.isActive !== false && s.startTime && s.endTime);
+
+            const timeToMinutes = (t: string) => {
+                const [h, m] = t.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            for (let i = 0; i < activeSlots.length; i++) {
+                const s1 = activeSlots[i];
+                const start1 = timeToMinutes(s1.startTime);
+                const end1 = timeToMinutes(s1.endTime);
+
+                if (start1 >= end1) {
+                    return res.status(400).json({ error: `Invalid time range for slot: ${s1.name || s1.label}. End time must be after start time.` });
+                }
+
+                for (let j = i + 1; j < activeSlots.length; j++) {
+                    const s2 = activeSlots[j];
+                    const start2 = timeToMinutes(s2.startTime);
+                    const end2 = timeToMinutes(s2.endTime);
+
+                    // Check for overlap
+                    if (start1 < end2 && start2 < end1) {
+                        return res.status(400).json({
+                            error: `Time slot conflict detected between "${s1.name || s1.label}" and "${s2.name || s2.label}". Slots cannot overlap.`
+                        });
+                    }
+                }
+            }
+        }
+
         let settings = await prisma.settings.findFirst();
 
         if (settings) {
@@ -68,7 +102,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         timeSlots: {
                             create: timeSlots.map((ts: any, index: number) => ({
                                 label: ts.label,
+                                startTime: ts.startTime,
+                                endTime: ts.endTime,
                                 type: ts.type,
+                                isActive: ts.isActive !== undefined ? ts.isActive : true,
                                 order: ts.order || index + 1
                             }))
                         }
@@ -83,7 +120,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     timeSlots: {
                         create: timeSlots?.map((ts: any, index: number) => ({
                             label: ts.label,
+                            startTime: ts.startTime,
+                            endTime: ts.endTime,
                             type: ts.type,
+                            isActive: ts.isActive !== undefined ? ts.isActive : true,
                             order: ts.order || index + 1
                         })) || []
                     }

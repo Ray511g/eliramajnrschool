@@ -14,15 +14,16 @@ export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
     const { teachers, settings, addTimetableEntry, updateTimetableEntry, deleteTimetableEntry } = useSchool();
 
     const lessonSlots = settings.timeSlots && settings.timeSlots.length > 0
-        ? settings.timeSlots.filter(s => s.type === 'Lesson')
-        : TIME_SLOTS.filter(s => s !== '10:00 - 10:30' && s !== '12:30 - 1:10').map(s => ({ id: s, label: s, type: 'Lesson' as const }));
+        ? settings.timeSlots.filter(s => s.type === 'Lesson' && s.isActive !== false)
+        : [];
 
     const [form, setForm] = useState({
         day: DAYS[0],
-        timeSlot: lessonSlots[0]?.label || '',
-        subject: SUBJECTS[0],
-        teacherId: '',
-        teacherName: '',
+        timeSlot: entry?.timeSlot || lessonSlots[0]?.label || '',
+        slotId: entry?.slotId || lessonSlots[0]?.id || '',
+        subject: entry?.subject || SUBJECTS[0],
+        teacherId: entry?.teacherId || '',
+        teacherName: entry?.teacherName || '',
     });
 
     useEffect(() => {
@@ -30,6 +31,7 @@ export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
             setForm({
                 day: entry.day,
                 timeSlot: entry.timeSlot,
+                slotId: entry.slotId || '',
                 subject: entry.subject,
                 teacherId: entry.teacherId || '',
                 teacherName: entry.teacherName,
@@ -40,10 +42,13 @@ export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const teacher = teachers.find(t => t.id === form.teacherId);
+        const slot = settings.timeSlots?.find(s => s.id === form.slotId);
+
         const entryData = {
             grade,
             day: form.day,
-            timeSlot: form.timeSlot,
+            timeSlot: slot ? slot.label : form.timeSlot,
+            slotId: form.slotId,
             subject: form.subject,
             teacherId: form.teacherId,
             teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : form.teacherName || 'TBA',
@@ -86,9 +91,16 @@ export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
                             </div>
                             <div className="form-group">
                                 <label>Time Slot *</label>
-                                <select className="form-control" value={form.timeSlot} onChange={e => setForm({ ...form, timeSlot: e.target.value })}>
+                                <select
+                                    className="form-control"
+                                    value={form.slotId}
+                                    onChange={e => {
+                                        const slot = lessonSlots.find(s => s.id === e.target.value);
+                                        setForm({ ...form, slotId: e.target.value, timeSlot: slot?.label || '' });
+                                    }}
+                                >
                                     {lessonSlots.map(s => (
-                                        <option key={s.id} value={s.label}>{s.label}</option>
+                                        <option key={s.id} value={s.id}>{s.label}</option>
                                     ))}
                                 </select>
                             </div>
@@ -96,7 +108,7 @@ export default function TimetableEntryModal({ grade, onClose, entry }: Props) {
                         <div className="form-group">
                             <label>Subject *</label>
                             <select className="form-control" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}>
-                                {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                                {SUBJECTS.map((s, idx) => <option key={`${s}-${idx}`} value={s}>{s}</option>)}
                             </select>
                         </div>
                         <div className="form-group">

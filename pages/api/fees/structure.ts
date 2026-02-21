@@ -46,9 +46,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const { grade, name, amount, term } = req.body;
             const feeAmount = parseFloat(amount);
+
+            const existing = await prisma.feeStructure.findUnique({ where: { id: id as string } });
+            if (!existing) return res.status(404).json({ error: 'Fee item not found' });
+            if (existing.status === 'Published' && user.role !== 'Super Admin') {
+                return res.status(403).json({ error: 'Published items cannot be modified' });
+            }
+
             const feeStructure = await prisma.feeStructure.update({
                 where: { id: id as string },
-                data: { grade, name, amount: feeAmount, term }
+                data: { grade, name, amount: feeAmount, term, status: 'Draft' } // Reverting to draft on edit? Or keep current status? 
+                // User requirement: "Lock the structure from editing unless reverted to draft."
+                // So if it's Published, we block. If it's Draft, we update.
             });
 
             // Audit Log
@@ -74,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const { grade, name, amount, term } = req.body;
             const feeAmount = parseFloat(amount);
             const feeStructure = await prisma.feeStructure.create({
-                data: { grade, name, amount: feeAmount, term }
+                data: { grade, name, amount: feeAmount, term, status: 'Draft' }
             });
 
             // Audit Log
@@ -102,6 +111,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const existing = await prisma.feeStructure.findUnique({ where: { id: id as string } });
             if (!existing) return res.status(404).json({ error: 'Fee item not found' });
+            if (existing.status === 'Published' && user.role !== 'Super Admin') {
+                return res.status(403).json({ error: 'Published items cannot be deleted' });
+            }
 
             await prisma.feeStructure.delete({ where: { id: id as string } });
 

@@ -53,7 +53,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }
             }
 
-            // 4. Audit Log
+            // 4. Lock the fee structures (Set status to Published)
+            await prisma.feeStructure.updateMany({
+                where: grade ? { grade: grade as string } : {},
+                data: { status: 'Published' }
+            });
+
+            // 5. Audit Log
             await prisma.auditLog.create({
                 data: {
                     userId: user.id || 'unknown',

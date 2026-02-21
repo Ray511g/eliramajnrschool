@@ -43,7 +43,7 @@ interface SchoolContextType {
     addTimetableEntry: (entry: Omit<TimetableEntry, 'id'>) => void;
     updateTimetableEntry: (id: string, updates: Partial<TimetableEntry>) => void;
     deleteTimetableEntry: (id: string) => void;
-    updateSettings: (data: Partial<SchoolSettings>) => void;
+    updateSettings: (data: Partial<SchoolSettings>) => Promise<boolean>;
     updateGradeFees: (grade: string, amount: number) => void;
     uploadStudents: (file: File) => Promise<void>;
     uploadTeachers: (file: File) => Promise<void>;
@@ -64,7 +64,8 @@ interface SchoolContextType {
     updateFeeStructure: (id: string, updates: Partial<FeeStructureItem>) => void;
     deleteFeeStructure: (id: string) => void;
     applyFeeStructure: (grade?: string) => Promise<void>;
-    fetchAuditLogs: () => void;
+    revertFeeStructure: (grade: string) => Promise<void>;
+    fetchAuditLogs: () => Promise<void>;
     isSyncing: boolean;
     serverStatus: 'connected' | 'disconnected' | 'checking';
 }
@@ -76,16 +77,16 @@ function generateId() {
 }
 
 const defaultTimeSlots: TimeSlot[] = [
-    { id: '1', label: '8:00 - 8:40', type: 'Lesson' },
-    { id: '2', label: '8:40 - 9:20', type: 'Lesson' },
-    { id: '3', label: '9:20 - 10:00', type: 'Lesson' },
-    { id: '4', label: '10:00 - 10:30', type: 'Break' },
-    { id: '5', label: '10:30 - 11:10', type: 'Lesson' },
-    { id: '6', label: '11:10 - 11:50', type: 'Lesson' },
-    { id: '7', label: '11:50 - 12:30', type: 'Lesson' },
-    { id: '8', label: '12:30 - 1:10', type: 'Lunch' },
-    { id: '9', label: '1:10 - 1:50', type: 'Lesson' },
-    { id: '10', label: '1:50 - 2:30', type: 'Lesson' },
+    { id: '1', label: '8:00 - 8:40', type: 'Lesson', order: 1 },
+    { id: '2', label: '8:40 - 9:20', type: 'Lesson', order: 2 },
+    { id: '3', label: '9:20 - 10:00', type: 'Lesson', order: 3 },
+    { id: '4', label: '10:00 - 10:30', type: 'Break', order: 4 },
+    { id: '5', label: '10:30 - 11:10', type: 'Lesson', order: 5 },
+    { id: '6', label: '11:10 - 11:50', type: 'Lesson', order: 6 },
+    { id: '7', label: '11:50 - 12:30', type: 'Lesson', order: 7 },
+    { id: '8', label: '12:30 - 1:10', type: 'Lunch', order: 8 },
+    { id: '9', label: '1:10 - 1:50', type: 'Lesson', order: 9 },
+    { id: '10', label: '1:50 - 2:30', type: 'Lesson', order: 10 },
 ];
 
 const defaultSettings: SchoolSettings = {
@@ -771,10 +772,31 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const updated = await apiRes.json();
             setSettings(updated);
+            showToast('Settings updated');
+            return true;
         } else {
+            // tryApi returns null on failure. In a real app, we'd want the error message.
+            // Let's improve tryApi or handle it here for settings specifically.
+            const token = localStorage.getItem('elirama_token');
+            const res = await fetch(`${API_URL}/settings`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (res.status === 400) {
+                const err = await res.json();
+                showToast(err.error || 'Validation failed', 'error');
+                return false;
+            }
+
             setSettings(prev => ({ ...prev, ...data }));
+            showToast('Settings updated locally');
+            return true;
         }
-        showToast('Settings updated');
     };
 
     const updateGradeFees = (grade: string, amount: number) => {
@@ -822,11 +844,26 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const data = await apiRes.json();
             showToast(`Fee structure published${grade ? ` for ${grade}` : ''}! Updated ${data.updatedCount} students.`);
+
+            // Update local state to show items as Published
+            setFeeStructures(prev => prev.map(f => {
+                if (!grade || f.grade === grade) return { ...f, status: 'Published' };
+                return f;
+            }));
+
             await fetchData(true); // Pull fresh student data with new balances
         } else {
             showToast('Failed to publish fee structure', 'error');
         }
         setLoading(false);
+    };
+
+    const revertFeeStructure = async (grade: string) => {
+        const apiRes = await tryApi(`${API_URL}/fees/revert?grade=${encodeURIComponent(grade)}`, { method: 'POST' });
+        if (apiRes) {
+            setFeeStructures(prev => prev.map(f => f.grade === grade ? { ...f, status: 'Draft' } : f));
+            showToast(`Fee structure for ${grade} reverted to draft`);
+        }
     };
 
     // AUDIT LOGS
@@ -880,7 +917,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             uploadStudents, uploadTeachers, uploadExams,
             systemUsers, addSystemUser, updateSystemUser, deleteSystemUser, resetUserPassword, changeUserPassword,
             showToast, refreshData, clearAllData,
-            feeStructures, auditLogs, addFeeStructure, updateFeeStructure, deleteFeeStructure, applyFeeStructure, fetchAuditLogs,
+            feeStructures, auditLogs, addFeeStructure, updateFeeStructure, deleteFeeStructure, applyFeeStructure, revertFeeStructure, fetchAuditLogs,
             isSyncing, serverStatus
         }}>
             {children}

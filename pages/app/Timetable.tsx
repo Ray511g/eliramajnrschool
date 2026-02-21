@@ -11,12 +11,15 @@ export default function Timetable() {
     const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
 
     const gradeEntries = timetable.filter(e => e.grade === selectedGrade);
-    const slots: any[] = settings.timeSlots && settings.timeSlots.length > 0
-        ? settings.timeSlots
-        : TIME_SLOTS.map((s, i) => ({ id: String(i), label: s, type: (s === '10:00 - 10:30' ? 'Break' : (s === '12:30 - 1:10' ? 'Lunch' : 'Lesson')) }));
 
-    const getEntry = (day: string, slotLabel: string) => {
-        return gradeEntries.find(e => e.day === day && e.timeSlot === slotLabel);
+    // Sort and filter active slots
+    const slots: TimeSlot[] = (settings.timeSlots || [])
+        .filter(s => s.isActive !== false)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    const getEntry = (day: string, slotId: string, slotLabel: string) => {
+        // Try finding by slotId first (new system), fallback to timeSlot label (legacy)
+        return gradeEntries.find(e => (e.slotId === slotId) || (!e.slotId && e.timeSlot === slotLabel));
     };
 
     const handleEdit = (entry: TimetableEntry) => {
@@ -32,6 +35,21 @@ export default function Timetable() {
     const handlePrint = () => {
         window.print();
     };
+
+    if (slots.length === 0) {
+        return (
+            <div className="page-container">
+                <div className="page-header">
+                    <h1>Timetable</h1>
+                    <p>Structure not configured</p>
+                </div>
+                <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+                    <h3>Timetable Structure Not Set</h3>
+                    <p>Please go to Admin &rarr; Timetable Structure to define your school's periods and breaks.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="page-container">
@@ -77,20 +95,27 @@ export default function Timetable() {
 
                     {/* Body rows */}
                     {slots.map(slot => {
-                        if (slot.type === 'Break' || slot.type === 'Lunch' || slot.type === 'Other') {
-                            const icon = slot.type === 'Break' ? '☕' : (slot.type === 'Lunch' ? '🍽️' : '🔔');
-                            const displayName = slot.name || (slot.type.toUpperCase());
+                        const isBreak = slot.type === 'Break' || slot.type === 'Lunch' || slot.type === 'Assembly';
+                        const timeDisplay = slot.startTime && slot.endTime ? `${slot.startTime} - ${slot.endTime}` : slot.label;
+
+                        if (isBreak) {
+                            const icon = slot.type === 'Break' ? '☕' : (slot.type === 'Lunch' ? '🍽️' : (slot.type === 'Assembly' ? '📢' : '🔔'));
+                            const displayName = slot.name || slot.label;
                             return (
-                                <div key={slot.id} className="timetable-cell break-row">
-                                    {icon} {displayName} ({slot.label})
-                                </div>
+                                <React.Fragment key={slot.id}>
+                                    <div className="timetable-cell time-slot">{timeDisplay}</div>
+                                    <div className="timetable-cell break-row" style={{ gridColumn: 'span 5' }}>
+                                        {icon} {displayName}
+                                    </div>
+                                </React.Fragment>
                             );
                         }
+
                         return (
                             <React.Fragment key={slot.id}>
-                                <div className="timetable-cell time-slot">{slot.label}</div>
+                                <div className="timetable-cell time-slot">{timeDisplay}</div>
                                 {DAYS.map(day => {
-                                    const entry = getEntry(day, slot.label);
+                                    const entry = getEntry(day, slot.id, slot.label);
                                     return (
                                         <div key={`${day}-${slot.id}`} className="timetable-cell">
                                             {entry ? (

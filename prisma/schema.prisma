@@ -111,7 +111,8 @@ model TimetableEntry {
   id          String   @id @default(cuid())
   grade       String
   day         String
-  timeSlot    String
+  timeSlot    String   // Keep for backward compatibility/display
+  slotId      String?  // New field linking to TimeSlot
   subject     String
   teacherId   String?
   teacherName String
@@ -142,8 +143,11 @@ model Settings {
 model TimeSlot {
   id         String   @id @default(cuid())
   label      String
-  type       String   @default("Lesson") // Lesson, Break, Lunch
+  startTime  String?  // e.g. "08:00"
+  endTime    String?  // e.g. "08:40"
+  type       String   @default("Lesson") // Lesson, Break, Lunch, Assembly, Other
   order      Int      @default(0)
+  isActive   Boolean  @default(true)
   settings   Settings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
   settingsId String
 }
@@ -185,6 +189,7 @@ model FeeStructure {
   name      String   // e.g., "Tuition", "Lunch", "Transport"
   amount    Float
   term      String
+  status    String   @default("Draft") // Draft, Published
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

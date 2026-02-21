@@ -84,6 +84,7 @@ export interface TimetableEntry {
     grade: string;
     day: string;
     timeSlot: string;
+    slotId?: string; // Relation to TimeSlot
     subject: string;
     teacherId: string;
     teacherName: string;
@@ -91,9 +92,13 @@ export interface TimetableEntry {
 
 export interface TimeSlot {
     id: string;
-    label: string; // The time range, e.g. "8:00 - 8:40"
-    name?: string;  // Optional custom name, e.g. "Tea Break", "Assembly"
-    type: 'Lesson' | 'Break' | 'Lunch' | 'Other';
+    label: string; // The display name, e.g. "Lesson 1" or "8:00 - 8:40"
+    name?: string;  // Optional custom name, e.g. "Tea Break"
+    startTime?: string;
+    endTime?: string;
+    type: 'Lesson' | 'Break' | 'Lunch' | 'Assembly' | 'Other';
+    order: number;
+    isActive?: boolean;
 }
 
 export interface User {
@@ -170,4 +175,5 @@ export interface FeeStructureItem {
     name: string;
     amount: number;
     term: string;
+    status: 'Draft' | 'Published';
 }
