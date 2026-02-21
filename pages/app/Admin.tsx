@@ -30,6 +30,14 @@ export default function Admin() {
     const [activeTab, setActiveTab] = useState<'settings' | 'users' | 'roles' | 'fees' | 'audit' | 'timetable'>('settings');
 
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab');
+        if (tab && ['settings', 'users', 'roles', 'fees', 'audit', 'timetable'].includes(tab)) {
+            setActiveTab(tab as any);
+        }
+    }, []);
+
+    useEffect(() => {
         if (!editing) {
             setForm(settings);
         }
@@ -381,9 +389,43 @@ export default function Admin() {
                                             <option>Term 3</option>
                                         </select>
                                     </div>
-                                    <div className="form-group" style={{ marginBottom: 20 }}>
+                                    <div className="form-group" style={{ marginBottom: 15 }}>
                                         <label htmlFor="current-year">Current Year</label>
                                         <input id="current-year" className="form-control" type="number" value={form.currentYear} onChange={e => setForm({ ...form, currentYear: parseInt(e.target.value) })} />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 15 }}>
+                                        <label>Active School Levels</label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 5 }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'normal', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.earlyYearsEnabled} onChange={e => setForm({ ...form, earlyYearsEnabled: e.target.checked })} />
+                                                Early Years (Playgroup - PP2)
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'normal', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.primaryEnabled} onChange={e => setForm({ ...form, primaryEnabled: e.target.checked })} />
+                                                Primary School
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'normal', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.jssEnabled} onChange={e => setForm({ ...form, jssEnabled: e.target.checked })} />
+                                                Junior Secondary (JSS)
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'normal', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.sssEnabled} onChange={e => setForm({ ...form, sssEnabled: e.target.checked })} />
+                                                Senior Secondary (SSS)
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 15 }}>
+                                        <label>Timetable Management</label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 5 }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'normal', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.autoTimetableEnabled} onChange={e => setForm({ ...form, autoTimetableEnabled: e.target.checked })} />
+                                                Enable Auto Generator
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'normal', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={form.manualTimetableBuilderEnabled} onChange={e => setForm({ ...form, manualTimetableBuilderEnabled: e.target.checked })} />
+                                                Enable Manual Builder
+                                            </label>
+                                        </div>
                                     </div>
                                 </>
                             ) : (
@@ -394,10 +436,20 @@ export default function Admin() {
                                         <span className="setting-label">Active Levels</span>
                                         <span className="setting-value">
                                             {[
+                                                settings.earlyYearsEnabled && 'Early Years',
                                                 settings.primaryEnabled && 'Primary',
                                                 settings.jssEnabled && 'JSS',
                                                 settings.sssEnabled && 'SSS'
                                             ].filter(Boolean).join(', ') || 'None'}
+                                        </span>
+                                    </div>
+                                    <div className="setting-row">
+                                        <span className="setting-label">Timetable Features</span>
+                                        <span className="setting-value">
+                                            {[
+                                                settings.autoTimetableEnabled && 'Auto-Generated',
+                                                settings.manualTimetableBuilderEnabled && 'Manual Builder'
+                                            ].filter(Boolean).join(', ') || 'Disabled'}
                                         </span>
                                     </div>
                                 </>
@@ -706,15 +758,15 @@ export default function Admin() {
                                 <div className="form-row">
                                     <div className="form-group" style={{ flex: 1 }}>
                                         <label>First Name</label>
-                                        <input className="form-control" value={userForm.firstName} onChange={e => setUserForm({ ...userForm, firstName: e.target.value })} placeholder="ANN" />
+                                        <input className="form-control" value={userForm.firstName} onChange={e => setUserForm({ ...userForm, firstName: e.target.value })} placeholder="First Name" />
                                     </div>
                                     <div className="form-group" style={{ flex: 1 }}>
                                         <label>Last Name</label>
-                                        <input className="form-control" value={userForm.lastName} onChange={e => setUserForm({ ...userForm, lastName: e.target.value })} placeholder="NKIROTE" />
+                                        <input className="form-control" value={userForm.lastName} onChange={e => setUserForm({ ...userForm, lastName: e.target.value })} placeholder="Last Name" />
                                     </div>
                                     <div className="form-group" style={{ flex: 1 }}>
                                         <label>Username</label>
-                                        <input className="form-control" value={userForm.username} onChange={e => setUserForm({ ...userForm, username: e.target.value })} placeholder="ANKIROTE" />
+                                        <input className="form-control" value={userForm.username} onChange={e => setUserForm({ ...userForm, username: e.target.value })} placeholder="Username" />
                                     </div>
                                     <div className="form-group" style={{ flex: 1 }}>
                                         <label>System Password</label>
@@ -724,7 +776,7 @@ export default function Admin() {
                                 <div className="form-row" style={{ marginTop: 15 }}>
                                     <div className="form-group" style={{ flex: 1 }}>
                                         <label>Email Address</label>
-                                        <input className="form-control" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} placeholder="ann@spa-limited.com" />
+                                        <input className="form-control" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} placeholder="email@example.com" />
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="user-role">Role</label>
@@ -840,7 +892,7 @@ export default function Admin() {
                                         value={feeForm.grade}
                                         onChange={e => setFeeForm({ ...feeForm, grade: e.target.value })}
                                     >
-                                        {['Play Group', 'PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'].map(g => <option key={g}>{g}</option>)}
+                                        {activeGrades.map(g => <option key={g}>{g}</option>)}
                                     </select>
                                 </div>
                                 <div className="form-group" style={{ flex: 1 }}>

@@ -5,7 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import TimetableEntryModal from '../../components/modals/TimetableEntryModal';
 
 export default function Timetable() {
-    const { timetable, settings } = useSchool();
+    const { timetable, settings, activeGrades, updateTimetable, teachers, showToast } = useSchool();
     const [selectedGrade, setSelectedGrade] = useState<string>('Grade 1');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
@@ -35,8 +35,81 @@ export default function Timetable() {
         setEditingEntry(null);
     };
 
+    const handleQuickAdd = (day: string, slot: TimeSlot) => {
+        setEditingEntry({
+            id: '',
+            grade: selectedGrade,
+            day,
+            slotId: slot.id,
+            timeSlot: slot.label,
+            subject: '',
+            teacherId: '',
+            teacherName: '',
+        });
+        setShowAddModal(true);
+    };
+
     const handlePrint = () => {
         window.print();
+    };
+
+    const generateAutoTimetable = () => {
+        if (!confirm('This will overwrite the current timetable with a newly generated one. Are you sure?')) return;
+
+        const newEntries: TimetableEntry[] = [];
+        const teacherDailyCount: Record<string, Record<string, number>> = {};
+        const teacherWeeklyCount: Record<string, number> = {};
+        const usedSlots: Record<string, Set<string>> = {};
+
+        teachers.forEach(t => {
+            teacherDailyCount[t.id] = {};
+            DAYS.forEach(d => teacherDailyCount[t.id][d] = 0);
+            teacherWeeklyCount[t.id] = 0;
+        });
+
+        activeGrades.forEach(grade => {
+            DAYS.forEach(day => {
+                slots.forEach(slot => {
+                    if (slot.type !== 'Lesson') return;
+
+                    const key = `${day}-${slot.id}`;
+                    if (!usedSlots[key]) usedSlots[key] = new Set();
+
+                    const availableTeachers = teachers.filter(t =>
+                        t.grades.includes(grade) &&
+                        !usedSlots[key].has(t.id) &&
+                        teacherDailyCount[t.id][day] < (t.maxLessonsDay || 8) &&
+                        teacherWeeklyCount[t.id] < (t.maxLessonsWeek || 40)
+                    );
+
+                    if (availableTeachers.length > 0) {
+                        const selectedTeacher = availableTeachers.sort((a, b) =>
+                            teacherWeeklyCount[a.id] - teacherWeeklyCount[b.id]
+                        )[0];
+
+                        const subject = selectedTeacher.subjects[0];
+
+                        newEntries.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            grade,
+                            day,
+                            slotId: slot.id,
+                            timeSlot: slot.label,
+                            subject: subject || 'General',
+                            teacherId: selectedTeacher.id,
+                            teacherName: `${selectedTeacher.firstName} ${selectedTeacher.lastName}`,
+                        });
+
+                        teacherDailyCount[selectedTeacher.id][day]++;
+                        teacherWeeklyCount[selectedTeacher.id]++;
+                        usedSlots[key].add(selectedTeacher.id);
+                    }
+                });
+            });
+        });
+
+        updateTimetable(newEntries);
+        showToast('Timetable auto-generated for all active grades', 'success');
     };
 
     if (slots.length === 0) {
@@ -71,8 +144,16 @@ export default function Timetable() {
                         value={selectedGrade}
                         onChange={e => setSelectedGrade(e.target.value)}
                     >
-                        {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                        {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
+                    <button className="btn-outline" onClick={() => (window as any).location.href = '/app/Admin?tab=timetable'} style={{ marginRight: 10 }}>
+                        <AddIcon style={{ fontSize: 18 }} /> Slot Entry
+                    </button>
+                    {settings.autoTimetableEnabled && (
+                        <button className="btn-primary purple" onClick={() => generateAutoTimetable()} style={{ marginRight: 10 }}>
+                            Auto Generate
+                        </button>
+                    )}
                     <button className="btn-primary" onClick={() => setShowAddModal(true)}>
                         <AddIcon style={{ fontSize: 18 }} /> Add Entry
                     </button>
@@ -120,13 +201,20 @@ export default function Timetable() {
                                 {DAYS.map(day => {
                                     const entry = getEntry(day, slot.id, slot.label);
                                     return (
-                                        <div key={`${day}-${slot.id}`} className="timetable-cell">
+                                        <div
+                                            key={`${day}-${slot.id}`}
+                                            className={`timetable-cell ${!entry ? 'empty-slot' : ''}`}
+                                            onClick={() => !entry && settings.manualTimetableBuilderEnabled && handleQuickAdd(day, slot)}
+                                            style={{ cursor: !entry && settings.manualTimetableBuilderEnabled ? 'pointer' : 'default' }}
+                                        >
                                             {entry ? (
-                                                <div className="timetable-entry" onClick={() => handleEdit(entry)} style={{ cursor: 'pointer' }} title="Click to edit">
+                                                <div className="timetable-entry" onClick={(e) => { e.stopPropagation(); handleEdit(entry); }} style={{ cursor: 'pointer' }} title="Click to edit">
                                                     <div className="subject">{entry.subject}</div>
                                                     <div className="teacher">{entry.teacherName}</div>
                                                 </div>
-                                            ) : null}
+                                            ) : (
+                                                settings.manualTimetableBuilderEnabled && <div className="quick-add-hint">+</div>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -174,6 +262,18 @@ export default function Timetable() {
                         border: 1px solid #000 !important;
                         text-align: center !important;
                     }
+                }
+                .empty-slot:hover {
+                    background: var(--bg-light);
+                }
+                .quick-add-hint {
+                    display: none;
+                    color: var(--text-muted);
+                    font-size: 20px;
+                    text-align: center;
+                }
+                .empty-slot:hover .quick-add-hint {
+                    display: block;
                 }
             `}</style>
         </div>

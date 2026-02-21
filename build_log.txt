@@ -1,0 +1,32 @@
+
+> elirama-web@0.0.0 build
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+Γ£ö Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 198ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Help us improve the Prisma ORM for everyone. Share your feedback in a short 2-min survey: https://pris.ly/orm/survey/release-5-22
+
+  Γû▓ Next.js 14.2.35
+  - Environments: .env
+
+   Linting and checking validity of types ...
+Failed to compile.
+
+./pages/app/Admin.tsx:92:46
+Type error: Argument of type '{ firstName: string; lastName: string; username: string; password: string; name: string; email: string; role: string; roleId: string; permissions: Record<string, string[]>; }' is not assignable to parameter of type 'Partial<User>'.
+  Types of property 'permissions' are incompatible.
+    Type 'Record<string, string[]>' is missing the following properties from type 'string[]': length, pop, push, concat, and 35 more.
+
+  90 |
+  91 |         if (editingUser) {
+> 92 |             updateSystemUser(editingUser.id, userForm);
+     |                                              ^
+  93 |         } else {
+  94 |             addSystemUser(userForm);
+  95 |         }
+Next.js build worker exited with code: 1 and signal: null

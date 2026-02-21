@@ -11,7 +11,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import Pagination from '../../components/common/Pagination';
 
 export default function Attendance() {
-    const { students, attendance, saveAttendance, settings } = useSchool();
+    const { students, attendance, saveAttendance, settings, activeGrades } = useSchool();
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedGrade, setSelectedGrade] = useState('');
     const [records, setRecords] = useState<Map<string, string>>(new Map());
@@ -22,6 +22,7 @@ export default function Attendance() {
     const [reportTerm, setReportTerm] = useState('');
     const [reportStudent, setReportStudent] = useState('');
     const [reportGrade, setReportGrade] = useState('');
+    const [isLocked, setIsLocked] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -30,13 +31,14 @@ export default function Attendance() {
         return students.filter(s => s.status === 'Active' && (!selectedGrade || s.grade === selectedGrade));
     }, [students, selectedGrade]);
 
-    // Initialize from existing attendance
+    // Initialize from existing attendance and check lock status
     useMemo(() => {
-        const existing = attendance.filter(a => a.date === selectedDate);
+        const existing = attendance.filter(a => a.date === selectedDate && (!selectedGrade || a.grade === selectedGrade));
         const newMap = new Map<string, string>();
         existing.forEach(a => newMap.set(a.studentId, a.status));
         setRecords(newMap);
-    }, [selectedDate, attendance]);
+        setIsLocked(existing.length > 0);
+    }, [selectedDate, selectedGrade, attendance]);
 
     const setStatus = (studentId: string, status: string) => {
         setRecords(prev => {
@@ -200,20 +202,29 @@ export default function Attendance() {
                             <label htmlFor="attendance-grade">Grade</label>
                             <select id="attendance-grade" title="Select grade for attendance" className="filter-select" value={selectedGrade} onChange={e => setSelectedGrade(e.target.value)}>
                                 <option value="">All Grades</option>
-                                {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                                {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
                             </select>
                         </div>
                         <div className="attendance-actions">
-                            <button className="btn-primary green" onClick={() => markAll('Present')}>Mark All Present</button>
-                            <button className="btn-primary red" onClick={() => markAll('Absent')}>Mark All Absent</button>
+                            <button className="btn-primary green" onClick={() => markAll('Present')} disabled={isLocked}>Mark All Present</button>
+                            <button className="btn-primary red" onClick={() => markAll('Absent')} disabled={isLocked}>Mark All Absent</button>
                         </div>
                     </div>
 
-                    <div className="attendance-list-header">
+                    {isLocked && (
+                        <div className="alert info" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <InfoIcon />
+                            <span>Attendance for this date and grade has already been marked and is now locked.</span>
+                        </div>
+                    )}
+
+                    <div className="attendance-list-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                         <h3><CalendarTodayIcon style={{ fontSize: 18, marginRight: 8 }} />Mark Attendance - {filteredStudents.length} Students</h3>
-                        <button className="btn-primary" onClick={handleSave}>
-                            <SaveIcon style={{ fontSize: 18 }} /> Save Attendance
-                        </button>
+                        {!isLocked && (
+                            <button className="btn-primary" onClick={handleSave}>
+                                <SaveIcon style={{ fontSize: 18 }} /> Save Attendance
+                            </button>
+                        )}
                     </div>
 
                     {filteredStudents.length === 0 ? (
@@ -232,7 +243,9 @@ export default function Attendance() {
                                         <button
                                             key={status}
                                             className={`attendance-status-btn ${status.toLowerCase()} ${records.get(student.id) === status ? 'active' : ''}`}
-                                            onClick={() => setStatus(student.id, status)}
+                                            onClick={() => !isLocked && setStatus(student.id, status)}
+                                            disabled={isLocked}
+                                            style={{ opacity: isLocked && records.get(student.id) !== status ? 0.5 : 1 }}
                                         >
                                             {status}
                                         </button>
@@ -258,7 +271,7 @@ export default function Attendance() {
                             <label>Grade</label>
                             <select className="filter-select" value={reportGrade} onChange={e => setReportGrade(e.target.value)}>
                                 <option value="">All Grades</option>
-                                {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                                {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
                             </select>
                         </div>
                         <div className="form-group">

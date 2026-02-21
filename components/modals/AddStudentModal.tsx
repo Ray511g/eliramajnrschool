@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function AddStudentModal({ onClose, student }: Props) {
-    const { addStudent, updateStudent, gradeFees } = useSchool();
+    const { addStudent, updateStudent, gradeFees, activeGrades } = useSchool();
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
@@ -103,7 +103,7 @@ export default function AddStudentModal({ onClose, student }: Props) {
                                     // Only update fees if it's a new student or explicitly changing grade
                                     setForm(prev => ({ ...prev, grade, totalFees: gradeFees[grade] || prev.totalFees }));
                                 }}>
-                                    {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                                    {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                             </div>
                             <div className="form-group">

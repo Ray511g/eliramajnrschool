@@ -61,18 +61,21 @@ model Student {
 }
 
 model Teacher {
-  id            String   @id @default(cuid())
-  firstName     String
-  lastName      String
-  email         String   @unique
-  phone         String
-  qualification String?
-  subjects      String[] // stored as array
-  grades        String[] // stored as array
-  status        String   @default("Active")
-  joinDate      String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String   @unique
+  phone           String
+  qualification   String?
+  subjects        String[] // stored as array
+  grades          String[] // stored as array
+  status          String   @default("Active")
+  joinDate        String
+  maxLessonsDay   Int      @default(8)
+  maxLessonsWeek  Int      @default(40)
+  availability    Json?    // Specific days/times teacher is available
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Attendance {
@@ -142,14 +145,17 @@ model Settings {
   poBox                String?
   currentTerm          String     @default("Term 1")
   currentYear          Int        @default(2026)
-  logo                 String?    // Base64 or URL
-  paybillNumber        String?
-  headteacherSignature String?    // Base64 or URL
-  financeSignature     String?    // Base64 or URL
-  primaryEnabled       Boolean    @default(true)
-  jssEnabled           Boolean    @default(false)
-  sssEnabled           Boolean    @default(false)
-  updatedAt            DateTime   @updatedAt
+  logo                         String?    // Base64 or URL
+  paybillNumber                String?
+  headteacherSignature         String?    // Base64 or URL
+  financeSignature             String?    // Base64 or URL
+  earlyYearsEnabled            Boolean    @default(true) // PlayGroup, PP1, PP2
+  primaryEnabled               Boolean    @default(true)
+  jssEnabled                   Boolean    @default(false)
+  sssEnabled                   Boolean    @default(false)
+  autoTimetableEnabled         Boolean    @default(false)
+  manualTimetableBuilderEnabled Boolean    @default(true)
+  updatedAt                    DateTime   @updatedAt
   timeSlots            TimeSlot[]
 }
 

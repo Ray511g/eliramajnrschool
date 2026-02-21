@@ -1,0 +1,30 @@
+
+> elirama-web@0.0.0 build
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+Γ£ö Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 295ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Help us improve the Prisma ORM for everyone. Share your feedback in a short 2-min survey: https://pris.ly/orm/survey/release-5-22
+
+  Γû▓ Next.js 14.2.35
+  - Environments: .env
+
+   Linting and checking validity of types ...
+Failed to compile.
+
+./prisma/seed.ts:18:13
+Type error: Type 'string' has no properties in common with type 'RoleCreateNestedOneWithoutUsersInput'.
+
+  16 |             email: 'admin@elirama.ac.ke',
+  17 |             password: hashedPassword,
+> 18 |             role: 'Super Admin',
+     |             ^
+  19 |         },
+  20 |     });
+  21 |     console.log('Γ£à Admin user created');
+Next.js build worker exited with code: 1 and signal: null

@@ -43,6 +43,7 @@ interface SchoolContextType {
     addTimetableEntry: (entry: Omit<TimetableEntry, 'id'>) => void;
     updateTimetableEntry: (id: string, updates: Partial<TimetableEntry>) => void;
     deleteTimetableEntry: (id: string) => void;
+    updateTimetable: (entries: TimetableEntry[]) => void;
     updateSettings: (data: Partial<SchoolSettings>) => Promise<boolean>;
     updateGradeFees: (grade: string, amount: number) => void;
     uploadStudents: (file: File) => Promise<void>;
@@ -106,9 +107,12 @@ const defaultSettings: SchoolSettings = {
     currentYear: 2026,
     paybillNumber: '123456',
     timeSlots: defaultTimeSlots,
+    earlyYearsEnabled: true,
     primaryEnabled: true,
     jssEnabled: false,
-    sssEnabled: false
+    sssEnabled: false,
+    autoTimetableEnabled: false,
+    manualTimetableBuilderEnabled: true
 };
 
 // Default seed data — used when localStorage is empty
@@ -128,11 +132,11 @@ const seedStudents: Student[] = [
 ];
 
 const seedTeachers: Teacher[] = [
-    { id: 't1', firstName: 'Alice', lastName: 'Kariuki', email: 'alice@elirama.ac.ke', phone: '0711111111', qualification: 'B.Ed Mathematics', subjects: ['Mathematics', 'Physics'], grades: ['Grade 5', 'Grade 6'], status: 'Active', joinDate: '2020-01-15' },
-    { id: 't2', firstName: 'Bob', lastName: 'Omondi', email: 'bob@elirama.ac.ke', phone: '0722222222', qualification: 'B.Ed English', subjects: ['English', 'Literature'], grades: ['Grade 3', 'Grade 4'], status: 'Active', joinDate: '2019-03-01' },
-    { id: 't3', firstName: 'Carol', lastName: "Ndung'u", email: 'carol@elirama.ac.ke', phone: '0733333333', qualification: 'B.Ed Science', subjects: ['Science', 'Biology'], grades: ['PP1', 'PP2'], status: 'Active', joinDate: '2021-08-20' },
-    { id: 't4', firstName: 'Daniel', lastName: 'Cheruiyot', email: 'daniel@elirama.ac.ke', phone: '0744444444', qualification: 'B.Ed Social Studies', subjects: ['Social Studies', 'History'], grades: ['Play Group', 'Grade 1'], status: 'Active', joinDate: '2022-01-10' },
-    { id: 't5', firstName: 'Eunice', lastName: 'Waweru', email: 'eunice@elirama.ac.ke', phone: '0755555555', qualification: 'B.Ed Kiswahili', subjects: ['Kiswahili', 'CRE'], grades: ['Grade 2', 'Grade 6'], status: 'Active', joinDate: '2021-05-15' },
+    { id: 't1', firstName: 'Alice', lastName: 'Kariuki', email: 'alice@elirama.ac.ke', phone: '0711111111', qualification: 'B.Ed Mathematics', subjects: ['Mathematics', 'Physics'], grades: ['Grade 5', 'Grade 6'], status: 'Active', joinDate: '2020-01-15', maxLessonsDay: 8, maxLessonsWeek: 40 },
+    { id: 't2', firstName: 'Bob', lastName: 'Omondi', email: 'bob@elirama.ac.ke', phone: '0722222222', qualification: 'B.Ed English', subjects: ['English', 'Literature'], grades: ['Grade 3', 'Grade 4'], status: 'Active', joinDate: '2019-03-01', maxLessonsDay: 8, maxLessonsWeek: 40 },
+    { id: 't3', firstName: 'Carol', lastName: "Ndung'u", email: 'carol@elirama.ac.ke', phone: '0733333333', qualification: 'B.Ed Science', subjects: ['Science', 'Biology'], grades: ['PP1', 'PP2'], status: 'Active', joinDate: '2021-08-20', maxLessonsDay: 8, maxLessonsWeek: 40 },
+    { id: 't4', firstName: 'Daniel', lastName: 'Cheruiyot', email: 'daniel@elirama.ac.ke', phone: '0744444444', qualification: 'B.Ed Social Studies', subjects: ['Social Studies', 'History'], grades: ['Play Group', 'Grade 1'], status: 'Active', joinDate: '2022-01-10', maxLessonsDay: 8, maxLessonsWeek: 40 },
+    { id: 't5', firstName: 'Eunice', lastName: 'Waweru', email: 'eunice@elirama.ac.ke', phone: '0755555555', qualification: 'B.Ed Kiswahili', subjects: ['Kiswahili', 'CRE'], grades: ['Grade 2', 'Grade 6'], status: 'Active', joinDate: '2021-05-15', maxLessonsDay: 8, maxLessonsWeek: 40 },
 ];
 
 const seedExams: Exam[] = [
@@ -388,6 +392,24 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             setStudents(prev => prev.filter(s => s.id !== id));
             setPayments(prev => prev.filter(p => p.studentId !== id));
             showToast('Student deleted successfully', 'info');
+        }
+    };
+
+    const updateTimetable = async (newEntries: TimetableEntry[]) => {
+        if (serverStatus !== 'connected') {
+            showToast('System Offline: Cannot update timetable.', 'error');
+            return;
+        }
+        // Save all entries via bulk API
+        const apiRes = await tryApi(`${API_URL}/timetable/bulk`, {
+            method: 'POST',
+            body: JSON.stringify(newEntries)
+        });
+        if (apiRes) {
+            setTimetable(newEntries);
+            showToast('Timetable updated successfully');
+        } else {
+            showToast('Failed to update timetable', 'error');
         }
     };
 
@@ -671,6 +693,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 status: 'Active' as any,
                 joinDate: new Date().toISOString().split('T')[0],
                 qualification: row['Qualification'] || '',
+                maxLessonsDay: 8,
+                maxLessonsWeek: 40,
             }));
             for (const t of teachersToUpload) { await addTeacher(t); }
             showToast(`Imported ${teachersToUpload.length} teachers`);
@@ -970,8 +994,11 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     const activeGrades = useMemo(() => {
         const grades: GradeLevel[] = [];
+        if (settings.earlyYearsEnabled) {
+            grades.push('Play Group', 'PP1', 'PP2');
+        }
         if (settings.primaryEnabled) {
-            grades.push('Play Group', 'PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6');
+            grades.push('Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6');
         }
         if (settings.jssEnabled) {
             grades.push('Grade 7', 'Grade 8', 'Grade 9');
@@ -980,7 +1007,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             grades.push('Form 1', 'Form 2', 'Form 3', 'Form 4');
         }
         return grades;
-    }, [settings.primaryEnabled, settings.jssEnabled, settings.sssEnabled]);
+    }, [settings.earlyYearsEnabled, settings.primaryEnabled, settings.jssEnabled, settings.sssEnabled]);
 
     return (
         <SchoolContext.Provider value={{
@@ -1013,6 +1040,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             addTimetableEntry,
             updateTimetableEntry,
             deleteTimetableEntry,
+            updateTimetable,
             updateSettings,
             updateGradeFees,
             uploadStudents,

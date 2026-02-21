@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function AddTeacherModal({ onClose, teacher }: Props) {
-    const { addTeacher, updateTeacher } = useSchool();
+    const { addTeacher, updateTeacher, activeGrades } = useSchool();
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
@@ -18,6 +18,8 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
         qualification: '',
         subjects: [] as string[],
         grades: [] as string[],
+        maxLessonsDay: 8,
+        maxLessonsWeek: 40,
     });
 
     useEffect(() => {
@@ -30,6 +32,8 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
                 qualification: teacher.qualification,
                 subjects: teacher.subjects,
                 grades: teacher.grades,
+                maxLessonsDay: teacher.maxLessonsDay || 8,
+                maxLessonsWeek: teacher.maxLessonsWeek || 40,
             });
         }
     }, [teacher]);
@@ -99,6 +103,16 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
                             <label>Qualification</label>
                             <input className="form-control" value={form.qualification} onChange={e => setForm({ ...form, qualification: e.target.value })} />
                         </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Max Lessons / Day</label>
+                                <input type="number" className="form-control" value={form.maxLessonsDay} onChange={e => setForm({ ...form, maxLessonsDay: parseInt(e.target.value) })} />
+                            </div>
+                            <div className="form-group">
+                                <label>Max Lessons / Week</label>
+                                <input type="number" className="form-control" value={form.maxLessonsWeek} onChange={e => setForm({ ...form, maxLessonsWeek: parseInt(e.target.value) })} />
+                            </div>
+                        </div>
                         <div className="form-group">
                             <label>Subjects *</label>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
@@ -117,7 +131,7 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
                         <div className="form-group">
                             <label>Assigned Grades</label>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                                {GRADES.map(grade => (
+                                {activeGrades.map(grade => (
                                     <button
                                         key={grade}
                                         type="button"

@@ -28,6 +28,9 @@ export interface Teacher {
     status: 'Active' | 'Inactive';
     joinDate: string;
     qualification: string;
+    maxLessonsDay: number;
+    maxLessonsWeek: number;
+    availability?: any; // JSON from prisma
 }
 
 export interface AttendanceRecord {
@@ -144,9 +147,12 @@ export interface SchoolSettings {
     paybillNumber?: string;
     logo?: string;
     timeSlots?: TimeSlot[];
+    earlyYearsEnabled: boolean;
     primaryEnabled: boolean;
     jssEnabled: boolean;
     sssEnabled: boolean;
+    autoTimetableEnabled: boolean;
+    manualTimetableBuilderEnabled: boolean;
 }
 
 export type GradeLevel =
