@@ -145,10 +145,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         </div>
                     </div>
 
-                    <button className="logout-action" onClick={handleLogout}>
-                        <LogoutIcon style={{ fontSize: 18 }} />
-                        <span>Sign Out</span>
-                    </button>
                 </div>
             </aside>
         </>

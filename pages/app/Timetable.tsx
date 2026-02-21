@@ -9,8 +9,14 @@ export default function Timetable() {
     const [selectedGrade, setSelectedGrade] = useState<string>('Grade 1');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingEntry, setEditingEntry] = useState<TimetableEntry | null>(null);
+    const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
+    const [viewMode, setViewMode] = useState<'grade' | 'teacher'>('grade');
 
-    const gradeEntries = timetable.filter(e => e.grade === selectedGrade);
+    const gradeEntries = viewMode === 'grade'
+        ? timetable.filter(e => e.grade === selectedGrade)
+        : timetable.filter(e => e.teacherId === selectedTeacherId);
+
+    const selectedTeacher = teachers.find(t => t.id === selectedTeacherId);
 
     // Sort and filter active slots
     const slots: TimeSlot[] = (settings.timeSlots || [])
@@ -139,13 +145,36 @@ export default function Timetable() {
                         Print Timetable
                     </button>
                     <select
-                        title="Select grade for timetable view"
+                        title="View Mode"
                         className="filter-select"
-                        value={selectedGrade}
-                        onChange={e => setSelectedGrade(e.target.value)}
+                        value={viewMode}
+                        onChange={e => setViewMode(e.target.value as any)}
+                        style={{ marginRight: 10 }}
                     >
-                        {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
+                        <option value="grade">View by Grade</option>
+                        <option value="teacher">View by Teacher</option>
                     </select>
+
+                    {viewMode === 'grade' ? (
+                        <select
+                            title="Select grade for timetable view"
+                            className="filter-select"
+                            value={selectedGrade}
+                            onChange={e => setSelectedGrade(e.target.value)}
+                        >
+                            {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
+                        </select>
+                    ) : (
+                        <select
+                            title="Select teacher for timetable view"
+                            className="filter-select"
+                            value={selectedTeacherId}
+                            onChange={e => setSelectedTeacherId(e.target.value)}
+                        >
+                            <option value="">Select Teacher</option>
+                            {teachers.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
+                        </select>
+                    )}
                     <button className="btn-outline" onClick={() => (window as any).location.href = '/app/Admin?tab=timetable'} style={{ marginRight: 10 }}>
                         <AddIcon style={{ fontSize: 18 }} /> Slot Entry
                     </button>
@@ -165,7 +194,9 @@ export default function Timetable() {
                     {settings.logo && <img src={settings.logo} style={{ height: 60, marginBottom: 10 }} alt="School Logo" />}
                     <h1 style={{ margin: 0 }}>{settings.schoolName}</h1>
                     <p style={{ margin: 5 }}>{settings.motto}</p>
-                    <h2 style={{ marginTop: 20 }}>{selectedGrade} Timetable</h2>
+                    <h2 style={{ marginTop: 20 }}>
+                        {viewMode === 'grade' ? `${selectedGrade} Timetable` : `${selectedTeacher?.firstName} ${selectedTeacher?.lastName}'s Schedule`}
+                    </h2>
                 </div>
             </div>
 
@@ -210,7 +241,7 @@ export default function Timetable() {
                                             {entry ? (
                                                 <div className="timetable-entry" onClick={(e) => { e.stopPropagation(); handleEdit(entry); }} style={{ cursor: 'pointer' }} title="Click to edit">
                                                     <div className="subject">{entry.subject}</div>
-                                                    <div className="teacher">{entry.teacherName}</div>
+                                                    <div className="teacher">{viewMode === 'grade' ? entry.teacherName : entry.grade}</div>
                                                 </div>
                                             ) : (
                                                 settings.manualTimetableBuilderEnabled && <div className="quick-add-hint">+</div>

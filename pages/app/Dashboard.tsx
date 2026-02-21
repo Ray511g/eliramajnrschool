@@ -43,11 +43,6 @@ export default function Dashboard() {
                     <h1 className="page-title">School Insights</h1>
                     <p className="page-subtitle">Welcome back, {user?.name || 'User'}! Monitor your school's performance at a glance.</p>
                 </div>
-                <div className="page-header-right">
-                    <button className="btn-primary" onClick={() => router.push('/students?action=add')}>
-                        <PersonAddIcon style={{ fontSize: 18 }} /> Register Student
-                    </button>
-                </div>
             </header>
 
             <div className="stats-sections-grid">

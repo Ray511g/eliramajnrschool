@@ -19,6 +19,7 @@ export default function Layout({ children }: LayoutProps) {
     const { toasts, isSyncing, settings, changeUserPassword } = useSchool();
     const { user, logout } = useAuth();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
     const [showChangePassword, setShowChangePassword] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -48,10 +49,49 @@ export default function Layout({ children }: LayoutProps) {
                     </div>
                     <div className="top-bar-right">
                         <div className="top-bar-actions">
-                            <div className="icon-badge-wrapper">
+                            <div className="icon-badge-wrapper" onClick={() => setShowNotifications(!showNotifications)}>
                                 <NotificationsIcon className="top-bar-icon" />
-                                <span className="icon-badge"></span>
+                                <span className="icon-badge">2</span>
                             </div>
+
+                            {showNotifications && (
+                                <div className="notifications-dropdown glass-overlay">
+                                    <div className="dropdown-header">
+                                        <h4>Notifications</h4>
+                                    </div>
+                                    <div className="dropdown-divider"></div>
+                                    <div className="notification-list">
+                                        {user?.role === 'Super Admin' || user?.role === 'Admin' ? (
+                                            <>
+                                                <div className="notification-item unread">
+                                                    <div className="notif-dot"></div>
+                                                    <div className="notif-content">
+                                                        <p><strong>System Update</strong></p>
+                                                        <span>New security patches applied successfully.</span>
+                                                    </div>
+                                                </div>
+                                                <div className="notification-item">
+                                                    <div className="notif-content">
+                                                        <p><strong>Database Backup</strong></p>
+                                                        <span>Nightly backup completed.</span>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="notification-item unread">
+                                                <div className="notif-dot"></div>
+                                                <div className="notif-content">
+                                                    <p><strong>Class Schedule</strong></p>
+                                                    <span>Your timetable for Term 1 is now available.</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="dropdown-footer">
+                                        <button className="text-btn">View All</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="user-profile-trigger" onClick={() => setShowProfileMenu(!showProfileMenu)}>
@@ -70,7 +110,11 @@ export default function Layout({ children }: LayoutProps) {
                         {showProfileMenu && (
                             <div className="profile-dropdown glass-overlay">
                                 <div className="dropdown-header">
+                                    <p className="dropdown-user-name">{user?.name}</p>
                                     <p className="dropdown-user-email">{user?.email}</p>
+                                    {user?.role === 'Super Admin' && (
+                                        <span className="badge gold-badge" style={{ marginTop: 8, display: 'inline-block' }}>SUPER ADMIN</span>
+                                    )}
                                 </div>
                                 <div className="dropdown-divider"></div>
                                 <div className="dropdown-item" onClick={() => { setShowChangePassword(true); setShowProfileMenu(false); }}>

@@ -299,8 +299,21 @@ export default function Admin() {
                                             </label>
                                         </div>
                                     </div>
+                                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                        <label htmlFor="head-of-school-title">Head of School Title</label>
+                                        <select
+                                            id="head-of-school-title"
+                                            className="form-control"
+                                            value={form.headOfSchoolTitle || 'Headteacher'}
+                                            onChange={e => setForm({ ...form, headOfSchoolTitle: e.target.value as any })}
+                                        >
+                                            <option value="Headteacher">Headteacher</option>
+                                            <option value="Principal">Principal</option>
+                                            <option value="Chief Principal">Chief Principal</option>
+                                        </select>
+                                    </div>
                                     <div className="form-group">
-                                        <label htmlFor="headteacher-signature">Digital Signature (Headteacher)</label>
+                                        <label htmlFor="headteacher-signature">Digital Signature ({form.headOfSchoolTitle || 'Headteacher'})</label>
                                         <div style={{ display: 'flex', gap: 15, alignItems: 'center', marginTop: 8 }}>
                                             {form.headteacherSignature && (
                                                 <img src={form.headteacherSignature} style={{ height: 50, border: '1px solid var(--border-color)', borderRadius: 4 }} alt="Headteacher Signature Preview" />
@@ -359,10 +372,10 @@ export default function Admin() {
                                     <div className="setting-row"><span className="setting-label">Telephone</span><span className="setting-value">{settings.telephone || 'Not Set'}</span></div>
                                     <div className="setting-row"><span className="setting-label">Paybill Number</span><span className="setting-value">{settings.paybillNumber || 'Not Set'}</span></div>
                                     <div className="setting-row">
-                                        <span className="setting-label">Headteacher Signature</span>
+                                        <span className="setting-label">{settings.headOfSchoolTitle || 'Headteacher'} Signature</span>
                                         <span className="setting-value">
                                             {settings.headteacherSignature ? (
-                                                <img src={settings.headteacherSignature} style={{ height: 30, verticalAlign: 'middle' }} alt="Headteacher Signature" />
+                                                <img src={settings.headteacherSignature} style={{ height: 30, verticalAlign: 'middle' }} alt={`${settings.headOfSchoolTitle || 'Headteacher'} Signature`} />
                                             ) : <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>Not Set</span>}
                                         </span>
                                     </div>

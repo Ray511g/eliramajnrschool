@@ -120,7 +120,8 @@ const defaultSettings: SchoolSettings = {
     jssEnabled: false,
     sssEnabled: false,
     autoTimetableEnabled: false,
-    manualTimetableBuilderEnabled: true
+    manualTimetableBuilderEnabled: true,
+    headOfSchoolTitle: 'Headteacher'
 };
 
 // Default seed data — used when localStorage is empty
@@ -967,56 +968,39 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const addRole = async (role: Omit<Role, 'id'>) => {
-        try {
-            const res = await fetch(`${API_URL}/roles`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(role)
-            });
-            if (res.ok) {
-                const newRole = await res.json();
-                setRoles(prev => [...prev, newRole]);
-                showToast('Role created successfully', 'success');
-                return true;
-            }
-        } catch (error) {
-            showToast('Failed to create role', 'error');
+        const apiRes = await tryApi(`${API_URL}/roles`, {
+            method: 'POST',
+            body: JSON.stringify(role)
+        });
+        if (apiRes) {
+            const newRole = await apiRes.json();
+            setRoles(prev => [...prev, newRole]);
+            showToast('Role created successfully', 'success');
+            return true;
         }
         return false;
     };
 
     const updateRole = async (id: string, updates: Partial<Role>) => {
-        try {
-            const res = await fetch(`${API_URL}/roles`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, ...updates })
-            });
-            if (res.ok) {
-                const updatedRole = await res.json();
-                setRoles(prev => prev.map(r => r.id === id ? updatedRole : r));
-                showToast('Role updated successfully', 'success');
-                return true;
-            }
-        } catch (error) {
-            showToast('Failed to update role', 'error');
+        const apiRes = await tryApi(`${API_URL}/roles`, {
+            method: 'PUT',
+            body: JSON.stringify({ id, ...updates })
+        });
+        if (apiRes) {
+            const updatedRole = await apiRes.json();
+            setRoles(prev => prev.map(r => r.id === id ? updatedRole : r));
+            showToast('Role updated successfully', 'success');
+            return true;
         }
         return false;
     };
 
     const deleteRole = async (id: string) => {
-        try {
-            const res = await fetch(`${API_URL}/roles?id=${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setRoles(prev => prev.filter(r => r.id !== id));
-                showToast('Role deleted successfully', 'success');
-                return true;
-            } else {
-                const data = await res.json();
-                showToast(data.error || 'Failed to delete role', 'error');
-            }
-        } catch (error) {
-            showToast('Failed to delete role', 'error');
+        const apiRes = await tryApi(`${API_URL}/roles?id=${id}`, { method: 'DELETE' });
+        if (apiRes) {
+            setRoles(prev => prev.filter(r => r.id !== id));
+            showToast('Role deleted successfully', 'success');
+            return true;
         }
         return false;
     };
