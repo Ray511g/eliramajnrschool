@@ -1,11 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../../lib/prisma';
+import { requireAuth, checkPermission } from '../../../lib/auth';
+import { logAction } from '../../../lib/audit';
 import { postTransaction } from '../../../utils/finance';
 
-const prisma = new PrismaClient();
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
     if (req.method === 'GET') {
+        if (!checkPermission(user, 'finance', 'VIEW', res)) return;
         const { type } = req.query; // 'staff' or 'entries'
         try {
             if (type === 'staff') {
@@ -26,6 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
+        if (!checkPermission(user, 'finance', 'EDIT', res)) return;
         // Generate Payroll for a specific month/year
         const { month, year } = req.body;
         try {
@@ -66,6 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 });
                 entries.push(entry);
             }
+            await logAction(user.id, user.name, 'GENERATE_PAYROLL', `Generated payroll for ${month}/${year}`, { module: 'Finance' });
             return res.status(201).json({ message: `Payroll generated for ${month}/${year}`, count: entries.length });
         } catch (error) {
             console.error(error);
@@ -74,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
+        if (!checkPermission(user, 'finance', 'EDIT', res)) return;
         // Update Payroll status (Review -> Approve -> Lock)
         const { id, status } = req.body;
         try {
@@ -87,6 +94,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 where: { id },
                 data: { status }
             });
+
+            await logAction(user.id, user.name, 'UPDATE_PAYROLL', `Updated payroll status to ${status} for ${entry.staff.firstName} ${entry.staff.lastName}`, { module: 'Finance' });
 
             if (status === 'Locked') {
                 // Post to Ledger once locked

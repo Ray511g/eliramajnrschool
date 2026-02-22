@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
-import { requireAuth, corsHeaders } from '../../../lib/auth';
+import { requireAuth, corsHeaders, checkPermission } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
 import { logAction } from '../../../lib/audit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    corsHeaders(res);
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     const user = requireAuth(req, res);
@@ -13,6 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { id } = req.query;
 
     if (req.method === 'GET') {
+        if (!checkPermission(user, 'students', 'VIEW', res)) return;
         try {
             const student = await prisma.student.findUnique({ where: { id: id as string } });
             if (!student) return res.status(404).json({ error: 'Student not found' });
@@ -23,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
+        if (!checkPermission(user, 'students', 'EDIT', res)) return;
         try {
             const data = req.body;
             const existing = await prisma.student.findUnique({ where: { id: id as string } });
@@ -44,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 user.name,
                 'UPDATE_STUDENT',
                 `Updated details for student: ${student.firstName} ${student.lastName} (${student.admissionNumber})`,
-                (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
+                { module: 'students' }
             );
 
             await touchSync();
@@ -55,6 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'DELETE') {
+        if (!checkPermission(user, 'students', 'DELETE', res)) return;
         try {
             const student = await prisma.student.findUnique({ where: { id: id as string } });
             if (!student) return res.status(404).json({ error: 'Student not found in database' });
@@ -70,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 user.name,
                 'DELETE_STUDENT',
                 `Permanently deleted student: ${student.firstName} ${student.lastName} (${student.admissionNumber})`,
-                (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
+                { module: 'students' }
             );
 
             await touchSync();
@@ -82,5 +86,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     res.setHeader('Allow', 'GET, PUT, DELETE');
-    res.status(405).json({ error: 'Method not allowed', receivedMethod: req.method, query: req.query });
+    res.status(405).json({ error: 'Method not allowed' });
 }

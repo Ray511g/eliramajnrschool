@@ -41,24 +41,24 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
             <div className="admin-grid" style={{ marginTop: 24 }}>
                 <div className="admin-section">
                     <h3 className="section-title">Monthly Cash Flow</h3>
-                    <div className="chart-placeholder" style={{ height: 200, display: 'flex', alignItems: 'flex-end', gap: 12, paddingBottom: 20 }}>
+                    <div className="chart-container">
                         {stats.cashFlow.map((d: any, i: number) => (
-                            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                                <div style={{ width: '100%', display: 'flex', gap: 4, height: 150, alignItems: 'flex-end' }}>
-                                    <div style={{ flex: 1, background: '#10b981', height: `${(d.income / stats.stats.totalIncome) * 100}%`, borderRadius: '4px 4px 0 0' }}></div>
-                                    <div style={{ flex: 1, background: '#ef4444', height: `${(d.expense / stats.stats.totalExpenses) * 100}%`, borderRadius: '4px 4px 0 0' }}></div>
+                            <div key={i} className="chart-bar-group">
+                                <div className="chart-bars">
+                                    <div className="chart-bar income" style={{ height: `${(d.income / (stats.stats.totalIncome || 1)) * 100}%` }}></div>
+                                    <div className="chart-bar expense" style={{ height: `${(d.expense / (stats.stats.totalExpenses || 1)) * 100}%` }}></div>
                                 </div>
                                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.month}</span>
                             </div>
                         ))}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 20, fontSize: 12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <div style={{ width: 12, height: 12, background: '#10b981', borderRadius: 2 }}></div>
+                    <div className="legend">
+                        <div className="legend-item">
+                            <div className="legend-color" style={{ background: '#10b981' }}></div>
                             <span>Income</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <div style={{ width: 12, height: 12, background: '#ef4444', borderRadius: 2 }}></div>
+                        <div className="legend-item">
+                            <div className="legend-color" style={{ background: '#ef4444' }}></div>
                             <span>Expenses</span>
                         </div>
                     </div>
@@ -73,9 +73,8 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
                                     <span>{b.category} ({b.department})</span>
                                     <span style={{ fontWeight: 600 }}>{Math.round(b.utilization)}%</span>
                                 </div>
-                                <div className="progress-bg" style={{ height: 8, background: 'var(--bg-surface)', borderRadius: 4, overflow: 'hidden' }}>
+                                <div className="progress-container">
                                     <div className="progress-fill" style={{
-                                        height: '100%',
                                         width: `${Math.min(b.utilization, 100)}%`,
                                         background: b.utilization > 90 ? '#ef4444' : b.utilization > 70 ? '#f59e0b' : '#10b981'
                                     }}></div>

@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
-import { requireAuth } from '../../../lib/auth';
+import { requireAuth, checkPermission } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
+import { logAction } from '../../../lib/audit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -12,9 +13,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { id } = req.query;
 
     if (req.method === 'PUT') {
+        if (!checkPermission(user, 'fees', 'EDIT', res)) return;
         try {
             const { amount, method, reference, date, term } = req.body;
-            const oldPayment = await prisma.payment.findUnique({ where: { id: id as string } });
+            const oldPayment = await prisma.payment.findUnique({
+                where: { id: id as string },
+                include: { student: true }
+            });
             if (!oldPayment) return res.status(404).json({ error: 'Payment not found' });
 
             const updatedPayment = await prisma.payment.update({
@@ -24,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             // If amount changed, update student balance
             if (amount !== oldPayment.amount) {
-                const student = await prisma.student.findUnique({ where: { id: oldPayment.studentId } });
+                const student = oldPayment.student;
                 if (student) {
                     const diff = amount - oldPayment.amount;
                     const newPaid = student.paidFees + diff;
@@ -35,24 +40,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }
             }
 
+            await logAction(
+                user.id,
+                user.name,
+                'UPDATE_PAYMENT',
+                `Updated fee payment for ${oldPayment.student.firstName} ${oldPayment.student.lastName}. New amount: ${amount}`,
+                { module: 'Fees', oldValue: oldPayment.amount, newValue: amount }
+            );
+
             await touchSync();
             return res.status(200).json(updatedPayment);
         } catch (error) {
+            console.error('Update payment error:', error);
             return res.status(500).json({ error: 'Failed to update payment' });
         }
     }
 
     if (req.method === 'DELETE') {
+        if (!checkPermission(user, 'fees', 'DELETE', res)) return;
         try {
             // Get payment details before deleting
-            const payment = await prisma.payment.findUnique({ where: { id: id as string } });
+            const payment = await prisma.payment.findUnique({
+                where: { id: id as string },
+                include: { student: true }
+            });
             if (!payment) return res.status(404).json({ error: 'Payment not found' });
 
             // Delete payment
             await prisma.payment.delete({ where: { id: id as string } });
 
             // Revert student balance
-            const student = await prisma.student.findUnique({ where: { id: payment.studentId } });
+            const student = payment.student;
             if (student) {
                 const newPaid = Math.max(0, student.paidFees - payment.amount);
                 await prisma.student.update({
@@ -60,6 +78,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     data: { paidFees: newPaid, feeBalance: student.totalFees - newPaid },
                 });
             }
+
+            await logAction(
+                user.id,
+                user.name,
+                'DELETE_PAYMENT',
+                `Deleted fee payment of ${payment.amount} for ${payment.student.firstName} ${payment.student.lastName}`,
+                { module: 'Fees' }
+            );
 
             await touchSync();
             return res.status(200).json({ success: true });
@@ -72,6 +98,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
     }
 
-    res.setHeader('Allow', 'DELETE');
-    res.status(405).json({ error: 'Method not allowed', receivedMethod: req.method, query: req.query });
+    res.setHeader('Allow', 'PUT, DELETE');
+    res.status(405).json({ error: 'Method not allowed' });
 }

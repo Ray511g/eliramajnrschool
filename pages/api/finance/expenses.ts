@@ -1,11 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../../lib/prisma';
+import { requireAuth, checkPermission } from '../../../lib/auth';
+import { logAction } from '../../../lib/audit';
 import { postTransaction } from '../../../utils/finance';
 
-const prisma = new PrismaClient();
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
     if (req.method === 'GET') {
+        if (!checkPermission(user, 'finance', 'VIEW', res)) return;
         try {
             const expenses = await prisma.expenseRequest.findMany({
                 orderBy: { createdAt: 'desc' }
@@ -17,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
+        if (!checkPermission(user, 'finance', 'CREATE', res)) return;
         try {
             const { category, description, department, amount, requestedById, requestedByName } = req.body;
             const expense = await prisma.expenseRequest.create({
@@ -32,15 +37,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             });
 
             // Log activity
-            await prisma.auditLog.create({
-                data: {
-                    userId: requestedById,
-                    userName: requestedByName,
-                    action: 'REQUEST_EXPENSE',
-                    module: 'Finance',
-                    details: `Expense request of ${amount} for ${description} submitted.`
-                }
-            });
+            await logAction(
+                user.id,
+                user.name,
+                'REQUEST_EXPENSE',
+                `Expense request of ${amount} for ${description} submitted.`,
+                { module: 'Finance' }
+            );
 
             return res.status(201).json(expense);
         } catch (error) {
@@ -49,8 +52,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
+        if (!checkPermission(user, 'finance', 'EDIT', res)) return;
         try {
-            const { id, action, userId, userName } = req.body; // action: APPROVE, PAY, REJECT
+            const { id, action } = req.body; // action: APPROVE, PAY, REJECT
+            const userId = user.id;
+            const userName = user.name;
 
             const currentExpense = await prisma.expenseRequest.findUnique({ where: { id } });
             if (!currentExpense) return res.status(404).json({ error: 'Expense not found' });
@@ -64,6 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         approvedByName: userName
                     }
                 });
+                await logAction(user.id, user.name, 'APPROVE_EXPENSE', `Approved expense request for ${currentExpense.amount}`, { module: 'Finance' });
                 return res.status(200).json(updated);
             }
 
@@ -103,6 +110,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     ],
                     currentExpense.id
                 );
+
+                await logAction(user.id, user.name, 'PAY_EXPENSE', `Processed payment for expense request of ${currentExpense.amount}`, { module: 'Finance' });
 
                 return res.status(200).json(updated);
             }

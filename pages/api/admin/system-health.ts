@@ -1,12 +1,18 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
-import { requireAuth } from '../../../lib/auth';
+import { requireAuth, checkPermission } from '../../../lib/auth';
+import { logAction } from '../../../lib/audit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const user = requireAuth(req, res);
     if (!user) return;
+
+    // Only Super Admin can run system health and cleanup
+    if (user.role !== 'Super Admin') {
+        return res.status(403).json({ error: 'Forbidden: Super Admin access required' });
+    }
 
     try {
         const report: any = {
@@ -69,15 +75,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         }
 
-        // 3. Orphan Cleanup (Rows pointing to non-existent students)
-        // Prisma usually handles this with foreign keys, but we'll do a sanity check in case cascading failed or was missing
+        // 3. Orphan Cleanup
         const allStudentIds = students.map(s => s.id);
 
-        // Find orphans (payments where studentId is not in valid list)
-        // Note: Prisma's deleteMany with 'where studentId not in' is safer if relations aren't enforced
-        // But for this generic script, we'll assume foreign keys might be loose in some setups
-
-        // Count orphans
         const orphanPayments = await prisma.payment.count({ where: { NOT: { studentId: { in: allStudentIds } } } });
         const orphanAttendance = await prisma.attendance.count({ where: { NOT: { studentId: { in: allStudentIds } } } });
         const orphanResults = await prisma.result.count({ where: { NOT: { studentId: { in: allStudentIds } } } });
@@ -91,6 +91,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (orphanResults > 0) await prisma.result.deleteMany({ where: { NOT: { studentId: { in: allStudentIds } } } });
 
         report.orphans.cleaned = orphanPayments + orphanAttendance + orphanResults;
+
+        await logAction(user.id, user.name, 'SYSTEM_HEALTH_CLEANUP', `Ran system health check. Fixed ${report.arrears.discrepanciesFixed} imbalances and cleaned ${report.orphans.cleaned} orphans.`, { module: 'Admin' });
 
         res.status(200).json(report);
 

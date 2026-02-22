@@ -68,7 +68,7 @@ export default function FinancePage() {
             await fetch('/api/finance/expenses', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, action, userId: user?.id, userName: user?.name })
+                body: JSON.stringify({ id, action })
             });
             fetchData();
         } catch (error) {
@@ -130,40 +130,19 @@ export default function FinancePage() {
         <div className="page-container">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <AccountBalanceIcon style={{ color: 'var(--accent-blue)' }} /> Financial Management
+                    <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <AccountBalanceIcon color="primary" /> Financial Management
                     </h1>
-                    <p>Ledger-Core School Financial System</p>
+                    <p className="page-subtitle">Ledger-Core School Financial System</p>
                 </div>
             </div>
 
-            <div className="finance-tabs-nav" style={{
-                display: 'flex',
-                gap: 8,
-                borderBottom: '1px solid var(--border-color)',
-                marginBottom: 24,
-                paddingBottom: 4,
-                overflowX: 'auto'
-            }}>
+            <div className="tab-nav">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
                         onClick={() => setActiveTab(tab.id)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            padding: '12px 20px',
-                            border: 'none',
-                            background: 'transparent',
-                            color: activeTab === tab.id ? 'var(--accent-blue)' : 'var(--text-muted)',
-                            fontWeight: activeTab === tab.id ? 600 : 500,
-                            borderBottom: `2px solid ${activeTab === tab.id ? 'var(--accent-blue)' : 'transparent'}`,
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                            transition: 'all 0.2s'
-                        }}
                     >
                         {React.cloneElement(tab.icon as React.ReactElement, { style: { fontSize: 20 } })}
                         {tab.label}

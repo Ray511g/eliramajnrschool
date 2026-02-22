@@ -21,11 +21,15 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
         department: ''
     });
 
-    const isPrincipalOrAdmin = user?.role === 'Super Admin' || user?.role === 'Principal';
-    const isAccountantOrAdmin = user?.role === 'Super Admin' || user?.role === 'Accountant' || user?.role === 'Finance Officer';
+    const isPrincipalOrAdmin = user?.role === 'Super Admin' || user?.role === 'Principal' || user?.role === 'Admin';
+    const isAccountantOrAdmin = user?.role === 'Super Admin' || user?.role === 'Accountant' || user?.role === 'Finance Officer' || user?.role === 'Admin';
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (form.amount <= 0) {
+            alert('Amount must be greater than zero');
+            return;
+        }
         onRequest(form);
         setShowForm(false);
         setForm({ category: 'Utilities', description: '', amount: 0, department: '' });
@@ -33,25 +37,28 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
 
     return (
         <div className="expenditure-manager">
-            <div className="toolbar" style={{ justifyContent: 'space-between', marginBottom: 20 }}>
-                <div className="toolbar-left">
-                    <h2 style={{ fontSize: 18, fontWeight: 600 }}>Expenditure Requests</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div>
+                    <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Expenditure Requests</h2>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Manage school expense requests and approvals</p>
                 </div>
                 {isAccountantOrAdmin && (
-                    <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-                        <AddIcon /> Raise Request
+                    <button className="btn-primary" onClick={() => setShowForm(true)}>
+                        <AddIcon style={{ fontSize: 18, marginRight: 8 }} />
+                        Raise Request
                     </button>
                 )}
             </div>
 
             {showForm && (
-                <div className="admin-section" style={{ marginBottom: 24 }}>
-                    <h3 className="section-title">New Expense Request</h3>
-                    <form onSubmit={handleSubmit} className="premium-form">
-                        <div className="form-row">
+                <div className="card" style={{ marginBottom: 24, border: '1px solid var(--accent-blue)', background: 'rgba(59, 130, 246, 0.02)' }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>New Expense Request</h3>
+                    <form onSubmit={handleSubmit}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                             <div className="form-group">
                                 <label>Category</label>
                                 <select
+                                    className="form-control"
                                     value={form.category}
                                     onChange={(e) => setForm({ ...form, category: e.target.value })}
                                 >
@@ -61,21 +68,26 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
                                     <option>Academic Materials</option>
                                     <option>Administration</option>
                                     <option>Transport</option>
+                                    <option>Salaries</option>
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Amount (KES)</label>
                                 <input
+                                    className="form-control"
                                     type="number"
                                     value={form.amount}
                                     onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) })}
                                     required
+                                    min="0.01"
+                                    step="0.01"
                                 />
                             </div>
                         </div>
                         <div className="form-group">
-                            <label>Description</label>
+                            <label>Description / Particulars</label>
                             <input
+                                className="form-control"
                                 type="text"
                                 value={form.description}
                                 onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -83,25 +95,25 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
                                 required
                             />
                         </div>
-                        <div className="form-actions" style={{ marginTop: 20 }}>
-                            <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
-                            <button type="submit" className="btn btn-primary">Submit Request</button>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+                            <button type="button" className="btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
+                            <button type="submit" className="btn-primary">Submit for Approval</button>
                         </div>
                     </form>
                 </div>
             )}
 
-            <div className="table-container">
+            <div className="table-container card" style={{ padding: 0 }}>
                 <table className="data-table">
                     <thead>
                         <tr>
                             <th>Date</th>
                             <th>Description</th>
                             <th>Category</th>
-                            <th>Amount</th>
+                            <th style={{ textAlign: 'right' }}>Amount</th>
                             <th>Status</th>
                             <th>Requested By</th>
-                            <th>Actions</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -112,35 +124,38 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
                                     <div style={{ fontWeight: 500 }}>{exp.description}</div>
                                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{exp.department}</div>
                                 </td>
-                                <td><span className="badge">{exp.category}</span></td>
-                                <td style={{ fontWeight: 600 }}>KES {exp.amount.toLocaleString()}</td>
+                                <td><span className="badge blue">{exp.category}</span></td>
+                                <td style={{ textAlign: 'right', fontWeight: 600 }}>{exp.amount.toLocaleString()}</td>
                                 <td>
-                                    <span className={`status-tag ${exp.status.toLowerCase()}`}>
+                                    <span className={`badge ${exp.status === 'Paid' ? 'green' : exp.status === 'Approved' ? 'blue' : exp.status === 'Rejected' ? 'red' : ''}`}>
                                         {exp.status}
                                     </span>
                                 </td>
                                 <td>{exp.requestedByName}</td>
-                                <td>
-                                    <div className="action-buttons">
+                                <td style={{ textAlign: 'right' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                                         {exp.status === 'Pending' && isPrincipalOrAdmin && (
                                             <>
-                                                <button className="action-btn approve" onClick={() => onAction(exp.id, 'APPROVE')} title="Approve">
+                                                <button className="btn-outline" style={{ color: 'var(--accent-green)', borderColor: 'var(--accent-green)', padding: '4px 8px' }} onClick={() => onAction(exp.id, 'APPROVE')} title="Approve">
                                                     <CheckCircleIcon fontSize="small" />
                                                 </button>
-                                                <button className="action-btn delete" onClick={() => onAction(exp.id, 'REJECT')} title="Reject">
+                                                <button className="btn-outline" style={{ color: 'var(--accent-red)', borderColor: 'var(--accent-red)', padding: '4px 8px' }} onClick={() => onAction(exp.id, 'REJECT')} title="Reject">
                                                     <CancelIcon fontSize="small" />
                                                 </button>
                                             </>
                                         )}
                                         {exp.status === 'Approved' && isAccountantOrAdmin && (
-                                            <button className="btn btn-sm btn-primary" onClick={() => onAction(exp.id, 'PAY')}>
-                                                <PaymentIcon fontSize="small" /> Pay
+                                            <button className="btn-primary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => onAction(exp.id, 'PAY')}>
+                                                <PaymentIcon style={{ fontSize: 16, marginRight: 4 }} /> Pay
                                             </button>
                                         )}
                                         {exp.status === 'Paid' && (
-                                            <span style={{ fontSize: 11, color: '#10b981' }}>
-                                                Posted <FilePresentIcon style={{ fontSize: 14 }} />
+                                            <span style={{ fontSize: 12, color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <FilePresentIcon style={{ fontSize: 16 }} /> Posted
                                             </span>
+                                        )}
+                                        {exp.status === 'Rejected' && (
+                                            <span style={{ fontSize: 12, color: 'var(--accent-red)' }}>Rejected</span>
                                         )}
                                     </div>
                                 </td>

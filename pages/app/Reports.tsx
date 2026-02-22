@@ -59,7 +59,7 @@ export default function Reports() {
             <html>
             <head>
                 <style>
-                    body { font-family: 'Inter', sans-serif; padding: 0; margin: 0; color: #1a1a1a; line-height: 1.6; }
+                    body { font-family: 'Outfit', 'Inter', sans-serif; padding: 0; margin: 0; color: #1a1a1a; line-height: 1.6; }
                     .page { 
                         width: 210mm; 
                         min-height: 297mm; 

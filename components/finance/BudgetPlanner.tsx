@@ -20,60 +20,69 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onUpdate }) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (form.allocatedAmount <= 0) {
+            alert('Allocation amount must be greater than zero');
+            return;
+        }
         onUpdate(form);
         setShowForm(false);
     };
 
     return (
         <div className="budget-planner">
-            <div className="toolbar" style={{ justifyContent: 'space-between', marginBottom: 20 }}>
-                <div className="toolbar-left">
-                    <h2 style={{ fontSize: 18, fontWeight: 600 }}>Budget Allocation</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div>
+                    <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Budget Management</h2>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Allocate and track departmental financial limits</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-                    <AddIcon /> New Allocation
+                <button className="btn-primary" onClick={() => setShowForm(true)}>
+                    <AddIcon style={{ fontSize: 18, marginRight: 8 }} />
+                    New Allocation
                 </button>
             </div>
 
             {showForm && (
-                <div className="admin-section" style={{ marginBottom: 24 }}>
-                    <h3 className="section-title">Allocate Budget</h3>
-                    <form onSubmit={handleSubmit} className="premium-form">
-                        <div className="form-row">
+                <div className="card" style={{ marginBottom: 24, border: '1px solid var(--accent-blue)', background: 'rgba(59, 130, 246, 0.02)' }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Allocate Budget</h3>
+                    <form onSubmit={handleSubmit}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 20 }}>
                             <div className="form-group">
                                 <label>Department</label>
-                                <select value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })}>
+                                <select className="form-control" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })}>
                                     <option>Academic</option>
                                     <option>Administration</option>
                                     <option>Operations</option>
                                     <option>Extracurricular</option>
+                                    <option>Feeding</option>
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Category</label>
-                                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                                <select className="form-control" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                                     <option>Utilities</option>
                                     <option>Maintenance</option>
                                     <option>Feeding</option>
                                     <option>Academic Materials</option>
                                     <option>Salaries</option>
+                                    <option>Transport</option>
                                     <option>Other</option>
                                 </select>
                             </div>
-                        </div>
-                        <div className="form-row">
                             <div className="form-group">
-                                <label>Allocation Amount (KES)</label>
+                                <label>Allocation (KES)</label>
                                 <input
+                                    className="form-control"
                                     type="number"
                                     value={form.allocatedAmount}
                                     onChange={(e) => setForm({ ...form, allocatedAmount: parseFloat(e.target.value) })}
                                     required
+                                    min="1"
                                 />
                             </div>
                             <div className="form-group">
-                                <label>Year</label>
+                                <label>Financial Year</label>
                                 <input
+                                    className="form-control"
                                     type="number"
                                     value={form.year}
                                     onChange={(e) => setForm({ ...form, year: parseInt(e.target.value) })}
@@ -81,57 +90,57 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onUpdate }) => {
                                 />
                             </div>
                         </div>
-                        <div className="form-actions">
-                            <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
-                            <button type="submit" className="btn btn-primary">Save Allocation</button>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                            <button type="button" className="btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
+                            <button type="submit" className="btn-primary">Save Allocation</button>
                         </div>
                     </form>
                 </div>
             )}
 
-            <div className="admin-grid">
+            <div className="stats-grid">
                 {budgets.map((b, i) => (
-                    <div key={i} className="admin-section budget-card">
+                    <div key={i} className="card premium-card" style={{ padding: 20 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <h4 style={{ margin: 0 }}>{b.category}</h4>
-                                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{b.department} • {b.year}</span>
+                                <h4 style={{ margin: 0, fontSize: 16 }}>{b.category}</h4>
+                                <span className="badge blue" style={{ marginTop: 8 }}>{b.department} • {b.year}</span>
                             </div>
-                            <div style={{
-                                padding: '4px 8px',
-                                borderRadius: 4,
-                                fontSize: 12,
-                                background: b.utilization > 90 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                                color: b.utilization > 90 ? '#ef4444' : '#10b981'
-                            }}>
-                                {b.utilization > 90 && <WarningIcon style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }} />}
-                                {Math.round(b.utilization)}% Used
+                            <div className={`badge ${b.utilization > 90 ? 'red' : b.utilization > 75 ? 'orange' : 'green'}`}>
+                                {b.utilization > 90 && <WarningIcon style={{ fontSize: 14, marginRight: 4 }} />}
+                                {Math.round(b.utilization)}% Utilized
                             </div>
                         </div>
 
-                        <div style={{ marginTop: 16 }}>
-                            <div className="progress-bg" style={{ height: 10, background: 'var(--bg-surface)', borderRadius: 5, overflow: 'hidden' }}>
-                                <div className="progress-fill" style={{
-                                    height: '100%',
-                                    width: `${Math.min(b.utilization, 100)}%`,
-                                    background: b.utilization > 90 ? '#ef4444' : b.utilization > 80 ? '#f59e0b' : 'var(--accent-blue)'
-                                }}></div>
-                            </div>
+                        <div className="progress-container" style={{ marginTop: 20 }}>
+                            <div className="progress-fill" style={{
+                                width: `${Math.min(b.utilization, 100)}%`,
+                                background: b.utilization > 90 ? 'var(--accent-red)' : b.utilization > 80 ? 'var(--accent-orange)' : 'var(--accent-blue)'
+                            }}></div>
                         </div>
 
-                        <div className="budget-details" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-                            <div className="detail-item">
-                                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Spent</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+                            <div>
+                                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Spent</span>
                                 <span style={{ fontWeight: 600 }}>KES {b.spentAmount.toLocaleString()}</span>
                             </div>
-                            <div className="detail-item">
-                                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Remaining</span>
-                                <span style={{ fontWeight: 600 }}>KES {(b.allocatedAmount - b.spentAmount).toLocaleString()}</span>
+                            <div style={{ textAlign: 'right' }}>
+                                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Remaining</span>
+                                <span style={{ fontWeight: 600, color: (b.allocatedAmount - b.spentAmount) < 0 ? 'var(--accent-red)' : 'inherit' }}>
+                                    KES {(b.allocatedAmount - b.spentAmount).toLocaleString()}
+                                </span>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
+            {budgets.length === 0 && (
+                <div className="card text-center" style={{ padding: 60 }}>
+                    <PieChartIcon style={{ fontSize: 48, color: 'var(--border-color)', marginBottom: 16 }} />
+                    <h3 style={{ margin: 0, color: 'var(--text-muted)' }}>No budgets defined for the current period</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Click "New Allocation" to set up your first budget.</p>
+                </div>
+            )}
         </div>
     );
 };
