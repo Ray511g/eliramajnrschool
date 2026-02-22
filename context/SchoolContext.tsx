@@ -290,16 +290,23 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             });
 
             if (res.status === 401) {
-                // Token is invalid or expired
-                localStorage.removeItem('elirama_token');
                 setServerStatus('disconnected');
-                window.location.href = '/login'; // Force re-login
                 return null;
             }
 
             if (res.ok) return res;
+
+            // Try to extract error message if available
+            try {
+                const errData = await res.json();
+                if (errData.error) showToast(errData.error, 'error');
+            } catch {
+                showToast(`Operation failed with status ${res.status}`, 'error');
+            }
             return null;
-        } catch {
+        } catch (err) {
+            console.error('API Error:', err);
+            showToast('Network error or server unreachable', 'error');
             return null;
         }
     }
@@ -310,9 +317,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const data = await apiRes.json();
             setStudents(prev => [...prev, data]);
-            showToast('Student added successfully');
-        } else {
-            showToast('Failed to save to server', 'error');
+            showToast('Student added successfully', 'success');
         }
     };
 
@@ -321,7 +326,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const updated = await apiRes.json();
             setStudents(prev => prev.map(s => s.id === id ? updated : s));
-            showToast('Student updated');
+            showToast('Student updated successfully', 'success');
         }
     };
 
@@ -354,9 +359,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const data = await apiRes.json();
             setTeachers(prev => [...prev, data]);
-            showToast('Teacher added successfully');
-        } else {
-            showToast('Failed to add teacher to server', 'error');
+            showToast('Teacher added successfully', 'success');
         }
     };
 
@@ -365,7 +368,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const updated = await apiRes.json();
             setTeachers(prev => prev.map(t => t.id === id ? updated : t));
-            showToast('Teacher updated');
+            showToast('Teacher updated successfully', 'success');
         }
     };
 
@@ -395,9 +398,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const data = await apiRes.json();
             setExams(prev => [...prev, data]);
-            showToast('Exam created successfully');
-        } else {
-            showToast('Failed to create exam', 'error');
+            showToast('Exam created successfully', 'success');
         }
     };
 
@@ -406,7 +407,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const updated = await apiRes.json();
             setExams(prev => prev.map(e => e.id === id ? updated : e));
-            showToast('Exam updated');
+            showToast('Exam updated successfully', 'success');
         }
     };
 
@@ -414,7 +415,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         const apiRes = await tryApi(`${API_URL}/exams/${id}`, { method: 'DELETE' });
         if (apiRes) {
             setExams(prev => prev.filter(e => e.id !== id));
-            showToast('Exam deleted', 'info');
+            showToast('Exam deleted successfully', 'info');
         }
     };
 
@@ -432,7 +433,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 }
                 return s;
             }));
-            showToast(`Payment of KSh ${payment.amount.toLocaleString()} recorded`);
+            showToast(`Payment of KSh ${payment.amount.toLocaleString()} recorded`, 'success');
         }
     };
 
@@ -452,7 +453,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                     return s;
                 }));
             }
-            showToast('Payment updated');
+            showToast('Payment updated successfully', 'success');
         }
     };
 
@@ -483,9 +484,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const data = await apiRes.json();
             setResults(prev => [...prev.filter(r => !(r.studentId === result.studentId && r.examId === result.examId)), data]);
-            showToast('Result saved');
-        } else {
-            showToast('Failed to save result', 'error');
+            showToast('Result saved', 'success');
         }
     };
 
@@ -505,25 +504,17 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // CBC METHODS
     const saveLearningArea = async (area: Omit<LearningArea, 'id'>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot save learning area.', 'error');
-            return false;
-        }
         const apiRes = await tryApi(`${API_URL}/cbc/learning-areas`, { method: 'POST', body: JSON.stringify(area) });
         if (apiRes) {
             const data = await apiRes.json();
             setLearningAreas(prev => [...prev.filter(a => a.id !== data.id), data]);
-            showToast('Learning Area saved');
+            showToast('Learning Area saved', 'success');
             return true;
         }
         return false;
     };
 
     const saveAssessmentScore = async (score: AssessmentScore) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot save score.', 'error');
-            return false;
-        }
         const apiRes = await tryApi(`${API_URL}/cbc/scores`, { method: 'POST', body: JSON.stringify(score) });
         if (apiRes) {
             const data = await apiRes.json();
@@ -534,10 +525,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const saveBulkAssessmentScores = async (scores: AssessmentScore[]) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot save scores.', 'error');
-            return false;
-        }
         const apiRes = await tryApi(`${API_URL}/cbc/scores/bulk`, { method: 'POST', body: JSON.stringify(scores) });
         if (apiRes) {
             const data = await apiRes.json();
@@ -545,44 +532,26 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 const filtered = prev.filter(s => !scores.some(ns => ns.studentId === s.studentId && ns.assessmentItemId === s.assessmentItemId));
                 return [...filtered, ...data];
             });
-            showToast(`Saved ${scores.length} scores`);
+            showToast(`Saved ${scores.length} scores`, 'success');
             return true;
         }
         return false;
     };
 
     const uploadResults = async (newResults: Omit<StudentResult, 'id'>[]) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot upload results.', 'error');
-            return;
+        const apiRes = await tryApi(`${API_URL}/results/bulk`, { method: 'POST', body: JSON.stringify(newResults) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setResults(prev => {
+                const filtered = prev.filter(p => !newResults.some(n => n.studentId === p.studentId && n.examId === p.examId));
+                return [...filtered, ...data];
+            });
+            showToast(`Uploaded ${newResults.length} results`, 'success');
         }
-        // For bulk, we might want a bulk API endpoint, but here we just loop or send one by one
-        // The original logic was client-side only. We should probably block this or implement a bulk API.
-        // For now, let's block to be safe.
-        showToast('Bulk upload requires online connection. Please implement bulk API.', 'error');
-
-        /*
-        // Original logic was local only.
-        const timestamp = new Date().toISOString();
-        const resultsToAdd = newResults.map(r => ({ ...r, id: generateId() } as StudentResult));
-        setResults(prev => {
-            // Remove existing for same exam/student
-            const filtered = prev.filter(p => !newResults.some(n => n.studentId === p.studentId && n.examId === p.examId));
-            return [...filtered, ...resultsToAdd];
-        });
-        showToast(`Saved ${newResults.length} results`);
-        */
     };
 
     // ATTENDANCE
     const markAttendance = async (record: Omit<AttendanceRecord, 'id'>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot mark attendance.', 'error');
-            return;
-        }
-        // Check if already exists for this date/student to prevent duplicates
-        // (The server should handle this, but client check is good UX)
-
         const apiRes = await tryApi(`${API_URL}/attendance`, { method: 'POST', body: JSON.stringify(record) });
         if (apiRes) {
             const data = await apiRes.json();
@@ -590,9 +559,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 const filtered = prev.filter(a => !(a.studentId === record.studentId && a.date === record.date));
                 return [...filtered, data];
             });
-            showToast('Attendance marked');
-        } else {
-            showToast('Failed to save attendance', 'error');
+            showToast('Attendance marked successfully', 'success');
         }
     };
 
@@ -684,11 +651,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const data = await apiRes.json();
             setSystemUsers(prev => [...prev, data]);
-        } else {
-            const newUser: User = { ...user, id: generateId(), lastLogin: 'Never', status: 'Active', updatedAt: new Date().toLocaleDateString() } as User;
-            setSystemUsers(prev => [...prev, newUser]);
+            showToast(`User ${user.name} added successfully`, 'success');
         }
-        showToast(`User ${user.name} added successfully`);
     };
 
     const updateSystemUser = async (id: string, updates: Partial<User>) => {
@@ -696,10 +660,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const data = await apiRes.json();
             setSystemUsers(prev => prev.map(u => (u.id === id ? data : u)));
-        } else {
-            setSystemUsers(prev => prev.map(u => (u.id === id ? { ...u, ...updates, updatedAt: new Date().toLocaleDateString() } : u)));
+            showToast('User updated successfully', 'success');
         }
-        showToast('User updated successfully');
     };
 
     const deleteSystemUser = async (id: string) => {
@@ -764,31 +726,11 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (apiRes) {
             const updated = await apiRes.json();
             setSettings(updated);
-            showToast('Settings updated');
-            fetchData(true); // Mandatory re-sync after success
+            showToast('Settings updated successfully', 'success');
+            refreshData(); // Proactive re-sync
             return true;
         } else {
-            // tryApi returns null on failure. In a real app, we'd want the error message.
-            // Let's improve tryApi or handle it here for settings specifically.
-            const token = localStorage.getItem('elirama_token');
-            const res = await fetch(`${API_URL}/settings`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (res.status === 400) {
-                const err = await res.json();
-                showToast(err.error || 'Validation failed', 'error');
-                return false;
-            }
-
-            setSettings(prev => ({ ...prev, ...data }));
-            showToast('Settings updated locally');
-            return true;
+            return false;
         }
     };
 
