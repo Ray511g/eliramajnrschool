@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Layout from '../../components/layout/Layout';
 import { useAuth } from '../../context/AuthContext';
 import { useSchool } from '../../context/SchoolContext';
 import FinanceDashboard from '../../components/finance/FinanceDashboard';
@@ -128,75 +127,73 @@ export default function FinancePage() {
     if (loading && !stats) return <div className="loading-screen">Loading Finance System...</div>;
 
     return (
-        <Layout>
-            <div className="page-container">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <AccountBalanceIcon style={{ color: 'var(--accent-blue)' }} /> Financial Management
-                        </h1>
-                        <p>Ledger-Core School Financial System</p>
-                    </div>
-                </div>
-
-                <div className="finance-tabs-nav" style={{
-                    display: 'flex',
-                    gap: 8,
-                    borderBottom: '1px solid var(--border-color)',
-                    marginBottom: 24,
-                    paddingBottom: 4,
-                    overflowX: 'auto'
-                }}>
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                            onClick={() => setActiveTab(tab.id)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                padding: '12px 20px',
-                                border: 'none',
-                                background: 'transparent',
-                                color: activeTab === tab.id ? 'var(--accent-blue)' : 'var(--text-muted)',
-                                fontWeight: activeTab === tab.id ? 600 : 500,
-                                borderBottom: `2px solid ${activeTab === tab.id ? 'var(--accent-blue)' : 'transparent'}`,
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            {React.cloneElement(tab.icon as React.ReactElement, { style: { fontSize: 20 } })}
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="finance-content">
-                    {activeTab === 'Dashboard' && <FinanceDashboard stats={stats} />}
-                    {activeTab === 'Fees' && <FeeManager />}
-                    {activeTab === 'Expenditure' && (
-                        <ExpenditureManager
-                            expenses={expenses}
-                            onAction={handleExpenseAction}
-                            onRequest={handleExpenseRequest}
-                            user={user}
-                        />
-                    )}
-                    {activeTab === 'Payroll' && (
-                        <PayrollManager
-                            staff={staff}
-                            payrollEntries={payrollEntries}
-                            onGenerate={handlePayrollGenerate}
-                            onUpdateStatus={handlePayrollStatus}
-                            user={user}
-                        />
-                    )}
-                    {activeTab === 'Budget' && <BudgetPlanner budgets={stats?.budgets || []} onUpdate={() => fetchData()} />}
-                    {activeTab === 'Ledger' && <GeneralLedger accounts={accounts} journalEntries={stats?.journalEntries || []} />}
+        <div className="page-container">
+            <div className="page-header">
+                <div className="page-header-left">
+                    <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <AccountBalanceIcon style={{ color: 'var(--accent-blue)' }} /> Financial Management
+                    </h1>
+                    <p>Ledger-Core School Financial System</p>
                 </div>
             </div>
-        </Layout>
+
+            <div className="finance-tabs-nav" style={{
+                display: 'flex',
+                gap: 8,
+                borderBottom: '1px solid var(--border-color)',
+                marginBottom: 24,
+                paddingBottom: 4,
+                overflowX: 'auto'
+            }}>
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                        onClick={() => setActiveTab(tab.id)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '12px 20px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: activeTab === tab.id ? 'var(--accent-blue)' : 'var(--text-muted)',
+                            fontWeight: activeTab === tab.id ? 600 : 500,
+                            borderBottom: `2px solid ${activeTab === tab.id ? 'var(--accent-blue)' : 'transparent'}`,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {React.cloneElement(tab.icon as React.ReactElement, { style: { fontSize: 20 } })}
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div className="finance-content">
+                {activeTab === 'Dashboard' && <FinanceDashboard stats={stats} />}
+                {activeTab === 'Fees' && <FeeManager />}
+                {activeTab === 'Expenditure' && (
+                    <ExpenditureManager
+                        expenses={expenses}
+                        onAction={handleExpenseAction}
+                        onRequest={handleExpenseRequest}
+                        user={user}
+                    />
+                )}
+                {activeTab === 'Payroll' && (
+                    <PayrollManager
+                        staff={staff}
+                        payrollEntries={payrollEntries}
+                        onGenerate={handlePayrollGenerate}
+                        onUpdateStatus={handlePayrollStatus}
+                        user={user}
+                    />
+                )}
+                {activeTab === 'Budget' && <BudgetPlanner budgets={stats?.budgets || []} onUpdate={() => fetchData()} />}
+                {activeTab === 'Ledger' && <GeneralLedger accounts={accounts} journalEntries={stats?.journalEntries || []} />}
+            </div>
+        </div>
     );
 }

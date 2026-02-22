@@ -1,5 +1,4 @@
 import React from 'react';
-import Layout from '../../components/layout/Layout';
 import { useSchool } from '../../context/SchoolContext';
 import {
     Info as InfoIcon,
@@ -14,7 +13,7 @@ export default function About() {
     const { settings } = useSchool();
 
     return (
-        <Layout>
+        <div style={{ padding: 20 }}>
             <div className="page-header" style={{ textAlign: 'center', marginBottom: 40 }}>
                 <h1>{settings?.schoolName || 'School management system'}</h1>
                 <p>Version 2.0.4 • Professional School Management solution designed for modern educational institutions.</p>
@@ -114,6 +113,6 @@ export default function About() {
                     &copy; {new Date().getFullYear()} {settings?.schoolName || 'School Management System'}. All rights reserved.
                 </div>
             </div>
-        </Layout>
+        </div>
     );
 }

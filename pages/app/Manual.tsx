@@ -1,5 +1,4 @@
 import React from 'react';
-import Layout from '../../components/layout/Layout';
 import { useSchool } from '../../context/SchoolContext';
 import {
     Description as DescriptionIcon,
@@ -58,8 +57,8 @@ export default function Manual() {
     ];
 
     return (
-        <Layout>
-            <div className="page-header">
+        <div className="page-container">
+            <header className="page-header">
                 <div className="header-content">
                     <h1>System User Manual</h1>
                     <p>Learn how to navigate and use the {settings?.schoolName || 'School Management System'} effectively.</p>
@@ -69,7 +68,7 @@ export default function Manual() {
                         <DownloadIcon style={{ marginRight: 8 }} /> Download Manual (PDF)
                     </button>
                 </div>
-            </div>
+            </header>
 
             <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginTop: 24 }}>
                 {sections.map((section, idx) => (
@@ -113,6 +112,6 @@ export default function Manual() {
                     </div>
                 </div>
             </div>
-        </Layout>
+        </div>
     );
 }
