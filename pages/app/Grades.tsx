@@ -42,7 +42,7 @@ export default function Grades() {
 
             <div className="data-table-wrapper">
                 <table className="data-table">
-                    <thead>
+                    <thead className="sticky-header">
                         <tr>
                             <th>Grade Level</th>
                             <th>Total Students</th>

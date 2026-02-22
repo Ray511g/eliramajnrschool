@@ -296,27 +296,28 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 lastSyncRef.current = lastUpdated;
             }
 
-            setIsSyncing(true);
-            const [stdRes, tchRes, exmRes, setRes, resRes, usrRes, tmtRes] = await Promise.all([
-                fetch(`${API_URL}/students`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/teachers`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/exams`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/settings`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/results`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/timetable`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            // Pull fresh data with individual error handling to prevent one failure from breaking everything
+            const fetchResource = async (path: string, setter: (val: any) => void) => {
+                const res = await fetch(`${API_URL}/${path}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const data = await res.json();
+                    setter(data);
+                    return true;
+                }
+                return false;
+            };
+
+            await Promise.all([
+                fetchResource('students', setStudents),
+                fetchResource('teachers', setTeachers),
+                fetchResource('exams', setExams),
+                fetchResource('settings', setSettings),
+                fetchResource('results', setResults),
+                fetchResource('users', setSystemUsers),
+                fetchResource('timetable', setTimetable),
+                fetchResource('fees/structure', setFeeStructures),
+                fetchResource('roles', setRoles),
             ]);
-
-            // Check if ANY critical fetch failed (404/500)
-            if (!stdRes.ok || !tchRes.ok) throw new Error('API Sync Failed');
-
-            if (stdRes.ok) setStudents(await stdRes.json());
-            if (tchRes.ok) setTeachers(await tchRes.json());
-            if (exmRes.ok) setExams(await exmRes.json());
-            if (setRes.ok) setSettings(await setRes.json());
-            if (resRes.ok) setResults(await resRes.json());
-            if (usrRes.ok) setSystemUsers(await usrRes.json());
-            if (tmtRes.ok) setTimetable(await tmtRes.json());
 
             setServerStatus('connected');
             dbAvailableRef.current = true;
@@ -346,7 +347,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     }, [fetchData]);
 
     useEffect(() => {
-        const interval = setInterval(() => fetchData(false), 1000); // Poll every 1 second
+        const interval = setInterval(() => fetchData(false), 10000); // Poll every 10 seconds instead of 1s
         return () => clearInterval(interval);
     }, [fetchData]);
 
@@ -905,6 +906,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             const updated = await apiRes.json();
             setSettings(updated);
             showToast('Settings updated');
+            fetchData(true); // Mandatory re-sync after success
             return true;
         } else {
             // tryApi returns null on failure. In a real app, we'd want the error message.

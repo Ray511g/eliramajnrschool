@@ -221,7 +221,7 @@ export default function Results() {
 
                     <div className="table-container overhaul-table">
                         <table className="data-table">
-                            <thead>
+                            <thead className="sticky-header">
                                 <tr>
                                     <th>Learner Name</th>
                                     {activeTab === 'exams' && <th style={{ width: 120 }}>Marks / {selectedExam?.totalMarks}</th>}

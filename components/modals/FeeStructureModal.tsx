@@ -146,23 +146,16 @@ export default function FeeStructureModal({ onClose }: Props) {
                     <h2>Fee Structure Overview</h2>
                     <button className="modal-close" onClick={onClose}><CloseIcon /></button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body modal-body-scroll">
                     <div style={{ textAlign: 'center', paddingBottom: 20 }}>
                         <p style={{ color: 'var(--text-secondary)' }}>
                             Generate an official fee structure document for parents and guardians.
                         </p>
                     </div>
 
-                    <div style={{
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        marginBottom: 24,
-                        maxHeight: '50vh',
-                        overflowY: 'auto'
-                    }}>
+                    <div className="table-wrapper" style={{ marginBottom: 24 }}>
                         <table className="data-table">
-                            <thead>
+                            <thead className="sticky-header">
                                 <tr>
                                     <th>Grade / Item</th>
                                     <th>Period</th>

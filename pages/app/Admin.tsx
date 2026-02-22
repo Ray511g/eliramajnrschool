@@ -101,9 +101,9 @@ export default function Admin() {
         const submissionData = { ...userForm, name: fullName };
 
         if (editingUser) {
-            updateSystemUser(editingUser.id, userForm as any);
+            updateSystemUser(editingUser.id, submissionData as any);
         } else {
-            addSystemUser(userForm as any);
+            addSystemUser(submissionData as any);
         }
 
         setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Teacher', roleId: '', permissions: [] });
@@ -130,6 +130,7 @@ export default function Admin() {
     const handleDeleteUser = (id: string, name: string) => {
         if (confirm(`Are you sure you want to delete user ${name}? This action cannot be undone.`)) {
             deleteSystemUser(id);
+            if (id === selectedUserId) setSelectedUserId(null);
         }
     };
 
@@ -545,9 +546,9 @@ export default function Admin() {
                                 <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20 }}>
                                     Define your school's daily periods, breaks, and lunch times. These will be used to render the timetable grid for all grades.
                                 </p>
-                                <div className="table-responsive">
+                                <div className="table-wrapper">
                                     <table className="data-table">
-                                        <thead>
+                                        <thead className="sticky-header">
                                             <tr>
                                                 <th style={{ width: 80 }}>Order</th>
                                                 <th>Start Time</th>
@@ -688,9 +689,9 @@ export default function Admin() {
                             </div>
                         ) : (
                             <div className="card" style={{ background: 'var(--bg-surface)' }}>
-                                <div className="table-responsive">
+                                <div className="table-wrapper">
                                     <table className="data-table">
-                                        <thead>
+                                        <thead className="sticky-header">
                                             <tr>
                                                 <th style={{ width: 80 }}>Order</th>
                                                 <th>Time Range</th>
@@ -866,9 +867,9 @@ export default function Admin() {
                             </div>
                         )}
 
-                        <div className="user-management-table-wrapper">
+                        <div className="user-management-table-wrapper table-wrapper">
                             <table className="data-table">
-                                <thead>
+                                <thead className="sticky-header">
                                     <tr>
                                         <th style={{ width: '18%' }}>First Name</th>
                                         <th style={{ width: '18%' }}>Last Name</th>
@@ -879,10 +880,10 @@ export default function Admin() {
                                 </thead>
                                 <tbody>
                                     {systemUsers.filter(u =>
-                                        u.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        u.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+                                        (u.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                                        (u.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                                        (u.username?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                                        (u.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
                                     ).map(u => (
                                         <tr
                                             key={u.id}
@@ -890,10 +891,10 @@ export default function Admin() {
                                             onClick={() => setSelectedUserId(u.id === selectedUserId ? null : u.id)}
                                             style={{ cursor: 'pointer' }}
                                         >
-                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.firstName || u.name.split(' ')[0]}</td>
-                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.lastName || u.name.split(' ').slice(1).join(' ')}</td>
-                                            <td style={{ color: selectedUserId === u.id ? 'white' : 'var(--accent-blue)', textTransform: 'uppercase' }}>{u.username}</td>
-                                            <td>{u.email}</td>
+                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.firstName || u.name?.split(' ')[0] || 'N/A'}</td>
+                                            <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{u.lastName || u.name?.split(' ').slice(1).join(' ') || 'N/A'}</td>
+                                            <td style={{ color: selectedUserId === u.id ? 'white' : 'var(--accent-blue)', textTransform: 'uppercase' }}>{u.username || 'N/A'}</td>
+                                            <td>{u.email || 'No email'}</td>
                                             <td>{u.updatedAt ? new Date(u.updatedAt).toLocaleDateString() : '01/01/2026'}</td>
                                         </tr>
                                     ))}
@@ -1023,9 +1024,9 @@ export default function Admin() {
                                         return (
                                             <div key={term} style={{ marginBottom: 20 }}>
                                                 <h5 style={{ margin: '0 0 10px', color: 'var(--text-secondary)', fontSize: 14 }}>{term}</h5>
-                                                <div className="table-responsive">
+                                                <div className="table-wrapper">
                                                     <table className="data-table">
-                                                        <thead>
+                                                        <thead className="sticky-header">
                                                             <tr>
                                                                 <th>Item Name</th>
                                                                 <th>Amount</th>
@@ -1207,9 +1208,9 @@ export default function Admin() {
                                 <button className="btn-outline" onClick={fetchAuditLogs}>Refresh</button>
                             </div>
                         </div>
-                        <div className="table-container">
+                        <div className="table-wrapper">
                             <table className="data-table">
-                                <thead>
+                                <thead className="sticky-header">
                                     <tr>
                                         <th style={{ width: 160 }}>Timestamp</th>
                                         <th>User & Role</th>
@@ -1358,9 +1359,9 @@ export default function Admin() {
                                     </div>
                                     <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                         <label style={{ marginBottom: 15, display: 'block' }}>Permissions per Module</label>
-                                        <div className="table-responsive">
+                                        <div className="table-wrapper">
                                             <table className="data-table">
-                                                <thead>
+                                                <thead className="sticky-header">
                                                     <tr>
                                                         <th>Module</th>
                                                         {ACTIONS.map(a => <th key={a} style={{ textAlign: 'center', fontSize: 10 }}>{a}</th>)}
@@ -1410,9 +1411,9 @@ export default function Admin() {
                         )}
 
                         <div className="card" style={{ background: 'var(--bg-surface)' }}>
-                            <div className="table-responsive">
+                            <div className="table-wrapper">
                                 <table className="data-table">
-                                    <thead>
+                                    <thead className="sticky-header">
                                         <tr>
                                             <th>Role Name</th>
                                             <th>Permissions Summary</th>

@@ -111,7 +111,7 @@ export default function Exams() {
                     </div>
                 ) : (
                     <table className="data-table">
-                        <thead>
+                        <thead className="sticky-header">
                             <tr>
                                 <th>Exam Name</th>
                                 <th>Subject</th>

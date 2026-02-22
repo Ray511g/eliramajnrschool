@@ -86,7 +86,7 @@ export default function Teachers() {
                     </div>
                 ) : (
                     <table className="data-table">
-                        <thead>
+                        <thead className="sticky-header">
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>

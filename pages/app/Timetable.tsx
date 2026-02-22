@@ -200,12 +200,12 @@ export default function Timetable() {
                 </div>
             </div>
 
-            <div className="timetable-wrapper">
-                <div className="timetable-grid">
+            <div className="table-wrapper">
+                <div className="timetable-grid timetable-min-w">
                     {/* Header row */}
-                    <div className="timetable-cell header">Time</div>
+                    <div className="timetable-cell header sticky-header">Time</div>
                     {DAYS.map(day => (
-                        <div key={day} className="timetable-cell header">{day}</div>
+                        <div key={day} className="timetable-cell header sticky-header">{day}</div>
                     ))}
 
                     {/* Body rows */}

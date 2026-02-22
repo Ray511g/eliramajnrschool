@@ -448,7 +448,7 @@ export default function Reports() {
                         </div>
                         <div className="card-body">
                             <table className="data-table">
-                                <thead>
+                                <thead className="sticky-header">
                                     <tr>
                                         <th>Subject</th>
                                         <th>Level</th>

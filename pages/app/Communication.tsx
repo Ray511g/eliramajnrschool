@@ -310,7 +310,7 @@ export default function Communication() {
 
                     <div className="table-container">
                         <table className="data-table">
-                            <thead>
+                            <thead className="sticky-header">
                                 <tr>
                                     <th>Student</th>
                                     <th>Grade</th>

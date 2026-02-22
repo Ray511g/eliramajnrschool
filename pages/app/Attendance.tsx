@@ -286,7 +286,7 @@ export default function Attendance() {
 
                     <div className="table-wrapper" style={{ marginTop: 20 }}>
                         <table className="data-table">
-                            <thead>
+                            <thead className="sticky-header">
                                 <tr>
                                     <th>Date</th>
                                     <th>Student</th>

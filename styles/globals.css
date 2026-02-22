@@ -250,6 +250,7 @@ body {
   letter-spacing: -0.03em;
   margin-bottom: 6px;
   background: linear-gradient(to bottom right, #fff, #94a3b8);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -555,8 +556,10 @@ body {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  max-width: 100%;
   box-shadow: var(--shadow-glass);
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
@@ -2767,4 +2770,59 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 2px;
+}
+
+/* ===== LAYOUT AUDIT & FIX UTILITIES ===== */
+.max-w-full {
+  max-width: 100% !important;
+}
+
+.overflow-x-auto {
+  overflow-x: auto !important;
+}
+
+.box-border {
+  box-sizing: border-box !important;
+}
+
+.relative-pos {
+  position: relative !important;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: var(--space-4);
+  scrollbar-width: thin;
+}
+
+.timetable-min-w {
+  min-width: 900px !important;
+}
+
+.sticky-header th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: var(--bg-surface-opaque) !important;
+}
+
+.modal-body-scroll {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.min-w-0 {
+  min-width: 0 !important;
+}
+
+.w-full-input {
+  width: 100% !important;
+}
+
+.flex-child-grow {
+  flex: 1 1 0%;
+  min-width: 0;
 }

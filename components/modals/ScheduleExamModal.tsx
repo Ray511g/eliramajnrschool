@@ -52,21 +52,21 @@ export default function ScheduleExamModal({ onClose, exam }: Props) {
                     <button className="modal-close" onClick={onClose}><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
-                    <div className="modal-body">
+                    <div className="modal-body modal-body-scroll">
                         <div className="form-group">
                             <label>Exam Name *</label>
-                            <input className="form-control" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Mid-Term Mathematics" />
+                            <input className="form-control w-full-input" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Mid-Term Mathematics" />
                         </div>
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Subject *</label>
-                                <select className="form-control" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}>
+                                <select className="form-control w-full-input" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}>
                                     {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Grade *</label>
-                                <select className="form-control" value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value as any })}>
+                                <select className="form-control w-full-input" value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value as any })}>
                                     {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                             </div>
@@ -74,11 +74,11 @@ export default function ScheduleExamModal({ onClose, exam }: Props) {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Date *</label>
-                                <input type="date" className="form-control" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+                                <input type="date" className="form-control w-full-input" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
                             </div>
                             <div className="form-group">
                                 <label>Type</label>
-                                <select className="form-control" value={form.type} onChange={e => setForm({ ...form, type: e.target.value as any })}>
+                                <select className="form-control w-full-input" value={form.type} onChange={e => setForm({ ...form, type: e.target.value as any })}>
                                     <option value="Midterm">Midterm</option>
                                     <option value="Final">Final</option>
                                     <option value="Quiz">Quiz</option>
@@ -89,13 +89,13 @@ export default function ScheduleExamModal({ onClose, exam }: Props) {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Term</label>
-                                <select className="form-control" value={form.term} onChange={e => setForm({ ...form, term: e.target.value })}>
+                                <select className="form-control w-full-input" value={form.term} onChange={e => setForm({ ...form, term: e.target.value })}>
                                     {TERMS.map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Total Marks</label>
-                                <input type="number" className="form-control" value={form.totalMarks} onChange={e => setForm({ ...form, totalMarks: Number(e.target.value) })} />
+                                <input type="number" className="form-control w-full-input" value={form.totalMarks} onChange={e => setForm({ ...form, totalMarks: Number(e.target.value) })} />
                             </div>
                         </div>
                     </div>

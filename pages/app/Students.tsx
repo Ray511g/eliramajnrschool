@@ -108,7 +108,7 @@ export default function Students() {
                     </div>
                 ) : (
                     <table className="data-table">
-                        <thead>
+                        <thead className="sticky-header">
                             <tr>
                                 <th>Adm No</th>
                                 <th>Name</th>
