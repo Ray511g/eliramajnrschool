@@ -83,6 +83,7 @@ interface SchoolContextType {
     addRole: (role: Omit<Role, 'id'>) => Promise<boolean>;
     updateRole: (id: string, updates: Partial<Role>) => Promise<boolean>;
     deleteRole: (id: string) => Promise<boolean>;
+    tryApi: (url: string, options?: RequestInit) => Promise<Response | null>;
 }
 
 const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
@@ -952,6 +953,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             applyFeeStructure,
             revertFeeStructure,
             fetchAuditLogs,
+            tryApi,
             isSyncing,
             serverStatus,
             activeGrades,

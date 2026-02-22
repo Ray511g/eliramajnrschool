@@ -20,6 +20,7 @@ type FinanceTab = 'Dashboard' | 'Fees' | 'Expenditure' | 'Payroll' | 'Budget' | 
 
 export default function FinancePage() {
     const { user } = useAuth();
+    const { tryApi } = useSchool();
     const [activeTab, setActiveTab] = useState<FinanceTab>('Dashboard');
     const [stats, setStats] = useState<any>(null);
     const [accounts, setAccounts] = useState<any[]>([]);
@@ -32,26 +33,28 @@ export default function FinancePage() {
         setLoading(true);
         try {
             const [statsRes, accountsRes, expensesRes, payrollRes, staffRes] = await Promise.all([
-                fetch('/api/finance/stats'),
-                fetch('/api/finance/accounts'),
-                fetch('/api/finance/expenses'),
-                fetch('/api/finance/payroll?type=entries'),
-                fetch('/api/finance/payroll?type=staff')
+                tryApi('/api/finance/stats'),
+                tryApi('/api/finance/accounts'),
+                tryApi('/api/finance/expenses'),
+                tryApi('/api/finance/payroll?type=entries'),
+                tryApi('/api/finance/payroll?type=staff')
             ]);
 
-            const [statsData, accountsData, expensesData, payrollData, staffData] = await Promise.all([
-                statsRes.json(),
-                accountsRes.json(),
-                expensesRes.json(),
-                payrollRes.json(),
-                staffRes.json()
-            ]);
+            if (statsRes && accountsRes && expensesRes && payrollRes && staffRes) {
+                const [statsData, accountsData, expensesData, payrollData, staffData] = await Promise.all([
+                    statsRes.json(),
+                    accountsRes.json(),
+                    expensesRes.json(),
+                    payrollRes.json(),
+                    staffRes.json()
+                ]);
 
-            setStats(statsData);
-            setAccounts(accountsData);
-            setExpenses(expensesData);
-            setPayrollEntries(payrollData);
-            setStaff(staffData);
+                setStats(statsData);
+                setAccounts(accountsData);
+                setExpenses(expensesData);
+                setPayrollEntries(payrollData);
+                setStaff(staffData);
+            }
         } catch (error) {
             console.error('Error fetching finance data:', error);
         } finally {

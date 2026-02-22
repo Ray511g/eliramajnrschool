@@ -4,7 +4,13 @@ import { requireAuth, corsHeaders, checkPermission } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
 import { logAction } from '../../../lib/audit';
 
+import fs from 'fs';
+import path from 'path';
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const logPath = path.join(process.cwd(), 'api_debug.log');
+    fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${req.method} ${req.url}\nBody: ${JSON.stringify(req.body)}\nHeaders: ${JSON.stringify(req.headers)}\n\n`);
+
     corsHeaders(res);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     if (req.method === 'OPTIONS') return res.status(200).end();

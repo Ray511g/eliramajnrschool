@@ -8,11 +8,14 @@ export default function Attendance() {
     const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
 
-    useEffect(() => {
-        if (!isLoading && !isAuthenticated) router.replace('/login');
-    }, [isAuthenticated, isLoading, router]);
+    if (isLoading) return <div className="flex-center" style={{ height: '100vh' }}>Verifying Session...</div>;
 
-    if (isLoading) return null;
-    if (!isAuthenticated) return null;
+    if (!isAuthenticated) return (
+        <div className="flex-center" style={{ height: '100vh', flexDirection: 'column', gap: 20 }}>
+            <h2 style={{ color: 'var(--accent-red)' }}>Session Expired or Unauthorized</h2>
+            <button className="btn-primary" onClick={() => router.push('/login')}>Go to Login</button>
+        </div>
+    );
+
     return <Layout><AttendancePage /></Layout>;
 }
