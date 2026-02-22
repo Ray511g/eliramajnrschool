@@ -19,6 +19,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import InfoIcon from '@mui/icons-material/Info';
 
 export const PERMISSIONS = [
     { code: 'MANAGE_STUDENTS', label: 'Students Module' },
@@ -45,6 +47,8 @@ const navItems = [
     { path: '/reports', icon: <DescriptionIcon />, label: 'Reports', permission: 'MANAGE_REPORTS' },
     { path: '/communication', icon: <EmailIcon />, label: 'Communication', permission: 'MANAGE_COMMUNICATION' },
     { path: '/admin', icon: <SettingsIcon />, label: 'Admin', permission: 'MANAGE_ADMIN' },
+    { path: '/manual', icon: <MenuBookIcon />, label: 'System Manual' },
+    { path: '/about', icon: <InfoIcon />, label: 'About Software' },
 ];
 
 interface SidebarProps {
