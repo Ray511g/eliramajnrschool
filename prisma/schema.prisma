@@ -137,7 +137,7 @@ model TimetableEntry {
 
 model Settings {
   id                   String     @id @default(cuid())
-  schoolName           String     @default("ELIRAMA SCHOOL")
+  schoolName           String     @default("School management system")
   motto                String     @default("Excellence in Education")
   phone                String     @default("+254 700 000 000")
   telephone            String?
@@ -268,4 +268,101 @@ model AssessmentScore {
   createdAt        DateTime       @default(now())
 
   @@unique([studentId, assessmentItemId])
+}
+
+model Account {
+  id          String   @id @default(cuid())
+  code        String   @unique // e.g., "1001"
+  name        String   // e.g., "Cash at Bank"
+  type        String   // ASSET, LIABILITY, EQUITY, INCOME, EXPENSE
+  category    String   // e.g., "Current Asset", "Tuition Income"
+  balance     Float    @default(0)
+  isSystem    Boolean  @default(false)
+  entries     JournalEntry[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model JournalEntry {
+  id            String   @id @default(cuid())
+  transactionId String   // Group multiple entries into one transaction
+  accountId     String
+  description   String
+  debit         Float    @default(0)
+  credit        Float    @default(0)
+  reference     String?  // e.g., Receipt No or Expense ID
+  date          DateTime @default(now())
+  account       Account  @relation(fields: [accountId], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model ExpenseRequest {
+  id                String   @id @default(cuid())
+  category          String   // e.g., "Utilities", "Maintenance"
+  description       String
+  department        String?
+  amount            Float
+  supportingDoc     String?  // URL/Base64
+  status            String   @default("Draft") // Draft, Pending, Approved, Paid, Rejected
+  requestedById     String
+  requestedByName   String
+  approvedById      String?
+  approvedByName    String?
+  paidAt            DateTime?
+  journalPosted     Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Staff {
+  id             String   @id @default(cuid())
+  firstName      String
+  lastName       String
+  type           String   // BOM_TEACHER, SUPPORT_STAFF
+  role           String?
+  email          String?  @unique
+  phone          String?
+  salaryType     String   @default("Fixed") // Fixed, Hourly
+  basicSalary    Float    @default(0)
+  allowances     Json?    // Array of { name, amount }
+  deductions     Json?    // Array of { name, amount }
+  bankName       String?
+  accountNumber  String?
+  status         String   @default("Active")
+  payrollEntries PayrollEntry[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PayrollEntry {
+  id            String   @id @default(cuid())
+  staffId       String
+  month         Int      // 1-12
+  year          Int
+  basicSalary   Float
+  totalAllowances Float @default(0)
+  totalDeductions Float @default(0)
+  netPay        Float
+  status        String   @default("Draft") // Draft, Reviewed, Approved, Locked
+  payslipUrl    String?
+  staff         Staff    @relation(fields: [staffId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([staffId, month, year])
+}
+
+model Budget {
+  id             String   @id @default(cuid())
+  year           Int
+  term           String?
+  department     String
+  category       String
+  allocatedAmount Float
+  spentAmount     Float    @default(0)
+  utilization    Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([year, term, department, category])
 }

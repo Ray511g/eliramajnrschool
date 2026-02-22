@@ -37,6 +37,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             });
         }
 
+        // --- NEW: Post to General Ledger ---
+        try {
+            const { postTransaction } = require('../../../utils/finance');
+            const cashAccountCode = method === 'Cash' ? '1001' : '1002'; // Cash or Bank
+
+            await postTransaction(
+                receiptNumber,
+                [
+                    { accountCode: cashAccountCode, description: `Fee Payment: ${studentName}`, debit: amount, credit: 0 },
+                    { accountCode: '1003', description: `Fee Payment: ${studentName}`, debit: 0, credit: amount }
+                ],
+                payment.id
+            );
+        } catch (ledgerError) {
+            console.error('Ledger Posting Failed:', ledgerError);
+            // We don't fail the whole request here if it's a legacy system or missing configuration, 
+            // but in a strict system we might.
+        }
+        // ------------------------------------
+
         await logAction(
             user.id,
             user.name,

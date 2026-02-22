@@ -107,12 +107,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         <div className="sidebar-logo">
                             {settings?.logo ? (
                                 <img src={settings.logo} alt="Logo" className="logo-img" />
-                            ) : 'E'}
+                            ) : 'S'}
                         </div>
                         <div className="logo-glow"></div>
                     </div>
                     <div className="sidebar-brand">
-                        <h2>{settings?.schoolName || 'ELIRAMA'}</h2>
+                        <h2>{settings?.schoolName || 'SMS'}</h2>
                         <p>Academic Excellence</p>
                     </div>
                 </div>

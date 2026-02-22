@@ -13,8 +13,8 @@ export default function About() {
     return (
         <Layout>
             <div className="page-header" style={{ textAlign: 'center', marginBottom: 40 }}>
-                <h1>About Elirama SMS</h1>
-                <p>A comprehensive school management solution designed for modern educational institutions.</p>
+                <h1>School management system</h1>
+                <p>Version 2.0.4 • Professional School Management solution designed for modern educational institutions.</p>
             </div>
 
             <div style={{ maxWidth: 800, margin: '0 auto' }}>
@@ -51,7 +51,7 @@ export default function About() {
                         </div>
 
                         <p style={{ fontSize: 16, lineHeight: 1.8, color: 'var(--text-muted)', marginBottom: 40 }}>
-                            Elirama School Management System is a state-of-the-art platform built to streamline administrative workflows,
+                            A flagship product designed to digitize education. Management System is a state-of-the-art platform built to streamline administrative workflows,
                             enhance academic tracking, and improve financial transparency in schools. Supporting both Traditional and
                             Competency-Based Curriculums (CBC), it provides teachers, administrators, and principals with the tools they
                             need to foster excellence in education.
