@@ -42,7 +42,7 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
                 <div className="admin-section">
                     <h3 className="section-title">Monthly Cash Flow</h3>
                     <div className="chart-container">
-                        {stats.cashFlow.map((d: any, i: number) => (
+                        {(stats?.cashFlow || []).map((d: any, i: number) => (
                             <div key={i} className="chart-bar-group">
                                 <div className="chart-bars">
                                     <div className="chart-bar income" style={{ height: `${(d.income / (stats?.stats?.totalIncome || 1)) * 100}%` }}></div>
@@ -67,21 +67,21 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
                 <div className="admin-section">
                     <h3 className="section-title">Budget Utilization</h3>
                     <div className="budget-list" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {stats.budgets.length > 0 ? stats.budgets.map((b: any, i: number) => (
+                        {(stats?.budgets || []).length > 0 ? stats.budgets.map((b: any, i: number) => (
                             <div key={i} className="budget-item">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
                                     <span>{b.category} ({b.department})</span>
-                                    <span style={{ fontWeight: 600 }}>{Math.round(b.utilization)}%</span>
+                                    <span style={{ fontWeight: 600 }}>{Math.round(b.utilization || 0)}%</span>
                                 </div>
                                 <div className="progress-container">
                                     <div className="progress-fill" style={{
-                                        width: `${Math.min(b.utilization, 100)}%`,
-                                        background: b.utilization > 90 ? '#ef4444' : b.utilization > 70 ? '#f59e0b' : '#10b981'
+                                        width: `${Math.min(b.utilization || 0, 100)}%`,
+                                        background: (b.utilization || 0) > 90 ? '#ef4444' : (b.utilization || 0) > 70 ? '#f59e0b' : '#10b981'
                                     }}></div>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, color: 'var(--text-muted)' }}>
-                                    <span>Spent: KES {b.spentAmount.toLocaleString()}</span>
-                                    <span>Limit: KES {b.allocatedAmount.toLocaleString()}</span>
+                                    <span>Spent: KES {(b.spentAmount || 0).toLocaleString()}</span>
+                                    <span>Limit: KES {(b.allocatedAmount || 0).toLocaleString()}</span>
                                 </div>
                             </div>
                         )) : (

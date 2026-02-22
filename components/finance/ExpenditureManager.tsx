@@ -117,21 +117,21 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
                         </tr>
                     </thead>
                     <tbody>
-                        {expenses.length > 0 ? expenses.map((exp) => (
-                            <tr key={exp.id}>
-                                <td>{new Date(exp.createdAt).toLocaleDateString()}</td>
+                        {(expenses || []).length > 0 ? (expenses || []).map((exp) => (
+                            <tr key={exp?.id}>
+                                <td>{exp?.createdAt ? new Date(exp.createdAt).toLocaleDateString() : 'N/A'}</td>
                                 <td>
-                                    <div style={{ fontWeight: 500 }}>{exp.description}</div>
-                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{exp.department}</div>
+                                    <div style={{ fontWeight: 500 }}>{exp?.description || 'No Description'}</div>
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{exp?.department || ''}</div>
                                 </td>
-                                <td><span className="badge blue">{exp.category}</span></td>
-                                <td style={{ textAlign: 'right', fontWeight: 600 }}>{exp.amount.toLocaleString()}</td>
+                                <td><span className="badge blue">{exp?.category || 'General'}</span></td>
+                                <td style={{ textAlign: 'right', fontWeight: 600 }}>{(exp?.amount || 0).toLocaleString()}</td>
                                 <td>
-                                    <span className={`badge ${exp.status === 'Paid' ? 'green' : exp.status === 'Approved' ? 'blue' : exp.status === 'Rejected' ? 'red' : ''}`}>
-                                        {exp.status}
+                                    <span className={`badge ${exp?.status === 'Paid' ? 'green' : exp?.status === 'Approved' ? 'blue' : exp?.status === 'Rejected' ? 'red' : ''}`}>
+                                        {exp?.status || 'Pending'}
                                     </span>
                                 </td>
-                                <td>{exp.requestedByName}</td>
+                                <td>{exp?.requestedByName || 'Unknown'}</td>
                                 <td style={{ textAlign: 'right' }}>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                                         {exp.status === 'Pending' && isPrincipalOrAdmin && (

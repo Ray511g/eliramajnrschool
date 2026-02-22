@@ -125,68 +125,6 @@ const defaultSettings: SchoolSettings = {
     headOfSchoolTitle: 'Headteacher'
 };
 
-// Default seed data — used when localStorage is empty
-const seedStudents: Student[] = [
-    { id: 's0', firstName: 'Zion', lastName: 'Elirama', admissionNumber: 'ELR-100', gender: 'Male', grade: 'Play Group', dateOfBirth: '2022-05-10', parentName: 'John Elirama', parentPhone: '0700123456', parentEmail: 'john@elirama.ac.ke', address: 'Nairobi', status: 'Active', enrollmentDate: '2025-01-10', totalFees: 12000, paidFees: 5000, feeBalance: 7000 },
-    { id: 's01', firstName: 'Serah', lastName: 'Njeri', admissionNumber: 'ELR-101', gender: 'Female', grade: 'PP1', dateOfBirth: '2021-03-15', parentName: 'Mary Njeri', parentPhone: '0711123456', parentEmail: 'mary@gmail.com', address: 'Kiambu', status: 'Active', enrollmentDate: '2025-01-10', totalFees: 12500, paidFees: 12500, feeBalance: 0 },
-    { id: 's02', firstName: 'Liam', lastName: 'Kiptoo', admissionNumber: 'ELR-102', gender: 'Male', grade: 'PP2', dateOfBirth: '2020-07-22', parentName: 'James Kiptoo', parentPhone: '0722123456', parentEmail: 'james@gmail.com', address: 'Nairobi West', status: 'Active', enrollmentDate: '2025-01-10', totalFees: 13000, paidFees: 10000, feeBalance: 3000 },
-    { id: 's1', firstName: 'Amara', lastName: 'Ochieng', admissionNumber: 'ELR-001', gender: 'Female', grade: 'Grade 1', dateOfBirth: '2019-03-15', parentName: 'James Ochieng', parentPhone: '0712345678', parentEmail: 'james@gmail.com', address: 'Nairobi', status: 'Active', enrollmentDate: '2024-01-10', totalFees: 15000, paidFees: 15000, feeBalance: 0 },
-    { id: 's2', firstName: 'Brian', lastName: 'Kamau', admissionNumber: 'ELR-002', gender: 'Male', grade: 'Grade 2', dateOfBirth: '2018-07-22', parentName: 'Mary Kamau', parentPhone: '0723456789', parentEmail: 'mary@gmail.com', address: 'Westlands', status: 'Active', enrollmentDate: '2024-01-10', totalFees: 15000, paidFees: 10000, feeBalance: 5000 },
-    { id: 's3', firstName: 'Cynthia', lastName: 'Wanjiku', admissionNumber: 'ELR-003', gender: 'Female', grade: 'Grade 3', dateOfBirth: '2017-11-08', parentName: 'Peter Wanjiku', parentPhone: '0734567890', parentEmail: 'peter@gmail.com', address: 'Kilimani', status: 'Active', enrollmentDate: '2024-01-10', totalFees: 15000, paidFees: 5000, feeBalance: 10000 },
-    { id: 's4', firstName: 'David', lastName: 'Mwangi', admissionNumber: 'ELR-004', gender: 'Male', grade: 'Grade 4', dateOfBirth: '2016-05-30', parentName: 'Grace Mwangi', parentPhone: '0745678901', parentEmail: 'grace@gmail.com', address: 'Karen', status: 'Active', enrollmentDate: '2024-01-10', totalFees: 18000, paidFees: 18000, feeBalance: 0 },
-    { id: 's5', firstName: 'Esther', lastName: 'Njoroge', admissionNumber: 'ELR-005', gender: 'Female', grade: 'Grade 5', dateOfBirth: '2015-09-12', parentName: 'John Njoroge', parentPhone: '0756789012', parentEmail: 'john@gmail.com', address: 'Lavington', status: 'Active', enrollmentDate: '2024-01-10', totalFees: 18000, paidFees: 9000, feeBalance: 9000 },
-    { id: 's6', firstName: 'Felix', lastName: 'Otieno', admissionNumber: 'ELR-006', gender: 'Male', grade: 'Grade 6', dateOfBirth: '2014-02-18', parentName: 'Rose Otieno', parentPhone: '0767890123', parentEmail: 'rose@gmail.com', address: 'Parklands', status: 'Active', enrollmentDate: '2024-01-10', totalFees: 18000, paidFees: 18000, feeBalance: 0 },
-    { id: 's9', firstName: 'Irene', lastName: 'Wambua', admissionNumber: 'ELR-009', gender: 'Female', grade: 'Grade 1', dateOfBirth: '2019-01-14', parentName: 'Paul Wambua', parentPhone: '0790123456', parentEmail: 'paul@gmail.com', address: 'Embakasi', status: 'Active', enrollmentDate: '2024-01-10', totalFees: 15000, paidFees: 7500, feeBalance: 7500 },
-    { id: 's10', firstName: 'James', lastName: 'Mutua', admissionNumber: 'ELR-010', gender: 'Male', grade: 'Grade 2', dateOfBirth: '2018-04-20', parentName: 'Lucy Mutua', parentPhone: '0701234567', parentEmail: 'lucy@gmail.com', address: 'Kasarani', status: 'Inactive', enrollmentDate: '2024-01-10', totalFees: 15000, paidFees: 0, feeBalance: 15000 },
-    { id: 's11', firstName: 'Kevin', lastName: 'Odhiambo', admissionNumber: 'ELR-011', gender: 'Male', grade: 'Grade 3', dateOfBirth: '2017-08-11', parentName: 'Sarah Odhiambo', parentPhone: '0711222333', parentEmail: 'sarah@gmail.com', address: 'Kisumu', status: 'Active', enrollmentDate: '2024-01-10', totalFees: 15000, paidFees: 15000, feeBalance: 0 },
-];
-
-const seedTeachers: Teacher[] = [
-    { id: 't1', firstName: 'Alice', lastName: 'Kariuki', email: 'alice@elirama.ac.ke', phone: '0711111111', qualification: 'B.Ed Mathematics', subjects: ['Mathematics', 'Physics'], grades: ['Grade 5', 'Grade 6'], status: 'Active', joinDate: '2020-01-15', maxLessonsDay: 8, maxLessonsWeek: 40 },
-    { id: 't2', firstName: 'Bob', lastName: 'Omondi', email: 'bob@elirama.ac.ke', phone: '0722222222', qualification: 'B.Ed English', subjects: ['English', 'Literature'], grades: ['Grade 3', 'Grade 4'], status: 'Active', joinDate: '2019-03-01', maxLessonsDay: 8, maxLessonsWeek: 40 },
-    { id: 't3', firstName: 'Carol', lastName: "Ndung'u", email: 'carol@elirama.ac.ke', phone: '0733333333', qualification: 'B.Ed Science', subjects: ['Science', 'Biology'], grades: ['PP1', 'PP2'], status: 'Active', joinDate: '2021-08-20', maxLessonsDay: 8, maxLessonsWeek: 40 },
-    { id: 't4', firstName: 'Daniel', lastName: 'Cheruiyot', email: 'daniel@elirama.ac.ke', phone: '0744444444', qualification: 'B.Ed Social Studies', subjects: ['Social Studies', 'History'], grades: ['Play Group', 'Grade 1'], status: 'Active', joinDate: '2022-01-10', maxLessonsDay: 8, maxLessonsWeek: 40 },
-    { id: 't5', firstName: 'Eunice', lastName: 'Waweru', email: 'eunice@elirama.ac.ke', phone: '0755555555', qualification: 'B.Ed Kiswahili', subjects: ['Kiswahili', 'CRE'], grades: ['Grade 2', 'Grade 6'], status: 'Active', joinDate: '2021-05-15', maxLessonsDay: 8, maxLessonsWeek: 40 },
-];
-
-export const CBC_SUBJECTS_MAP: Record<string, string[]> = {
-    'Early Years': ['Language Activities', 'Mathematical Activities', 'Environmental Activities', 'Psycho-motor Activities', 'Religious Education'],
-    'Primary': ['English', 'Kiswahili', 'Mathematics', 'Science & Technology', 'Social Studies', 'CRE/IRE/HRE', 'Creative Arts', 'Physical & Health Education', 'Agriculture & Nutrition'],
-    'JSS': ['Mathematics', 'English', 'Kiswahili', 'Integrated Science', 'Health Education', 'Pre-Technical Studies', 'Social Studies', 'CRE/IRE/HRE', 'Creative Arts & Sports', 'Agriculture & Nutrition', 'Life Skills Education', 'Computer Science'],
-    'SSS': ['Mathematics', 'English', 'Kiswahili', 'Chemistry', 'Biology', 'Physics', 'History', 'Geography', 'Business Studies', 'Computer Science']
-};
-
-const getLevelForGrade = (grade: string): string => {
-    if (['Play Group', 'PP1', 'PP2'].includes(grade)) return 'Early Years';
-    if (grade.startsWith('Grade') && parseInt(grade.split(' ')[1]) <= 6) return 'Primary';
-    if (['Grade 7', 'Grade 8', 'Grade 9'].includes(grade)) return 'JSS';
-    return 'SSS';
-};
-
-const seedExams: Exam[] = [
-    { id: 'e1', name: 'Term 1 Mid-Term Mathematics', subject: 'Mathematics', grade: 'Grade 6', date: '2026-03-15', type: 'Midterm', term: 'Term 1', status: 'Scheduled', totalMarks: 100 },
-    { id: 'e2', name: 'Science Quiz - Grade 3', subject: 'Science', grade: 'Grade 3', date: '2026-02-20', type: 'Quiz', term: 'Term 1', status: 'Completed', totalMarks: 50 },
-    { id: 'e3', name: 'English Final - Grade 5', subject: 'English', grade: 'Grade 5', date: '2026-04-10', type: 'Final', term: 'Term 1', status: 'Scheduled', totalMarks: 100 },
-    { id: 'e4', name: 'KPSEA Mock Assessment', subject: 'Mathematics', grade: 'Grade 6', date: '2026-06-28', type: 'Final', term: 'Term 2', status: 'Scheduled', totalMarks: 50 },
-];
-
-const seedTimetable: TimetableEntry[] = [
-    { id: 'tt1', grade: 'Grade 6', day: 'Monday', timeSlot: '8:00 - 8:40', subject: 'Mathematics', teacherId: 't1', teacherName: 'Alice Kariuki' },
-    { id: 'tt2', grade: 'Grade 6', day: 'Monday', timeSlot: '8:40 - 9:20', subject: 'English', teacherId: 't2', teacherName: 'Bob Omondi' },
-    { id: 'tt3', grade: 'Grade 6', day: 'Tuesday', timeSlot: '8:00 - 8:40', subject: 'Science', teacherId: 't3', teacherName: 'Carol Ndungu' },
-    { id: 'tt4', grade: 'Grade 1', day: 'Monday', timeSlot: '8:00 - 8:40', subject: 'Social Studies', teacherId: 't4', teacherName: 'Daniel Cheruiyot' },
-    { id: 'tt5', grade: 'PP1', day: 'Wednesday', timeSlot: '10:00 - 10:30', subject: 'Creative Arts', teacherId: 't3', teacherName: 'Carol Ndungu' },
-];
-
-const seedPayments: FeePayment[] = [
-    { id: 'p1', studentId: 's1', studentName: 'Amara Ochieng', grade: 'Grade 1', amount: 15000, method: 'M-Pesa', reference: 'QAB123456', date: '2026-01-15', term: 'Term 1', receiptNumber: 'RCT-001' },
-    { id: 'p2', studentId: 's2', studentName: 'Brian Kamau', grade: 'Grade 2', amount: 10000, method: 'Cash', reference: '', date: '2026-02-01', term: 'Term 1', receiptNumber: 'RCT-002' },
-    { id: 'p3', studentId: 's4', studentName: 'David Mwangi', grade: 'Grade 4', amount: 18000, method: 'Bank Transfer', reference: 'TRF789012', date: '2026-01-20', term: 'Term 1', receiptNumber: 'RCT-003' },
-    { id: 'p4', studentId: 's6', studentName: 'Felix Otieno', grade: 'Grade 6', amount: 18000, method: 'M-Pesa', reference: 'QCD345678', date: '2026-01-25', term: 'Term 1', receiptNumber: 'RCT-004' },
-    { id: 'p5', studentId: 's01', studentName: 'Serah Njeri', grade: 'PP1', amount: 12500, method: 'M-Pesa', reference: 'TRF999888', date: '2026-02-05', term: 'Term 1', receiptNumber: 'RCT-005' },
-];
-
-// localStorage helper — saves/loads data with fallback
 const STORAGE_KEY = 'elirama_school_data';
 
 function loadFromStorage(): any {
@@ -206,24 +144,14 @@ function saveToStorage(data: any) {
 
 export function SchoolProvider({ children }: { children: ReactNode }) {
     // Always start with seed data for SSR consistency — load localStorage in useEffect
-    const [students, setStudents] = useState<Student[]>(seedStudents);
-    const [teachers, setTeachers] = useState<Teacher[]>(seedTeachers);
+    const [students, setStudents] = useState<Student[]>([]);
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-    const [exams, setExams] = useState<Exam[]>(seedExams);
-    const [payments, setPayments] = useState<FeePayment[]>(seedPayments);
-    const [timetable, setTimetable] = useState<TimetableEntry[]>(seedTimetable);
+    const [exams, setExams] = useState<Exam[]>([]);
+    const [payments, setPayments] = useState<FeePayment[]>([]);
+    const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
     const [settings, setSettings] = useState<SchoolSettings>(defaultSettings);
-    const [gradeFees, setGradeFees] = useState<Record<string, number>>({
-        'Play Group': 12000,
-        'PP1': 12500,
-        'PP2': 13000,
-        'Grade 1': 15000,
-        'Grade 2': 15000,
-        'Grade 3': 15000,
-        'Grade 4': 18000,
-        'Grade 5': 18000,
-        'Grade 6': 18000,
-    });
+    const [gradeFees, setGradeFees] = useState<Record<string, number>>({});
     const [results, setResults] = useState<StudentResult[]>([]);
     // CBC State
     const [learningAreas, setLearningAreas] = useState<LearningArea[]>([]);
@@ -232,11 +160,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const [feeStructures, setFeeStructures] = useState<FeeStructureItem[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
-    const [systemUsers, setSystemUsers] = useState<User[]>([
-        { id: '1', firstName: 'Admin', lastName: 'User', username: 'admin', name: 'Admin User', email: 'admin@elirama.ac.ke', role: 'Super Admin', permissions: [], status: 'Active', lastLogin: '2026-02-15 10:30', updatedAt: '2026-02-18 10:00' },
-        { id: '2', firstName: 'Teacher', lastName: 'Demo', username: 'teacher', name: 'Teacher Demo', email: 'teacher@elirama.ac.ke', role: 'Teacher', permissions: [], status: 'Active', lastLogin: '2026-02-16 08:45', updatedAt: '2026-02-18 10:00' },
-        { id: '3', firstName: 'Finance', lastName: 'Staff', username: 'finance', name: 'Finance Staff', email: 'finance@elirama.ac.ke', role: 'Finance Officer', permissions: [], status: 'Active', lastLogin: '2026-02-17 09:15', updatedAt: '2026-02-18 10:00' },
-    ]);
+    const [systemUsers, setSystemUsers] = useState<User[]>([]);
     const [toasts, setToasts] = useState<Toast[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -248,11 +172,11 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // ... (localStorage effects remain the same)
 
-    // Persist to localStorage whenever state changes (skip during SSR)
+    // Persist only settings to localStorage whenever state changes (skip during SSR)
     useEffect(() => {
         if (!hydratedRef.current) return;
-        saveToStorage({ students, teachers, attendance, exams, payments, timetable, settings, gradeFees, results, systemUsers });
-    }, [students, teachers, attendance, exams, payments, timetable, settings, gradeFees, results, systemUsers]);
+        saveToStorage({ settings, gradeFees }); // Only keep UI configuration locally
+    }, [settings, gradeFees]);
 
     const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
         const id = generateId();
@@ -283,15 +207,14 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 const statusRes = await fetch(`${API_URL}/sync/status?t=${Date.now()}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!statusRes.ok) {
-                    throw new Error('Sync status failed');
-                }
+
+                // We are connected if we get a response, even if status is not ok (server is alive)
+                setServerStatus(statusRes.ok ? 'connected' : 'disconnected');
+                dbAvailableRef.current = statusRes.ok;
+
+                if (!statusRes.ok) return;
+
                 const { lastUpdated } = await statusRes.json();
-
-                // We are connected
-                setServerStatus('connected');
-                dbAvailableRef.current = true;
-
                 if (lastSyncRef.current === lastUpdated) return;
                 lastSyncRef.current = lastUpdated;
             }
@@ -301,7 +224,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 const res = await fetch(`${API_URL}/${path}`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) {
                     const data = await res.json();
-                    setter(data);
+                    setter(Array.isArray(data) ? data : (data || []));
                     return true;
                 }
                 return false;
@@ -332,7 +255,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 }
             }
         } catch (error) {
-            console.warn('Database not available, using localStorage:', error);
+            console.warn('Database connection lost:', error);
             setServerStatus('disconnected');
             dbAvailableRef.current = false;
         } finally {
@@ -383,10 +306,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // STUDENTS
     const addStudent = async (student: Omit<Student, 'id'>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot add student. Check connection.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/students`, { method: 'POST', body: JSON.stringify(student) });
         if (apiRes) {
             const data = await apiRes.json();
@@ -398,10 +317,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const updateStudent = async (id: string, data: Partial<Student>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot update student.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/students/${id}`, { method: 'PUT', body: JSON.stringify(data) });
         if (apiRes) {
             const updated = await apiRes.json();
@@ -411,10 +326,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const deleteStudent = async (id: string) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot delete student.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/students/${id}`, { method: 'DELETE' });
         if (apiRes) {
             setStudents(prev => prev.filter(s => s.id !== id));
@@ -424,10 +335,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const updateTimetable = async (newEntries: TimetableEntry[]) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot update timetable.', 'error');
-            return;
-        }
         // Save all entries via bulk API
         const apiRes = await tryApi(`${API_URL}/timetable/bulk`, {
             method: 'POST',
@@ -443,10 +350,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // TEACHERS
     const addTeacher = async (teacher: Omit<Teacher, 'id'>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot add teacher.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/teachers`, { method: 'POST', body: JSON.stringify(teacher) });
         if (apiRes) {
             const data = await apiRes.json();
@@ -458,10 +361,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const updateTeacher = async (id: string, data: Partial<Teacher>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot update teacher.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/teachers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
         if (apiRes) {
             const updated = await apiRes.json();
@@ -471,10 +370,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const deleteTeacher = async (id: string) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot delete teacher.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/teachers/${id}`, { method: 'DELETE' });
         if (apiRes) {
             setTeachers(prev => prev.filter(t => t.id !== id));
@@ -484,10 +379,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // ATTENDANCE
     const saveAttendance = async (records: AttendanceRecord[]) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot save attendance.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/attendance`, { method: 'POST', body: JSON.stringify({ records }) });
         if (apiRes) {
             const dateStr = records[0]?.date;
@@ -500,10 +391,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // EXAMS
     const addExam = async (exam: Omit<Exam, 'id'>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot add exam.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/exams`, { method: 'POST', body: JSON.stringify(exam) });
         if (apiRes) {
             const data = await apiRes.json();
@@ -515,10 +402,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const updateExam = async (id: string, data: Partial<Exam>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot update exam.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/exams/${id}`, { method: 'PUT', body: JSON.stringify(data) });
         if (apiRes) {
             const updated = await apiRes.json();
@@ -528,10 +411,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const deleteExam = async (id: string) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot delete exam.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/exams/${id}`, { method: 'DELETE' });
         if (apiRes) {
             setExams(prev => prev.filter(e => e.id !== id));
@@ -541,10 +420,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // PAYMENTS
     const addPayment = async (payment: Omit<FeePayment, 'id' | 'receiptNumber'>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot record payment.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/fees`, { method: 'POST', body: JSON.stringify(payment) });
         if (apiRes) {
             const data = await apiRes.json();
@@ -562,10 +437,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const updatePayment = async (id: string, data: Partial<FeePayment>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot update payment.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/fees/${id}`, { method: 'PUT', body: JSON.stringify(data) });
         if (apiRes) {
             const updated = await apiRes.json();
@@ -586,10 +457,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const deletePayment = async (id: string) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot delete payment.', 'error');
-            return;
-        }
         const payment = payments.find(p => p.id === id);
         if (payment) {
             const apiRes = await tryApi(`${API_URL}/fees/${id}`, { method: 'DELETE' });
@@ -612,10 +479,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // RESULTS
     const addResult = async (result: Omit<StudentResult, 'id'>) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot add result.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/results`, { method: 'POST', body: JSON.stringify(result) });
         if (apiRes) {
             const data = await apiRes.json();
@@ -627,10 +490,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     };
 
     const saveBulkResults = async (newResults: Omit<StudentResult, 'id'>[]) => {
-        if (serverStatus !== 'connected') {
-            showToast('System Offline: Cannot save results.', 'error');
-            return;
-        }
         const apiRes = await tryApi(`${API_URL}/results`, { method: 'POST', body: JSON.stringify(newResults) });
         if (apiRes) {
             const data = await apiRes.json();

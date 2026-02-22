@@ -13,15 +13,15 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
     const [activeTab, setActiveTab] = useState<'accounts' | 'journal'>('journal');
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredEntries = journalEntries.filter(e =>
-        e.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.account?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredEntries = (journalEntries || []).filter(e =>
+        (e?.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e?.transactionId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (e?.account?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const filteredAccounts = accounts.filter(a =>
-        a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        a.code.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredAccounts = (accounts || []).filter(a =>
+        (a?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (a?.code || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const exportCSV = () => {
