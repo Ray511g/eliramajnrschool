@@ -14,12 +14,12 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
     if (!stats) return <div>Loading Stats...</div>;
 
     const cards = [
-        { label: 'Total Income', value: stats.stats.totalIncome, icon: <TrendingUpIcon />, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
-        { label: 'Total Expenses', value: stats.stats.totalExpenses, icon: <TrendingDownIcon />, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
-        { label: 'Payroll Total', value: stats.stats.payrollTotal, icon: <GroupIcon />, color: '#6366f1', bg: 'rgba(99, 102, 241, 0.1)' },
-        { label: 'Net Balance', value: stats.stats.netBalance, icon: <AccountBalanceWalletIcon />, color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.1)' },
-        { label: 'Outstanding Fees', value: stats.stats.outstandingFees, icon: <ReceiptLongIcon />, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' },
-        { label: 'Budget Utilized', value: `${Math.round(stats.stats.budgetUtilization)}%`, icon: <PieChartIcon />, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' },
+        { label: 'Total Income', value: stats?.stats?.totalIncome || 0, icon: <TrendingUpIcon />, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
+        { label: 'Total Expenses', value: stats?.stats?.totalExpenses || 0, icon: <TrendingDownIcon />, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
+        { label: 'Payroll Total', value: stats?.stats?.payrollTotal || 0, icon: <GroupIcon />, color: '#6366f1', bg: 'rgba(99, 102, 241, 0.1)' },
+        { label: 'Net Balance', value: stats?.stats?.netBalance || 0, icon: <AccountBalanceWalletIcon />, color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.1)' },
+        { label: 'Outstanding Fees', value: stats?.stats?.outstandingFees || 0, icon: <ReceiptLongIcon />, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' },
+        { label: 'Budget Utilized', value: `${Math.round(stats?.stats?.budgetUtilization || 0)}%`, icon: <PieChartIcon />, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' },
     ];
 
     return (
@@ -45,8 +45,8 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
                         {stats.cashFlow.map((d: any, i: number) => (
                             <div key={i} className="chart-bar-group">
                                 <div className="chart-bars">
-                                    <div className="chart-bar income" style={{ height: `${(d.income / (stats.stats.totalIncome || 1)) * 100}%` }}></div>
-                                    <div className="chart-bar expense" style={{ height: `${(d.expense / (stats.stats.totalExpenses || 1)) * 100}%` }}></div>
+                                    <div className="chart-bar income" style={{ height: `${(d.income / (stats?.stats?.totalIncome || 1)) * 100}%` }}></div>
+                                    <div className="chart-bar expense" style={{ height: `${(d.expense / (stats?.stats?.totalExpenses || 1)) * 100}%` }}></div>
                                 </div>
                                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.month}</span>
                             </div>

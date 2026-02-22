@@ -14,9 +14,9 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredEntries = journalEntries.filter(e =>
-        e.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.account?.name.toLowerCase().includes(searchTerm.toLowerCase())
+        e.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        e.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        e.account?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const filteredAccounts = accounts.filter(a =>

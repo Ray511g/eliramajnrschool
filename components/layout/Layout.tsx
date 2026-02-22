@@ -97,7 +97,7 @@ export default function Layout({ children }: LayoutProps) {
                         <div className="user-profile-trigger" onClick={() => setShowProfileMenu(!showProfileMenu)}>
                             <div className="user-avatar-wrapper">
                                 <div className="user-avatar">
-                                    {user?.name.charAt(0) || <AccountCircleIcon />}
+                                    {user?.name?.charAt(0) || <AccountCircleIcon />}
                                 </div>
                                 <div className="status-dot online"></div>
                             </div>
@@ -110,8 +110,8 @@ export default function Layout({ children }: LayoutProps) {
                         {showProfileMenu && (
                             <div className="profile-dropdown glass-overlay">
                                 <div className="dropdown-header">
-                                    <p className="dropdown-user-name">{user?.name}</p>
-                                    <p className="dropdown-user-email">{user?.email}</p>
+                                    <p className="dropdown-user-name">{user?.name || 'User'}</p>
+                                    <p className="dropdown-user-email">{user?.email || 'No email'}</p>
                                     <div style={{ marginTop: 8, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                                         {user?.role === 'Super Admin' && (
                                             <span className="badge gold-badge">SUPER ADMIN</span>
