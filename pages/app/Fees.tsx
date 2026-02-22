@@ -319,127 +319,125 @@ export default function Fees() {
                         )}
                     </div>
                 </div>
-
             </div>
-        </div>
 
-            {/* Fee Balance by Student */ }
-    {
-        students.length > 0 && (
-            <>
-                <div className="toolbar" style={{ marginTop: 20 }}>
-                    <div className="search-box">
-                        <input
-                            type="text"
-                            placeholder="Search student or receipt..."
-                            className="form-control"
-                            value={searchQuery}
-                            onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        />
-                    </div>
-                </div>
+            {/* Fee Balance by Student */}
+            {
+                students.length > 0 && (
+                    <>
+                        <div className="toolbar" style={{ marginTop: 20 }}>
+                            <div className="search-box">
+                                <input
+                                    type="text"
+                                    placeholder="Search student or receipt..."
+                                    className="form-control"
+                                    value={searchQuery}
+                                    onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                                />
+                            </div>
+                        </div>
 
-                <div className="section" style={{ marginTop: 24 }}>
-                    <div className="section-header">
-                        <h3><PaymentIcon style={{ fontSize: 18, marginRight: 8, color: 'var(--accent-blue)' }} />Recent Payments</h3>
-                    </div>
-                    <div className="table-wrapper">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Receipt No</th>
-                                    <th>Student</th>
-                                    <th>Term</th>
-                                    <th>Amount</th>
-                                    <th>Method</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedPayments.length === 0 ? (
+                        <div className="section" style={{ marginTop: 24 }}>
+                            <div className="section-header">
+                                <h3><PaymentIcon style={{ fontSize: 18, marginRight: 8, color: 'var(--accent-blue)' }} />Recent Payments</h3>
+                            </div>
+                            <div className="table-wrapper">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Receipt No</th>
+                                            <th>Student</th>
+                                            <th>Term</th>
+                                            <th>Amount</th>
+                                            <th>Method</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedPayments.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>No payments found matching your search.</td>
+                                            </tr>
+                                        ) : (
+                                            paginatedPayments.map(payment => (
+                                                <tr key={payment.id}>
+                                                    <td>{new Date(payment.date).toLocaleDateString()}</td>
+                                                    <td style={{ fontWeight: 600 }}>{payment.receiptNumber}</td>
+                                                    <td>{payment.studentName}</td>
+                                                    <td>{payment.term}</td>
+                                                    <td style={{ fontWeight: 600 }}>KSh {payment.amount.toLocaleString()}</td>
+                                                    <td><span className="badge blue">{payment.method}</span></td>
+                                                    <td>
+                                                        <div className="actions">
+                                                            <button className="action-btn" title="View/Print Receipt" onClick={() => setSelectedReceipt(payment)}><ReceiptIcon style={{ fontSize: 16 }} /></button>
+                                                            <button className="action-btn delete" title="Delete Entry" onClick={() => { if (window.confirm('Are you sure you want to delete this payment?')) deletePayment(payment.id) }}><DeleteIcon style={{ fontSize: 16 }} /></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <Pagination
+                                totalItems={filteredPayments.length}
+                                itemsPerPage={itemsPerPage}
+                                currentPage={currentPage}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
+                    </>
+                )
+            }
+
+            {/* Student Fee Balances Table (moved outside dashboard-grid) */}
+            {
+                students.length > 0 && (
+                    <div className="dashboard-card" style={{ marginTop: 24 }}>
+                        <div className="dashboard-card-title">
+                            <ReceiptIcon style={{ fontSize: 20 }} /> Student Fee Balances
+                        </div>
+                        <div className="data-table-wrapper" style={{ marginTop: 16 }}>
+                            <table className="data-table">
+                                <thead>
                                     <tr>
-                                        <td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>No payments found matching your search.</td>
+                                        <th>Student</th>
+                                        <th>Grade</th>
+                                        <th>Total Fees</th>
+                                        <th>Paid</th>
+                                        <th>Balance</th>
+                                        <th>Status</th>
                                     </tr>
-                                ) : (
-                                    paginatedPayments.map(payment => (
-                                        <tr key={payment.id}>
-                                            <td>{new Date(payment.date).toLocaleDateString()}</td>
-                                            <td style={{ fontWeight: 600 }}>{payment.receiptNumber}</td>
-                                            <td>{payment.studentName}</td>
-                                            <td>{payment.term}</td>
-                                            <td style={{ fontWeight: 600 }}>KSh {payment.amount.toLocaleString()}</td>
-                                            <td><span className="badge blue">{payment.method}</span></td>
+                                </thead>
+                                <tbody>
+                                    {students.map(s => (
+                                        <tr key={s.id}>
+                                            <td>{s.firstName} {s.lastName}</td>
+                                            <td>{s.grade}</td>
+                                            <td>KSh {s.totalFees.toLocaleString()}</td>
+                                            <td style={{ color: 'var(--accent-green)' }}>KSh {s.paidFees.toLocaleString()}</td>
+                                            <td style={{ color: s.feeBalance > 0 ? 'var(--accent-red)' : 'var(--accent-green)', fontWeight: 600 }}>
+                                                KSh {s.feeBalance.toLocaleString()}
+                                            </td>
                                             <td>
-                                                <div className="actions">
-                                                    <button className="action-btn" title="View/Print Receipt" onClick={() => setSelectedReceipt(payment)}><ReceiptIcon style={{ fontSize: 16 }} /></button>
-                                                    <button className="action-btn delete" title="Delete Entry" onClick={() => { if (window.confirm('Are you sure you want to delete this payment?')) deletePayment(payment.id) }}><DeleteIcon style={{ fontSize: 16 }} /></button>
-                                                </div>
+                                                <span className={`badge ${s.feeBalance === 0 ? 'green' : s.feeBalance < s.totalFees / 2 ? 'orange' : 'red'}`}>
+                                                    {s.feeBalance === 0 ? 'Paid' : 'Pending'}
+                                                </span>
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                )
+            }
 
-                    <Pagination
-                        totalItems={filteredPayments.length}
-                        itemsPerPage={itemsPerPage}
-                        currentPage={currentPage}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
-            </>
-        )
-    }
-
-    {/* Student Fee Balances Table (moved outside dashboard-grid) */ }
-    {
-        students.length > 0 && (
-            <div className="dashboard-card" style={{ marginTop: 24 }}>
-                <div className="dashboard-card-title">
-                    <ReceiptIcon style={{ fontSize: 20 }} /> Student Fee Balances
-                </div>
-                <div className="data-table-wrapper" style={{ marginTop: 16 }}>
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Student</th>
-                                <th>Grade</th>
-                                <th>Total Fees</th>
-                                <th>Paid</th>
-                                <th>Balance</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {students.map(s => (
-                                <tr key={s.id}>
-                                    <td>{s.firstName} {s.lastName}</td>
-                                    <td>{s.grade}</td>
-                                    <td>KSh {s.totalFees.toLocaleString()}</td>
-                                    <td style={{ color: 'var(--accent-green)' }}>KSh {s.paidFees.toLocaleString()}</td>
-                                    <td style={{ color: s.feeBalance > 0 ? 'var(--accent-red)' : 'var(--accent-green)', fontWeight: 600 }}>
-                                        KSh {s.feeBalance.toLocaleString()}
-                                    </td>
-                                    <td>
-                                        <span className={`badge ${s.feeBalance === 0 ? 'green' : s.feeBalance < s.totalFees / 2 ? 'orange' : 'red'}`}>
-                                            {s.feeBalance === 0 ? 'Paid' : 'Pending'}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        )
-    }
-
-    { showPayModal && <RecordPaymentModal onClose={() => setShowPayModal(false)} /> }
-    { selectedReceipt && <ReceiptModal payment={selectedReceipt} onClose={() => setSelectedReceipt(null)} /> }
-    { showStructure && <FeeStructureModal onClose={() => setShowStructure(false)} /> }
+            {showPayModal && <RecordPaymentModal onClose={() => setShowPayModal(false)} />}
+            {selectedReceipt && <ReceiptModal payment={selectedReceipt} onClose={() => setSelectedReceipt(null)} />}
+            {showStructure && <FeeStructureModal onClose={() => setShowStructure(false)} />}
         </div >
     );
 }
