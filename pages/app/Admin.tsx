@@ -232,13 +232,13 @@ export default function Admin() {
                 </div>
             </div>
 
-            <div className="admin-layout" style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 30, alignItems: 'start' }}>
-                <aside className="admin-sidebar card" style={{ padding: '20px 0', position: 'sticky', top: 20 }}>
-                    <div style={{ padding: '0 20px 15px', borderBottom: '1px solid var(--border-color)', marginBottom: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h4 style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Control Panel</h4>
-                        {isPending && <div className="spinner-small" style={{ width: 14, height: 14, border: '2px solid var(--primary-color)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}></div>}
+            <div className="admin-layout-container">
+                <aside className="admin-side-nav">
+                    <div className="admin-nav-header">
+                        <h4>Control Panel</h4>
+                        {isPending && <div className="spinner-small"></div>}
                     </div>
-                    <nav className="admin-nav" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <nav className="admin-nav">
                         {[
                             { id: 'settings', label: 'School Settings', icon: <SettingsIcon /> },
                             { id: 'timetable', label: 'Timetable Setup', icon: <SchoolIcon /> },
@@ -271,34 +271,19 @@ export default function Admin() {
                                 {module.label}
                             </button>
                         ))}
-                        {user?.role === 'Principal' || user?.role === 'Super Admin' ? (
+                        {(user?.role === 'Principal' || user?.role === 'Super Admin') && (
                             <button
                                 className={`admin-nav-item ${activeTab === 'approvals' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('approvals')}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 12,
-                                    padding: '12px 20px',
-                                    border: 'none',
-                                    background: activeTab === 'approvals' ? 'var(--bg-primary)' : 'transparent',
-                                    color: activeTab === 'approvals' ? 'var(--primary-color)' : 'var(--text-primary)',
-                                    cursor: 'pointer',
-                                    width: '100%',
-                                    textAlign: 'left',
-                                    transition: 'all 0.2s ease',
-                                    borderLeft: activeTab === 'approvals' ? '4px solid var(--primary-color)' : '4px solid transparent',
-                                    fontWeight: activeTab === 'approvals' ? 600 : 400
-                                }}
                             >
-                                <RuleIcon style={{ fontSize: 20, opacity: activeTab === 'approvals' ? 1 : 0.6 }} /> Pending Approvals
+                                <RuleIcon /> Pending Approvals
                                 {(expenses.filter(e => e.status === 'Pending').length + payrollEntries.filter(p => p.status === 'Reviewed').length) > 0 && (
-                                    <span className="badge red" style={{ marginLeft: 8, padding: '2px 6px', fontSize: 10 }}>
+                                    <span className="badge red">
                                         {expenses.filter(e => e.status === 'Pending').length + payrollEntries.filter(p => p.status === 'Reviewed').length}
                                     </span>
                                 )}
                             </button>
-                        ) : null}
+                        )}
                     </nav>
                 </aside>
 
