@@ -7,7 +7,10 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import PrintIcon from '@mui/icons-material/Print';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import LocalAtmIcon from '@mui/icons-material/LocalAtm';
+import SearchIcon from '@mui/icons-material/Search';
 import RecordPaymentModal from '../modals/RecordPaymentModal';
 import ReceiptModal from '../modals/ReceiptModal';
 import FeeStructureModal from '../modals/FeeStructureModal';
@@ -16,13 +19,16 @@ import Pagination from '../common/Pagination';
 const FeeManager: React.FC = () => {
     const { students, payments, settings, updateGradeFees, deletePayment } = useSchool();
     const [showPayModal, setShowPayModal] = useState(false);
+    const [editingPayment, setEditingPayment] = useState<FeePayment | null>(null);
     const [selectedReceipt, setSelectedReceipt] = useState<FeePayment | null>(null);
     const [showStructure, setShowStructure] = useState(false);
 
     // Filtering & Pagination
     const [searchQuery, setSearchQuery] = useState('');
+    const [termFilter, setTermFilter] = useState('All');
+    const [methodFilter, setMethodFilter] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    const itemsPerPage = 12;
 
     const totalFees = students.reduce((sum, s) => sum + s.totalFees, 0);
     const collected = students.reduce((sum, s) => sum + s.paidFees, 0);
@@ -30,11 +36,15 @@ const FeeManager: React.FC = () => {
     const collectionRate = totalFees > 0 ? Math.round((collected / totalFees) * 100) : 0;
 
     const filteredPayments = useMemo(() => {
-        return payments.filter(p =>
-            p.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.receiptNumber.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [payments, searchQuery]);
+        return payments.filter(p => {
+            const matchesSearch = p.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.receiptNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (p.reference && p.reference.toLowerCase().includes(searchQuery.toLowerCase()));
+            const matchesTerm = termFilter === 'All' || p.term === termFilter;
+            const matchesMethod = methodFilter === 'All' || p.method === methodFilter;
+            return matchesSearch && matchesTerm && matchesMethod;
+        }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [payments, searchQuery, termFilter, methodFilter]);
 
     const paginatedPayments = useMemo(() => {
         return filteredPayments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -156,78 +166,150 @@ const FeeManager: React.FC = () => {
                 </div>
             </div>
 
-            <div className="admin-grid">
-                <div className="admin-section">
-                    <h3 className="section-title">Recent Fee Payments</h3>
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Receipt</th>
-                                    <th>Student</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedPayments.map(p => (
-                                    <tr key={p.id}>
-                                        <td>{p.receiptNumber}</td>
-                                        <td>{p.studentName}</td>
-                                        <td style={{ fontWeight: 600, color: '#10b981' }}>KSh {p.amount.toLocaleString()}</td>
-                                        <td>{new Date(p.date).toLocaleDateString()}</td>
-                                        <td>
-                                            <div className="action-buttons">
-                                                <button className="action-btn" onClick={() => setSelectedReceipt(p)}><ReceiptIcon fontSize="small" /></button>
-                                                <button className="action-btn delete" onClick={() => deletePayment(p.id)}><DeleteIcon fontSize="small" /></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <Pagination
-                            totalItems={filteredPayments.length}
-                            itemsPerPage={itemsPerPage}
-                            currentPage={currentPage}
-                            onPageChange={setCurrentPage}
-                        />
+            <div className="admin-section" style={{ marginBottom: 24 }}>
+                <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <h3 className="section-title" style={{ margin: 0 }}>Fee Transactions History</h3>
+                    <div className="filter-row" style={{ display: 'flex', gap: 12 }}>
+                        <div className="search-box">
+                            <SearchIcon style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: 18 }} />
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Search transactions..."
+                                style={{ paddingLeft: 35, minWidth: 250 }}
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                title="Search transactions"
+                            />
+                        </div>
+                        <select
+                            className="form-control"
+                            style={{ width: 120 }}
+                            value={termFilter}
+                            onChange={e => setTermFilter(e.target.value)}
+                            title="Filter by term"
+                        >
+                            <option value="All">All Terms</option>
+                            <option value="Term 1">Term 1</option>
+                            <option value="Term 2">Term 2</option>
+                            <option value="Term 3">Term 3</option>
+                        </select>
+                        <select
+                            className="form-control"
+                            style={{ width: 130 }}
+                            value={methodFilter}
+                            onChange={e => setMethodFilter(e.target.value)}
+                            title="Filter by payment method"
+                        >
+                            <option value="All">All Methods</option>
+                            <option value="Cash">Cash</option>
+                            <option value="M-Pesa">M-Pesa</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
                     </div>
                 </div>
 
-                <div className="admin-section">
-                    <h3 className="section-title">Student Balances</h3>
-                    <div className="table-container" style={{ maxHeight: 400, overflowY: 'auto' }}>
-                        <table className="data-table">
-                            <thead>
+                <div className="table-container">
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th>Receipt</th>
+                                <th>Student</th>
+                                <th>Grade</th>
+                                <th>Term</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {paginatedPayments.length > 0 ? (
+                                paginatedPayments.map(p => (
+                                    <tr key={p.id}>
+                                        <td><span className="receipt-badge">{p.receiptNumber}</span></td>
+                                        <td><div style={{ fontWeight: 500 }}>{p.studentName}</div></td>
+                                        <td>{p.grade}</td>
+                                        <td>{p.term}</td>
+                                        <td>{p.method}</td>
+                                        <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.reference || '-'}</td>
+                                        <td style={{ fontWeight: 700, color: '#10b981' }}>KSh {p.amount.toLocaleString()}</td>
+                                        <td>{new Date(p.date).toLocaleDateString()}</td>
+                                        <td>
+                                            <div className="action-buttons">
+                                                <button title="Print Receipt" className="action-btn" onClick={() => setSelectedReceipt(p)}><ReceiptIcon fontSize="small" /></button>
+                                                <button title="Edit Record" className="action-btn" onClick={() => setEditingPayment(p)}><EditIcon fontSize="small" /></button>
+                                                <button title="Delete Record" className="action-btn delete" onClick={() => { if (confirm('Are you sure you want to delete this payment record? This will adjust the student balance.')) deletePayment(p.id); }}><DeleteIcon fontSize="small" /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
                                 <tr>
-                                    <th>Student</th>
-                                    <th>Balance</th>
-                                    <th>Status</th>
+                                    <td colSpan={9} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        {searchQuery || termFilter !== 'All' || methodFilter !== 'All'
+                                            ? 'No transactions found matching your filters.'
+                                            : 'No fee transactions recorded yet.'}
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {students.map(s => (
+                            )}
+                        </tbody>
+                    </table>
+                    <Pagination
+                        totalItems={filteredPayments.length}
+                        itemsPerPage={itemsPerPage}
+                        currentPage={currentPage}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
+            </div>
+
+            <div className="admin-section">
+                <h3 className="section-title">Student Balances Overivew</h3>
+                <div className="table-container" style={{ maxHeight: 400, overflowY: 'auto' }}>
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Grade</th>
+                                <th>Paid Fees</th>
+                                <th>Balance Arrears</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {students.length > 0 ? (
+                                students.map(s => (
                                     <tr key={s.id}>
-                                        <td>{s.firstName} {s.lastName}</td>
+                                        <td><div style={{ fontWeight: 500 }}>{s.firstName} {s.lastName}</div></td>
+                                        <td>{s.grade}</td>
+                                        <td style={{ color: '#10b981' }}>KES {s.paidFees.toLocaleString()}</td>
                                         <td style={{ fontWeight: 600, color: s.feeBalance > 0 ? '#ef4444' : '#10b981' }}>
                                             KES {s.feeBalance.toLocaleString()}
                                         </td>
                                         <td>
-                                            <span className={`status-tag ${s.feeBalance === 0 ? 'active' : 'pending'}`}>
-                                                {s.feeBalance === 0 ? 'Paid' : 'Pending'}
+                                            <span className={`status-tag ${s.feeBalance <= 0 ? 'active' : 'pending'}`}>
+                                                {s.feeBalance <= 0 ? 'Fully Paid' : 'Partial/None'}
                                             </span>
                                         </td>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        No students registered in the system.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             {showPayModal && <RecordPaymentModal onClose={() => setShowPayModal(false)} />}
+            {editingPayment && <RecordPaymentModal payment={editingPayment} onClose={() => setEditingPayment(null)} />}
             {selectedReceipt && <ReceiptModal payment={selectedReceipt} onClose={() => setSelectedReceipt(null)} />}
             {showStructure && <FeeStructureModal onClose={() => setShowStructure(false)} />}
         </div>

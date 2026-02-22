@@ -37,11 +37,11 @@ export default function Login() {
                         {settings.logo ? (
                             <img src={settings.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         ) : (
-                            (settings.schoolName || 'E')[0]
+                            (settings.schoolName || 'S')[0]
                         )}
                     </div>
-                    <h1>{settings.schoolName || 'ELIRAMA SCHOOL'}</h1>
-                    <p>{settings.motto || 'School Management System'}</p>
+                    <h1>{settings.schoolName || 'School Management System'}</h1>
+                    <p>{settings.motto || 'Academic Excellence'}</p>
                 </div>
 
                 {error && (

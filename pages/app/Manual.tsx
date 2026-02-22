@@ -1,5 +1,6 @@
 import React from 'react';
 import Layout from '../../components/layout/Layout';
+import { useSchool } from '../../context/SchoolContext';
 import {
     Description as DescriptionIcon,
     Download as DownloadIcon,
@@ -12,6 +13,7 @@ import {
 } from '@mui/icons-material';
 
 export default function Manual() {
+    const { settings } = useSchool();
     const sections = [
         {
             title: 'Getting Started',
@@ -60,7 +62,7 @@ export default function Manual() {
             <div className="page-header">
                 <div className="header-content">
                     <h1>System User Manual</h1>
-                    <p>Learn how to navigate and use the Elirama School Management System effectively.</p>
+                    <p>Learn how to navigate and use the {settings?.schoolName || 'School Management System'} effectively.</p>
                 </div>
                 <div className="header-actions">
                     <button className="btn btn-primary" onClick={() => window.print()}>

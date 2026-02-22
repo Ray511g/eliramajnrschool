@@ -11,6 +11,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { id } = req.query;
 
+    if (req.method === 'PUT') {
+        try {
+            const { amount, method, reference, date, term } = req.body;
+            const oldPayment = await prisma.payment.findUnique({ where: { id: id as string } });
+            if (!oldPayment) return res.status(404).json({ error: 'Payment not found' });
+
+            const updatedPayment = await prisma.payment.update({
+                where: { id: id as string },
+                data: { amount, method, reference, date, term }
+            });
+
+            // If amount changed, update student balance
+            if (amount !== oldPayment.amount) {
+                const student = await prisma.student.findUnique({ where: { id: oldPayment.studentId } });
+                if (student) {
+                    const diff = amount - oldPayment.amount;
+                    const newPaid = student.paidFees + diff;
+                    await prisma.student.update({
+                        where: { id: oldPayment.studentId },
+                        data: { paidFees: newPaid, feeBalance: student.totalFees - newPaid },
+                    });
+                }
+            }
+
+            await touchSync();
+            return res.status(200).json(updatedPayment);
+        } catch (error) {
+            return res.status(500).json({ error: 'Failed to update payment' });
+        }
+    }
+
     if (req.method === 'DELETE') {
         try {
             // Get payment details before deleting

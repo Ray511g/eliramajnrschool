@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSchool } from '../../context/SchoolContext';
+import { FeePayment } from '../../types';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface Props {
     onClose: () => void;
+    payment?: FeePayment;
 }
 
-export default function RecordPaymentModal({ onClose }: Props) {
-    const { students, addPayment, settings } = useSchool();
+export default function RecordPaymentModal({ onClose, payment }: Props) {
+    const { students, addPayment, updatePayment, settings } = useSchool();
     const [form, setForm] = useState({
-        studentId: '',
-        amount: 0,
-        method: 'Cash' as 'Cash' | 'M-Pesa' | 'Bank Transfer' | 'Cheque',
-        reference: '',
+        studentId: payment?.studentId || '',
+        amount: payment?.amount || 0,
+        method: payment?.method || 'Cash' as 'Cash' | 'M-Pesa' | 'Bank Transfer' | 'Cheque',
+        reference: payment?.reference || '',
+        date: payment?.date || new Date().toISOString().split('T')[0],
+        term: payment?.term || settings.currentTerm,
     });
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -25,13 +29,20 @@ export default function RecordPaymentModal({ onClose }: Props) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedStudent) return;
-        addPayment({
-            ...form,
-            studentName: `${selectedStudent.firstName} ${selectedStudent.lastName}`,
-            grade: selectedStudent.grade,
-            date: new Date().toISOString().split('T')[0],
-            term: settings.currentTerm,
-        });
+
+        if (payment) {
+            updatePayment(payment.id, {
+                ...form,
+                amount: Number(form.amount)
+            });
+        } else {
+            addPayment({
+                ...form,
+                studentName: `${selectedStudent.firstName} ${selectedStudent.lastName}`,
+                grade: selectedStudent.grade,
+                amount: Number(form.amount)
+            });
+        }
         onClose();
     };
 
@@ -39,30 +50,45 @@ export default function RecordPaymentModal({ onClose }: Props) {
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Record Fee Payment</h2>
+                    <h2>{payment ? 'Edit Fee Payment' : 'Record Fee Payment'}</h2>
                     <button className="modal-close" onClick={onClose}><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
                     <div className="modal-body">
-                        <div className="form-group">
-                            <label>Student *</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Search by name..."
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                style={{ marginBottom: 8 }}
-                            />
-                            <select className="form-control" required value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })}>
-                                <option value="">Select a student ({filteredStudents.length} matches)</option>
-                                {filteredStudents.map(s => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.firstName} {s.lastName} ({s.grade}) - Balance: KSh {s.feeBalance.toLocaleString()}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {!payment && (
+                            <div className="form-group">
+                                <label>Student *</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Search by name..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    style={{ marginBottom: 8 }}
+                                />
+                                <select
+                                    className="form-control"
+                                    required
+                                    value={form.studentId}
+                                    onChange={e => setForm({ ...form, studentId: e.target.value })}
+                                    title="Select student"
+                                >
+                                    <option value="">Select a student ({filteredStudents.length} matches)</option>
+                                    {filteredStudents.map(s => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.firstName} {s.lastName} ({s.grade}) - Balance: KSh {s.feeBalance.toLocaleString()}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {payment && (
+                            <div className="form-group">
+                                <label>Student</label>
+                                <input className="form-control" value={payment.studentName} disabled title="Selected student" />
+                            </div>
+                        )}
 
                         {selectedStudent && (
                             <div style={{ background: 'var(--bg-surface)', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
@@ -84,11 +110,16 @@ export default function RecordPaymentModal({ onClose }: Props) {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Amount (KSh) *</label>
-                                <input type="number" className="form-control" required min={1} value={form.amount || ''} onChange={e => setForm({ ...form, amount: Number(e.target.value) })} placeholder="Enter amount" />
+                                <input type="number" className="form-control" required min={1} value={form.amount || ''} onChange={e => setForm({ ...form, amount: Number(e.target.value) })} placeholder="Enter amount" title="Payment Amount" />
                             </div>
                             <div className="form-group">
                                 <label>Payment Method *</label>
-                                <select className="form-control" value={form.method} onChange={e => setForm({ ...form, method: e.target.value as any })}>
+                                <select
+                                    className="form-control"
+                                    value={form.method}
+                                    onChange={e => setForm({ ...form, method: e.target.value as any })}
+                                    title="Payment method"
+                                >
                                     <option value="Cash">Cash</option>
                                     <option value="M-Pesa">M-Pesa</option>
                                     <option value="Bank Transfer">Bank Transfer</option>
@@ -96,6 +127,27 @@ export default function RecordPaymentModal({ onClose }: Props) {
                                 </select>
                             </div>
                         </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Term *</label>
+                                <select
+                                    className="form-control"
+                                    value={form.term}
+                                    onChange={e => setForm({ ...form, term: e.target.value })}
+                                    title="Term"
+                                >
+                                    <option value="Term 1">Term 1</option>
+                                    <option value="Term 2">Term 2</option>
+                                    <option value="Term 3">Term 3</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Date *</label>
+                                <input type="date" className="form-control" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required title="Payment Date" />
+                            </div>
+                        </div>
+
                         <div className="form-group">
                             <label>Reference / Transaction ID</label>
                             <input className="form-control" value={form.reference} onChange={e => setForm({ ...form, reference: e.target.value })} placeholder="e.g. MPESA transaction code" />
@@ -103,7 +155,7 @@ export default function RecordPaymentModal({ onClose }: Props) {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary green">Record Payment</button>
+                        <button type="submit" className="btn-primary green">{payment ? 'Update Payment' : 'Record Payment'}</button>
                     </div>
                 </form>
             </div>

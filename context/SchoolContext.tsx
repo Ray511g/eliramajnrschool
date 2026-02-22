@@ -41,6 +41,7 @@ interface SchoolContextType {
     updateExam: (id: string, data: Partial<Exam>) => void;
     deleteExam: (id: string) => void;
     addPayment: (payment: Omit<FeePayment, 'id' | 'receiptNumber'>) => void;
+    updatePayment: (id: string, data: Partial<FeePayment>) => void;
     deletePayment: (id: string) => void;
     addResult: (result: Omit<StudentResult, 'id'>) => void;
     saveBulkResults: (results: Omit<StudentResult, 'id'>[]) => void;
@@ -104,8 +105,8 @@ const defaultTimeSlots: TimeSlot[] = [
 ];
 
 const defaultSettings: SchoolSettings = {
-    schoolName: 'ELIRAMA SCHOOL',
-    motto: 'Excellence in Education',
+    schoolName: 'School Management System',
+    motto: 'Academic Excellence',
     phone: '+254 700 000 000',
     telephone: '',
     email: 'info@elirama.ac.ke',
@@ -556,6 +557,30 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 return s;
             }));
             showToast(`Payment of KSh ${payment.amount.toLocaleString()} recorded`);
+        }
+    };
+
+    const updatePayment = async (id: string, data: Partial<FeePayment>) => {
+        if (serverStatus !== 'connected') {
+            showToast('System Offline: Cannot update payment.', 'error');
+            return;
+        }
+        const apiRes = await tryApi(`${API_URL}/fees/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+        if (apiRes) {
+            const updated = await apiRes.json();
+            const old = payments.find(p => p.id === id);
+            setPayments(prev => prev.map(p => p.id === id ? updated : p));
+            if (old && data.amount !== undefined && data.amount !== old.amount) {
+                const diff = data.amount - old.amount;
+                setStudents(prev => prev.map(s => {
+                    if (s.id === old.studentId) {
+                        const newPaid = s.paidFees + diff;
+                        return { ...s, paidFees: newPaid, feeBalance: s.totalFees - newPaid };
+                    }
+                    return s;
+                }));
+            }
+            showToast('Payment updated');
         }
     };
 
@@ -1094,6 +1119,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             updateExam,
             deleteExam,
             addPayment,
+            updatePayment,
             deletePayment,
             addResult,
             saveBulkResults,

@@ -1,5 +1,6 @@
 import React from 'react';
 import Layout from '../../components/layout/Layout';
+import { useSchool } from '../../context/SchoolContext';
 import {
     Info as InfoIcon,
     Email as EmailIcon,
@@ -10,10 +11,12 @@ import {
 } from '@mui/icons-material';
 
 export default function About() {
+    const { settings } = useSchool();
+
     return (
         <Layout>
             <div className="page-header" style={{ textAlign: 'center', marginBottom: 40 }}>
-                <h1>School management system</h1>
+                <h1>{settings?.schoolName || 'School management system'}</h1>
                 <p>Version 2.0.4 • Professional School Management solution designed for modern educational institutions.</p>
             </div>
 
@@ -45,13 +48,13 @@ export default function About() {
                                 <VerifiedIcon style={{ fontSize: 32 }} />
                             </div>
                             <div>
-                                <h2 style={{ margin: 0 }}>Elirama SMS</h2>
+                                <h2 style={{ margin: 0 }}>{settings?.schoolName || 'School Management System'}</h2>
                                 <span className="badge blue">Version 1.5.0 Production</span>
                             </div>
                         </div>
 
                         <p style={{ fontSize: 16, lineHeight: 1.8, color: 'var(--text-muted)', marginBottom: 40 }}>
-                            A flagship product designed to digitize education. Management System is a state-of-the-art platform built to streamline administrative workflows,
+                            A flagship product designed to digitize education. This Management System is a state-of-the-art platform built to streamline administrative workflows,
                             enhance academic tracking, and improve financial transparency in schools. Supporting both Traditional and
                             Competency-Based Curriculums (CBC), it provides teachers, administrators, and principals with the tools they
                             need to foster excellence in education.
@@ -108,7 +111,7 @@ export default function About() {
                 </div>
 
                 <div style={{ textAlign: 'center', marginTop: 32, fontSize: 12, color: 'var(--text-muted)' }}>
-                    &copy; {new Date().getFullYear()} Elirama Technologies. All rights reserved.
+                    &copy; {new Date().getFullYear()} {settings?.schoolName || 'School Management System'}. All rights reserved.
                 </div>
             </div>
         </Layout>
