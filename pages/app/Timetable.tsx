@@ -62,10 +62,39 @@ export default function Timetable() {
     const generateAutoTimetable = () => {
         if (!confirm('This will overwrite the current timetable with a newly generated one. Are you sure?')) return;
 
+        // Diagnostics
+        if (teachers.length === 0) {
+            showToast('Cannot generate timetable: No teachers found in the system.', 'error');
+            return;
+        }
+
+        if (activeGrades.length === 0) {
+            showToast('Cannot generate timetable: No active grades enabled in settings.', 'error');
+            return;
+        }
+
+        const lessonSlots = slots.filter(s => s.type === 'Lesson');
+        if (lessonSlots.length === 0) {
+            showToast('Cannot generate timetable: No slots of type "Lesson" defined.', 'error');
+            return;
+        }
+
+        const teachersWithGrades = teachers.filter(t => t.grades && t.grades.length > 0);
+        if (teachersWithGrades.length === 0) {
+            showToast('Cannot generate timetable: No teachers have been assigned to any grades. Please assign grades to teachers first.', 'error');
+            return;
+        }
+
         const newEntries: TimetableEntry[] = [];
         const teacherDailyCount: Record<string, Record<string, number>> = {};
         const teacherWeeklyCount: Record<string, number> = {};
         const usedSlots: Record<string, Set<string>> = {};
+
+        // Pre-index teachers by grade for faster lookup
+        const teachersByGrade: Record<string, typeof teachers> = {};
+        activeGrades.forEach(grade => {
+            teachersByGrade[grade] = teachers.filter(t => t.grades.includes(grade));
+        });
 
         teachers.forEach(t => {
             teacherDailyCount[t.id] = {};
@@ -74,21 +103,21 @@ export default function Timetable() {
         });
 
         activeGrades.forEach(grade => {
+            const gradeTeachers = teachersByGrade[grade] || [];
             DAYS.forEach(day => {
-                slots.forEach(slot => {
-                    if (slot.type !== 'Lesson') return;
-
+                lessonSlots.forEach(slot => {
                     const key = `${day}-${slot.id}`;
                     if (!usedSlots[key]) usedSlots[key] = new Set();
 
-                    const availableTeachers = teachers.filter(t =>
-                        t.grades.includes(grade) &&
+                    // Find available teachers for THIS grade and THIS slot
+                    const availableTeachers = gradeTeachers.filter(t =>
                         !usedSlots[key].has(t.id) &&
                         teacherDailyCount[t.id][day] < (t.maxLessonsDay || 8) &&
                         teacherWeeklyCount[t.id] < (t.maxLessonsWeek || 40)
                     );
 
                     if (availableTeachers.length > 0) {
+                        // Sort by weekly count to balance load
                         const selectedTeacher = availableTeachers.sort((a, b) =>
                             teacherWeeklyCount[a.id] - teacherWeeklyCount[b.id]
                         )[0];
@@ -114,8 +143,13 @@ export default function Timetable() {
             });
         });
 
+        if (newEntries.length === 0) {
+            showToast('Could not generate any entries. Check if teacher grade/subject assignments match active grades.', 'error');
+            return;
+        }
+
         updateTimetable(newEntries);
-        showToast('Timetable auto-generated for all active grades', 'success');
+        showToast(`Timetable auto-generated with ${newEntries.length} entries`, 'success');
     };
 
     if (slots.length === 0) {

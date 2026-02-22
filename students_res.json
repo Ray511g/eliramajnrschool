@@ -1,0 +1,22 @@
+[
+  {
+    "id": "cmlxgkygz0000oef6efsdllef",
+    "admissionNumber": "STEST-1771747272544",
+    "firstName": "ScriptTest",
+    "lastName": "Student",
+    "gender": "Male",
+    "grade": "Grade 1",
+    "dateOfBirth": null,
+    "parentName": "Test Parent",
+    "parentPhone": "0000000000",
+    "parentEmail": null,
+    "address": null,
+    "status": "Active",
+    "enrollmentDate": "2026-02-22",
+    "totalFees": 1000,
+    "paidFees": 0,
+    "feeBalance": 1000,
+    "createdAt": "2026-02-22T08:01:14.627Z",
+    "updatedAt": "2026-02-22T08:01:14.627Z"
+  }
+]

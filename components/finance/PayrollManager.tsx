@@ -5,17 +5,24 @@ import SaveIcon from '@mui/icons-material/Save';
 import LockIcon from '@mui/icons-material/Lock';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import AddStaffModal from '../modals/AddStaffModal';
+import { Staff } from '../../types';
 
 interface PayrollManagerProps {
-    staff: any[];
+    staff: Staff[];
     payrollEntries: any[];
     onGenerate: (month: number, year: number) => void;
     onUpdateStatus: (id: string, status: string) => void;
+    onAddStaff?: (staff: Omit<Staff, 'id'>) => void;
+    onUpdateStaff?: (id: string, updates: Partial<Staff>) => void;
+    onDeleteStaff?: (id: string) => void;
     user: any;
 }
 
-const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, onGenerate, onUpdateStatus, user }) => {
+const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, onGenerate, onUpdateStatus, onAddStaff, onUpdateStaff, onDeleteStaff, user }) => {
     const [activeTab, setActiveTab] = useState<'staff' | 'payroll'>('payroll');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
     const [generateConfig, setGenerateConfig] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear() });
 
     const isAdminOrPrincipal = user?.role === 'Super Admin' || user?.role === 'Principal' || user?.role === 'Admin';
@@ -87,13 +94,13 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                                 {payrollEntries.length > 0 ? payrollEntries.filter(e => e.month === generateConfig.month && e.year === generateConfig.year).map((entry) => (
                                     <tr key={entry.id}>
                                         <td>
-                                            <div style={{ fontWeight: 500 }}>{entry.staff.firstName} {entry.staff.lastName}</div>
-                                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{entry.staff.role}</div>
+                                            <div style={{ fontWeight: 500 }}>{entry.staff?.firstName || 'Unknown'} {entry.staff?.lastName || ''}</div>
+                                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{entry.staff?.role || 'N/A'}</div>
                                         </td>
-                                        <td style={{ textAlign: 'right' }}>{entry.basicSalary.toLocaleString()}</td>
-                                        <td style={{ textAlign: 'right', color: 'var(--accent-green)' }}>+ {entry.totalAllowances.toLocaleString()}</td>
-                                        <td style={{ textAlign: 'right', color: 'var(--accent-red)' }}>- {entry.totalDeductions.toLocaleString()}</td>
-                                        <td style={{ textAlign: 'right', fontWeight: 600 }}>{entry.netPay.toLocaleString()}</td>
+                                        <td style={{ textAlign: 'right' }}>{(entry.basicSalary || 0).toLocaleString()}</td>
+                                        <td style={{ textAlign: 'right', color: 'var(--accent-green)' }}>+ {(entry.totalAllowances || 0).toLocaleString()}</td>
+                                        <td style={{ textAlign: 'right', color: 'var(--accent-red)' }}>- {(entry.totalDeductions || 0).toLocaleString()}</td>
+                                        <td style={{ textAlign: 'right', fontWeight: 600 }}>{(entry.netPay || 0).toLocaleString()}</td>
                                         <td>
                                             <span className={`badge ${entry.status === 'Locked' ? 'green' : entry.status === 'Approved' ? 'blue' : entry.status === 'Draft' ? 'neutral' : 'blue'}`}>
                                                 {entry.status}
@@ -137,10 +144,34 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                 </div>
             ) : (
                 <div className="staff-config">
-                    <div style={{ marginBottom: 20 }}>
-                        <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Staff Remuneration</h2>
-                        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Configure basic salaries and payment methods for employees</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                        <div>
+                            <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Staff Remuneration</h2>
+                            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Configure basic salaries and payment methods for employees</p>
+                        </div>
+                        {isAdminOrPrincipal && (
+                            <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
+                                Add Staff Member
+                            </button>
+                        )}
                     </div>
+
+                    <AddStaffModal
+                        isOpen={isAddModalOpen}
+                        onClose={() => {
+                            setIsAddModalOpen(false);
+                            setEditingStaff(null);
+                        }}
+                        onAdd={(data) => {
+                            if (editingStaff) {
+                                // update
+                                onUpdateStaff?.(editingStaff.id, data);
+                            } else {
+                                onAddStaff?.(data);
+                            }
+                        }}
+                        initialData={editingStaff || undefined}
+                    />
                     <div className="table-container card" style={{ padding: 0 }}>
                         <table className="data-table">
                             <thead>
@@ -158,12 +189,12 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                                 {staff.map((s) => (
                                     <tr key={s.id}>
                                         <td style={{ fontWeight: 500 }}>{s.firstName} {s.lastName}</td>
-                                        <td><span className="badge blue">{s.type.replace('_', ' ')}</span></td>
+                                        <td><span className="badge blue">{(s.type || '').replace('_', ' ')}</span></td>
                                         <td>{s.role}</td>
-                                        <td style={{ textAlign: 'right', fontWeight: 600 }}>{s.basicSalary.toLocaleString()}</td>
+                                        <td style={{ textAlign: 'right', fontWeight: 600 }}>{(s.basicSalary || 0).toLocaleString()}</td>
                                         <td>
                                             <div style={{ fontSize: 13 }}>{s.bankName || 'Not Set'}</div>
-                                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.bankAccountNumber}</div>
+                                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.accountNumber}</div>
                                         </td>
                                         <td>
                                             <span className={`badge ${s.status === 'Active' ? 'green' : 'neutral'}`}>
@@ -171,9 +202,31 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                                             </span>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
-                                            <button className="btn-outline" style={{ padding: '4px 8px' }}>
-                                                <VisibilityIcon style={{ fontSize: 16 }} />
-                                            </button>
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                                <button
+                                                    className="btn-outline"
+                                                    style={{ padding: '4px 8px' }}
+                                                    onClick={() => {
+                                                        setEditingStaff(s);
+                                                        setIsAddModalOpen(true);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                {isAdminOrPrincipal && (
+                                                    <button
+                                                        className="btn-outline"
+                                                        style={{ padding: '4px 8px', color: 'var(--accent-red)' }}
+                                                        onClick={() => {
+                                                            if (confirm('Are you sure you want to remove this staff member?')) {
+                                                                onDeleteStaff?.(s.id);
+                                                            }
+                                                        }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

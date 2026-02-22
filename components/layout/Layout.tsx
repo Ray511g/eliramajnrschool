@@ -1,4 +1,4 @@
-import React, { useState, ReactNode } from 'react';
+import React, { useState, ReactNode, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { useSchool } from '../../context/SchoolContext';
 import { useAuth } from '../../context/AuthContext';
@@ -23,6 +23,41 @@ export default function Layout({ children }: LayoutProps) {
     const [showChangePassword, setShowChangePassword] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await fetch('/api/notifications');
+            if (res.ok) {
+                const data = await res.json();
+                setNotifications(data);
+                setUnreadCount(data.filter((n: any) => !n.read).length);
+            }
+        } catch (error) {
+            console.error('Failed to fetch notifications');
+        }
+    };
+
+    const markAsRead = async (id: string) => {
+        try {
+            await fetch('/api/notifications', {
+                method: 'PUT',
+                body: JSON.stringify({ id }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            fetchNotifications();
+        } catch (error) { }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchNotifications();
+            const interval = setInterval(fetchNotifications, 30000); // 30s refresh
+            return () => clearInterval(interval);
+        }
+    }, [user]);
 
     const handleChangePassword = () => {
         if (!newPassword || newPassword !== confirmPassword) {
@@ -51,7 +86,7 @@ export default function Layout({ children }: LayoutProps) {
                         <div className="top-bar-actions">
                             <div className="icon-badge-wrapper" onClick={() => setShowNotifications(!showNotifications)}>
                                 <NotificationsIcon className="top-bar-icon" />
-                                <span className="icon-badge">2</span>
+                                {unreadCount > 0 && <span className="icon-badge">{unreadCount}</span>}
                             </div>
 
                             {showNotifications && (
@@ -60,30 +95,21 @@ export default function Layout({ children }: LayoutProps) {
                                         <h4>Notifications</h4>
                                     </div>
                                     <div className="dropdown-divider"></div>
-                                    <div className="notification-list">
-                                        {user?.role === 'Super Admin' || user?.role === 'Admin' ? (
-                                            <>
-                                                <div className="notification-item unread">
-                                                    <div className="notif-dot"></div>
-                                                    <div className="notif-content">
-                                                        <p><strong>System Update</strong></p>
-                                                        <span>New security patches applied successfully.</span>
-                                                    </div>
-                                                </div>
-                                                <div className="notification-item">
-                                                    <div className="notif-content">
-                                                        <p><strong>Database Backup</strong></p>
-                                                        <span>Nightly backup completed.</span>
-                                                    </div>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="notification-item unread">
-                                                <div className="notif-dot"></div>
+                                    <div className="notification-list" style={{ maxHeight: 400, overflowY: 'auto' }}>
+                                        {notifications.length > 0 ? notifications.map((notif: any) => (
+                                            <div key={notif.id} className={`notification-item ${!notif.read ? 'unread' : ''}`} onClick={() => markAsRead(notif.id)}>
+                                                {!notif.read && <div className="notif-dot"></div>}
                                                 <div className="notif-content">
-                                                    <p><strong>Class Schedule</strong></p>
-                                                    <span>Your timetable for Term 1 is now available.</span>
+                                                    <p><strong>{notif.title}</strong></p>
+                                                    <span>{notif.message}</span>
+                                                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>
+                                                        {new Date(notif.createdAt).toLocaleString()}
+                                                    </div>
                                                 </div>
+                                            </div>
+                                        )) : (
+                                            <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                                                No new notifications
                                             </div>
                                         )}
                                     </div>
@@ -113,9 +139,12 @@ export default function Layout({ children }: LayoutProps) {
                                     <p className="dropdown-user-name">{user?.name || 'User'}</p>
                                     <p className="dropdown-user-email">{user?.email || 'No email'}</p>
                                     <div style={{ marginTop: 8, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                                        {user?.role === 'Super Admin' && (
-                                            <span className="badge gold-badge">SUPER ADMIN</span>
-                                        )}
+                                        {(() => {
+                                            const role = typeof user?.role === 'string' ? user.role : (user?.role as any)?.name;
+                                            return role?.toLowerCase() === 'super admin';
+                                        })() && (
+                                                <span className="badge gold-badge">SUPER ADMIN</span>
+                                            )}
                                         <span className="badge version-badge">v1.5.0</span>
                                     </div>
                                 </div>
@@ -160,11 +189,6 @@ export default function Layout({ children }: LayoutProps) {
                                 placeholder="Confirm new password"
                             />
                         </div>
-                        {/* The instruction included a line setUserForm(...) here.
-                            It's placed here to fulfill the instruction's placement,
-                            but commented out as it's a JavaScript statement and cannot
-                            be directly rendered in JSX. Its purpose is also unclear in this context. */}
-                        {/* setUserForm({ firstName: '', lastName: '', username: '', password: '', name: '', email: '', role: 'Staff', permissions: [] }); */}
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 25 }}>
                             <button className="btn-outline" onClick={() => setShowChangePassword(false)}>Cancel</button>
                             <button className="btn-primary" onClick={handleChangePassword}>Update Password</button>

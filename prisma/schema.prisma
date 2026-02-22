@@ -366,3 +366,15 @@ model Budget {
 
   @@unique([year, term, department, category])
 }
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?  // If null, send to all with the role
+  role      String?  // Target specific roles e.g. "Principal"
+  title     String
+  message   String
+  type      String   @default("INFO") // INFO, URGENT, APPROVAL
+  link      String?  // Optional navigation link
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

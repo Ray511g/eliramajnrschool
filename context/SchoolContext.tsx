@@ -4,7 +4,7 @@ import {
     Student, Teacher, AttendanceRecord, Exam, StudentResult, FeePayment, TimetableEntry,
     SchoolSettings, GradeLevel, GRADES, SUBJECTS, TERMS, PerformanceLevel, User, Role,
     FeeStructureItem, AuditLogItem, TimeSlot,
-    LearningArea, Strand, SubStrand, AssessmentItem, AssessmentScore // CBC
+    LearningArea, Strand, SubStrand, AssessmentItem, AssessmentScore, Staff // CBC
 } from '../types';
 import * as XLSX from 'xlsx';
 
@@ -21,10 +21,14 @@ interface SchoolContextType {
     exams: Exam[];
     payments: FeePayment[];
     timetable: TimetableEntry[];
+    staff: Staff[];
+    budgets: any[];
     settings: SchoolSettings;
     gradeFees: Record<string, number>;
     timeSlots: TimeSlot[];
     results: StudentResult[];
+    expenses: any[]; // Added
+    payrollEntries: any[]; // Added
     toasts: Toast[];
     loading: boolean;
     // CBC State
@@ -40,6 +44,9 @@ interface SchoolContextType {
     addExam: (exam: Omit<Exam, 'id'>) => void;
     updateExam: (id: string, data: Partial<Exam>) => void;
     deleteExam: (id: string) => void;
+    addStaff: (staff: Omit<Staff, 'id'>) => Promise<void>;
+    updateStaff: (id: string, updates: Partial<Staff>) => Promise<void>;
+    deleteStaff: (id: string) => Promise<void>;
     addPayment: (payment: Omit<FeePayment, 'id' | 'receiptNumber'>) => void;
     updatePayment: (id: string, data: Partial<FeePayment>) => void;
     deletePayment: (id: string) => void;
@@ -92,7 +99,7 @@ export function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-const defaultTimeSlots: TimeSlot[] = [
+export const defaultTimeSlots: TimeSlot[] = [
     { id: '1', label: '8:00 - 8:40', type: 'Lesson', order: 1 },
     { id: '2', label: '8:40 - 9:20', type: 'Lesson', order: 2 },
     { id: '3', label: '9:20 - 10:00', type: 'Lesson', order: 3 },
@@ -154,11 +161,15 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const [settings, setSettings] = useState<SchoolSettings>(defaultSettings);
     const [gradeFees, setGradeFees] = useState<Record<string, number>>({});
     const [results, setResults] = useState<StudentResult[]>([]);
+    const [budgets, setBudgets] = useState<any[]>([]); // Added budgets state
     // CBC State
     const [learningAreas, setLearningAreas] = useState<LearningArea[]>([]);
     const [assessmentScores, setAssessmentScores] = useState<AssessmentScore[]>([]);
     // New Features State
     const [feeStructures, setFeeStructures] = useState<FeeStructureItem[]>([]);
+    const [staff, setStaff] = useState<Staff[]>([]);
+    const [expenses, setExpenses] = useState<any[]>([]); // Added
+    const [payrollEntries, setPayrollEntries] = useState<any[]>([]); // Added
     const [roles, setRoles] = useState<Role[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
     const [systemUsers, setSystemUsers] = useState<User[]>([]);
@@ -171,12 +182,20 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const dbAvailableRef = useRef<boolean | null>(null); // null = untested
     const hydratedRef = useRef(false);
 
-    // ... (localStorage effects remain the same)
+    // Load data from localStorage on mount
+    useEffect(() => {
+        const stored = loadFromStorage();
+        if (stored) {
+            if (stored.settings) setSettings(stored.settings);
+            if (stored.gradeFees) setGradeFees(stored.gradeFees);
+        }
+        hydratedRef.current = true;
+    }, []);
 
-    // Persist only settings to localStorage whenever state changes (skip during SSR)
+    // Persist settings to localStorage whenever they change
     useEffect(() => {
         if (!hydratedRef.current) return;
-        saveToStorage({ settings, gradeFees }); // Only keep UI configuration locally
+        saveToStorage({ settings, gradeFees });
     }, [settings, gradeFees]);
 
     const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -220,28 +239,28 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 lastSyncRef.current = lastUpdated;
             }
 
-            // Pull fresh data with individual error handling to prevent one failure from breaking everything
-            const fetchResource = async (path: string, setter: (val: any) => void) => {
-                const res = await fetch(`${API_URL}/${path}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) {
-                    const data = await res.json();
-                    setter(Array.isArray(data) ? data : (data || []));
-                    return true;
-                }
-                return false;
-            };
+            // Pull fresh data in a single batch
+            const res = await fetch(`${API_URL}/sync/all`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-            await Promise.all([
-                fetchResource('students', setStudents),
-                fetchResource('teachers', setTeachers),
-                fetchResource('exams', setExams),
-                fetchResource('settings', setSettings),
-                fetchResource('results', setResults),
-                fetchResource('users', setSystemUsers),
-                fetchResource('timetable', setTimetable),
-                fetchResource('fees/structure', setFeeStructures),
-                fetchResource('roles', setRoles),
-            ]);
+            if (res.ok) {
+                const data = await res.json();
+                setStudents(data.students);
+                setTeachers(data.teachers);
+                setExams(data.exams);
+                setSettings(data.settings || defaultSettings);
+                setResults(data.results);
+                setSystemUsers(data.users);
+                setTimetable(data.timetable);
+                setFeeStructures(data.feeStructures);
+                setStaff(data.staff || []);
+                setBudgets(data.budgets || []);
+                setExpenses(data.expenses || []); // Added
+                setPayrollEntries(data.payrollEntries || []); // Added
+                setRoles(data.roles);
+                lastSyncRef.current = data.lastUpdated;
+            }
 
             setServerStatus('connected');
             dbAvailableRef.current = true;
@@ -278,7 +297,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const refreshData = () => fetchData();
 
     // Helper: try API call, fall back to local operation
-    async function tryApi(url: string, options: RequestInit): Promise<Response | null> {
+    async function tryApi(url: string, options: RequestInit = {}): Promise<Response | null> {
         const token = localStorage.getItem('elirama_token');
         try {
             const res = await fetch(url, {
@@ -548,6 +567,36 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 return [...filtered, ...data];
             });
             showToast(`Uploaded ${newResults.length} results`, 'success');
+        }
+    };
+
+    // STAFF
+    const addStaff = async (staffData: Omit<Staff, 'id'>) => {
+        const apiRes = await tryApi(`${API_URL}/finance/payroll?type=staff`, { method: 'POST', body: JSON.stringify(staffData) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setStaff(prev => [...prev, data]);
+            showToast('Staff member added', 'success');
+            refreshData();
+        }
+    };
+
+    const updateStaff = async (id: string, updates: Partial<Staff>) => {
+        const apiRes = await tryApi(`${API_URL}/finance/payroll?id=${id}&type=staff`, { method: 'PUT', body: JSON.stringify(updates) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setStaff(prev => prev.map(s => s.id === id ? data : s));
+            showToast('Staff profile updated', 'success');
+            refreshData();
+        }
+    };
+
+    const deleteStaff = async (id: string) => {
+        const apiRes = await tryApi(`${API_URL}/finance/payroll?id=${id}&type=staff`, { method: 'DELETE' });
+        if (apiRes) {
+            setStaff(prev => prev.filter(s => s.id !== id));
+            showToast('Staff record removed', 'success');
+            refreshData();
         }
     };
 
@@ -906,12 +955,17 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             exams,
             payments,
             timetable,
+            staff,
+            budgets,
             settings,
             gradeFees,
             timeSlots: settings.timeSlots || defaultTimeSlots,
             results,
             toasts,
             loading,
+            addStaff,
+            updateStaff,
+            deleteStaff,
             addStudent,
             updateStudent,
             deleteStudent,
@@ -961,6 +1015,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             addRole,
             updateRole,
             deleteRole,
+            expenses, // Added
+            payrollEntries, // Added
             // CBC
             learningAreas,
             assessmentScores,

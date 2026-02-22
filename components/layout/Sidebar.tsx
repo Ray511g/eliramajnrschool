@@ -74,18 +74,22 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const filteredNavItems = navItems.filter(item => {
         if (item.path === '/') return true;
         if (!user) return false;
-        if (user.role === 'Super Admin') return true;
+
+        // Robust role check
+        const userRole = typeof user.role === 'string' ? user.role : (user.role as any)?.name;
+        if (userRole?.toLowerCase() === 'super admin') return true;
+
         if (!item.permission) return true;
 
         const modMap: Record<string, string> = {
             'MANAGE_STUDENTS': 'students',
             'MANAGE_TEACHERS': 'teachers',
             'MANAGE_FINANCE': 'fees',
-            'MANAGE_ATTENDANCE': 'academic',
-            'MANAGE_EXAMS': 'academic',
+            'MANAGE_ATTENDANCE': 'attendance',
+            'MANAGE_EXAMS': 'exams',
             'MANAGE_REPORTS': 'academic',
             'MANAGE_COMMUNICATION': 'academic',
-            'MANAGE_TIMETABLE': 'academic',
+            'MANAGE_TIMETABLE': 'timetable',
             'MANAGE_ADMIN': 'settings'
         };
 

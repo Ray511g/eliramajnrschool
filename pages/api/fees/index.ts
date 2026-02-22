@@ -20,22 +20,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
         if (!checkPermission(user, 'fees', 'CREATE', res)) return;
-        const { studentId, amount, method, reference, date, term, studentName, grade } = req.body;
+        let { studentId, amount, method, reference, date, term, studentName, grade } = req.body;
         const receiptNumber = `RCT-${Date.now().toString().slice(-6)}`;
+
+        // Automatically fetch student info if missing
+        const student = await prisma.student.findUnique({ where: { id: studentId } });
+        if (!student) return res.status(404).json({ error: 'Student not found' });
+
+        if (!studentName) studentName = `${student.firstName} ${student.lastName}`;
+        if (!grade) grade = student.grade;
 
         const payment = await prisma.payment.create({
             data: { studentId, studentName, grade, amount, method, reference: reference || '', date, term, receiptNumber },
         });
 
         // Update student's paid fees and balance
-        const student = await prisma.student.findUnique({ where: { id: studentId } });
-        if (student) {
-            const newPaid = student.paidFees + amount;
-            await prisma.student.update({
-                where: { id: studentId },
-                data: { paidFees: newPaid, feeBalance: student.totalFees - newPaid },
-            });
-        }
+        const newPaid = student.paidFees + amount;
+        await prisma.student.update({
+            where: { id: studentId },
+            data: { paidFees: newPaid, feeBalance: student.totalFees - newPaid },
+        });
 
         // --- NEW: Post to General Ledger ---
         try {

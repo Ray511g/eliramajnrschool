@@ -21,7 +21,7 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
         department: ''
     });
 
-    const isPrincipalOrAdmin = user?.role === 'Super Admin' || user?.role === 'Principal' || user?.role === 'Admin';
+    const isPrincipalOrAdmin = user?.role === 'Super Admin' || user?.role === 'Principal';
     const isAccountantOrAdmin = user?.role === 'Super Admin' || user?.role === 'Accountant' || user?.role === 'Finance Officer' || user?.role === 'Admin';
 
     const handleSubmit = (e: React.FormEvent) => {

@@ -44,8 +44,19 @@ export function checkPermission(user: any, module: string, action: string, res?:
     if (user.role === 'Super Admin') return true;
 
     const permissions = user.permissions || {};
-    const modulePermissions = permissions[module] || [];
-    const hasPerm = modulePermissions.includes(action.toUpperCase());
+    const modulePermissions = permissions[module];
+
+    if (!modulePermissions) {
+        if (res) res.status(403).json({ error: `Forbidden: Missing ${action} permission for ${module}` });
+        return false;
+    }
+
+    let hasPerm = false;
+    if (Array.isArray(modulePermissions)) {
+        hasPerm = modulePermissions.includes(action.toUpperCase());
+    } else if (typeof modulePermissions === 'string') {
+        hasPerm = modulePermissions.split(' ').includes(action.toUpperCase());
+    }
 
     if (!hasPerm && res) {
         res.status(403).json({ error: `Forbidden: Missing ${action} permission for ${module}` });

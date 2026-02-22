@@ -20,40 +20,39 @@ type FinanceTab = 'Dashboard' | 'Fees' | 'Expenditure' | 'Payroll' | 'Budget' | 
 
 export default function FinancePage() {
     const { user } = useAuth();
-    const { tryApi } = useSchool();
+    const { tryApi, staff, addStaff, updateStaff, deleteStaff } = useSchool();
     const [activeTab, setActiveTab] = useState<FinanceTab>('Dashboard');
     const [stats, setStats] = useState<any>(null);
     const [accounts, setAccounts] = useState<any[]>([]);
     const [expenses, setExpenses] = useState<any[]>([]);
     const [payrollEntries, setPayrollEntries] = useState<any[]>([]);
-    const [staff, setStaff] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchData = async () => {
+    const fetchData = async (force = false) => {
+        // If not forcing, and we have stats, don't refetch on every tab click
+        if (!force && stats) return;
+
         setLoading(true);
         try {
-            const [statsRes, accountsRes, expensesRes, payrollRes, staffRes] = await Promise.all([
+            const [statsRes, accountsRes, expensesRes, payrollRes] = await Promise.all([
                 tryApi('/api/finance/stats'),
                 tryApi('/api/finance/accounts'),
                 tryApi('/api/finance/expenses'),
-                tryApi('/api/finance/payroll?type=entries'),
-                tryApi('/api/finance/payroll?type=staff')
+                tryApi('/api/finance/payroll?type=entries')
             ]);
 
-            if (statsRes && accountsRes && expensesRes && payrollRes && staffRes) {
-                const [statsData, accountsData, expensesData, payrollData, staffData] = await Promise.all([
+            if (statsRes && accountsRes && expensesRes && payrollRes) {
+                const [statsData, accountsData, expensesData, payrollData] = await Promise.all([
                     statsRes.json(),
                     accountsRes.json(),
                     expensesRes.json(),
-                    payrollRes.json(),
-                    staffRes.json()
+                    payrollRes.json()
                 ]);
 
                 setStats(statsData);
                 setAccounts(accountsData);
                 setExpenses(expensesData);
                 setPayrollEntries(payrollData);
-                setStaff(staffData);
             }
         } catch (error) {
             console.error('Error fetching finance data:', error);
@@ -63,59 +62,40 @@ export default function FinancePage() {
     };
 
     useEffect(() => {
-        fetchData();
-    }, [activeTab]);
+        // Initial load only
+        if (!stats) fetchData();
+    }, []);
 
     const handleExpenseAction = async (id: string, action: string) => {
-        try {
-            await fetch('/api/finance/expenses', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, action })
-            });
-            fetchData();
-        } catch (error) {
-            console.error('Action failed:', error);
-        }
+        const apiRes = await tryApi('/api/finance/expenses', {
+            method: 'PUT',
+            body: JSON.stringify({ id, action })
+        });
+        if (apiRes) fetchData();
     };
 
     const handleExpenseRequest = async (formData: any) => {
-        try {
-            await fetch('/api/finance/expenses', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, requestedById: user?.id, requestedByName: user?.name })
-            });
-            fetchData();
-        } catch (error) {
-            console.error('Request failed:', error);
-        }
+        const apiRes = await tryApi('/api/finance/expenses', {
+            method: 'POST',
+            body: JSON.stringify({ ...formData, requestedById: user?.id, requestedByName: user?.name })
+        });
+        if (apiRes) fetchData();
     };
 
     const handlePayrollGenerate = async (month: number, year: number) => {
-        try {
-            await fetch('/api/finance/payroll', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ month, year })
-            });
-            fetchData();
-        } catch (error) {
-            console.error('Payroll generation failed:', error);
-        }
+        const apiRes = await tryApi('/api/finance/payroll', {
+            method: 'POST',
+            body: JSON.stringify({ month, year })
+        });
+        if (apiRes) fetchData();
     };
 
     const handlePayrollStatus = async (id: string, status: string) => {
-        try {
-            await fetch('/api/finance/payroll', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, status })
-            });
-            fetchData();
-        } catch (error) {
-            console.error('Payroll update failed:', error);
-        }
+        const apiRes = await tryApi('/api/finance/payroll', {
+            method: 'PUT',
+            body: JSON.stringify({ id, status })
+        });
+        if (apiRes) fetchData();
     };
 
     const tabs = [
@@ -126,6 +106,14 @@ export default function FinancePage() {
         { id: 'Budget', icon: <PieChartIcon />, label: 'Budgets' },
         { id: 'Ledger', icon: <ReceiptLongIcon />, label: 'General Ledger' },
     ] as const;
+
+    const handleBudgetUpdate = async (formData: any) => {
+        const apiRes = await tryApi('/api/finance/budgets', {
+            method: 'POST',
+            body: JSON.stringify(formData)
+        });
+        if (apiRes) fetchData();
+    };
 
     if (loading && !stats) return <div className="loading-screen">Loading Finance System...</div>;
 
@@ -167,13 +155,16 @@ export default function FinancePage() {
                 {activeTab === 'Payroll' && (
                     <PayrollManager
                         staff={staff}
-                        payrollEntries={payrollEntries}
+                        payrollEntries={payrollEntries || []}
                         onGenerate={handlePayrollGenerate}
                         onUpdateStatus={handlePayrollStatus}
+                        onAddStaff={addStaff}
+                        onUpdateStaff={updateStaff}
+                        onDeleteStaff={deleteStaff}
                         user={user}
                     />
                 )}
-                {activeTab === 'Budget' && <BudgetPlanner budgets={stats?.budgets || []} onUpdate={() => fetchData()} />}
+                {activeTab === 'Budget' && <BudgetPlanner budgets={stats?.budgets || []} onUpdate={handleBudgetUpdate} />}
                 {activeTab === 'Ledger' && <GeneralLedger accounts={accounts} journalEntries={stats?.journalEntries || []} />}
             </div>
         </div>

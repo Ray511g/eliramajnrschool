@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export type TransactionEntry = {
     accountCode: string;
@@ -27,7 +25,7 @@ export async function postTransaction(
         throw new Error(`Transaction imbalanced: Debit (${totalDebit}) !== Credit (${totalCredit})`);
     }
 
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
         const results = [];
 
         for (const entry of entries) {

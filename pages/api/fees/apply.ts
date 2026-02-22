@@ -53,6 +53,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }
             }
 
+            // --- Post to General Ledger ---
+            const totalBilled = Object.values(gradeTotals).reduce((sum: any, val: any) => sum + val, 0) as number;
+            if (totalBilled > 0) {
+                try {
+                    const { postTransaction } = await import('../../../utils/finance');
+                    await postTransaction(
+                        `BILL-${Date.now()}`,
+                        [
+                            { accountCode: '1003', description: `Periodic Fee Billing${grade ? ` for ${grade}` : ''}`, debit: totalBilled, credit: 0 },
+                            { accountCode: '4001', description: `Periodic Fee Billing${grade ? ` for ${grade}` : ''}`, debit: 0, credit: totalBilled }
+                        ]
+                    );
+                } catch (ledgerError) {
+                    console.error('Billing Ledger Posting Failed:', ledgerError);
+                }
+            }
+
             // 4. Lock the fee structures (Set status to Published)
             await prisma.feeStructure.updateMany({
                 where: grade ? { grade: grade as string } : {},

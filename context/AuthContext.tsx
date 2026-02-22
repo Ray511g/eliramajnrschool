@@ -6,7 +6,7 @@ interface AuthUser {
     name: string;
     email: string;
     role: string;
-    permissions: Record<string, string[]>;
+    permissions: Record<string, string[] | string>;
 }
 
 interface AuthContextType {
@@ -61,12 +61,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const hasPermission = (module: string, action: string) => {
         if (!user) return false;
-        if (user.role === 'Super Admin') return true;
 
-        const modulePermissions = user.permissions[module];
+        // Robust role check (handles string or object with name)
+        const userRole = typeof user.role === 'string' ? user.role : (user.role as any)?.name;
+        if (userRole?.toLowerCase() === 'super admin') return true;
+
+        // Ensure permissions object exists
+        const permissions = user.permissions || {};
+        const modulePermissions = permissions[module];
+
         if (!modulePermissions) return false;
 
-        return modulePermissions.includes(action.toUpperCase());
+        // Handle both Array and String formats (for flexibility with different DB states)
+        if (Array.isArray(modulePermissions)) {
+            return modulePermissions.includes(action.toUpperCase());
+        }
+
+        if (typeof modulePermissions === 'string') {
+            return modulePermissions.split(' ').includes(action.toUpperCase());
+        }
+
+        return false;
     };
 
     const login = async (email: string, password: string): Promise<boolean> => {

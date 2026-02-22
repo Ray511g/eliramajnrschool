@@ -45,6 +45,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 { module: 'Finance' }
             );
 
+            // Create notification for Principal
+            await prisma.notification.create({
+                data: {
+                    role: 'Principal',
+                    title: 'New Expense Request',
+                    message: `${requestedByName} requested KES ${amount} for ${description}`,
+                    type: 'APPROVAL',
+                    link: '/finance?tab=Expenditure'
+                }
+            });
+
             return res.status(201).json(expense);
         } catch (error) {
             return res.status(500).json({ error: 'Failed to create expense request' });

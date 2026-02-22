@@ -31,6 +31,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
         if (!checkPermission(user, 'finance', 'EDIT', res)) return;
+        const { type } = req.query;
+
+        if (type === 'staff') {
+            try {
+                const {
+                    firstName, lastName, type: staffType, role,
+                    email, phone, salaryType, basicSalary,
+                    bankName, accountNumber, status
+                } = req.body;
+
+                // Sanitize: Convert empty strings to null for optional fields
+                const data = {
+                    firstName,
+                    lastName,
+                    type: staffType,
+                    role: role || null,
+                    email: email?.trim() === '' ? null : email,
+                    phone: phone?.trim() === '' ? null : phone,
+                    salaryType: salaryType || 'Fixed',
+                    basicSalary: Number(basicSalary) || 0,
+                    bankName: bankName || null,
+                    accountNumber: accountNumber || null,
+                    status: status || 'Active'
+                };
+
+                const staff = await prisma.staff.create({ data });
+
+                // Update global sync status - Use new Date() for DateTime field
+                await prisma.syncStatus.upsert({
+                    where: { id: 'global' },
+                    update: { lastUpdated: new Date() },
+                    create: { id: 'global', lastUpdated: new Date() }
+                });
+
+                await logAction(user.id, user.name, 'ADD_STAFF', `Added staff member ${staff.firstName} ${staff.lastName}`, { module: 'Finance' });
+                return res.status(201).json(staff);
+            } catch (error: any) {
+                console.error('Add Staff Error:', error);
+                if (error.code === 'P2002') {
+                    return res.status(400).json({ error: 'A staff member with this email or phone already exists' });
+                }
+                return res.status(500).json({ error: error.message || 'Failed to add staff member' });
+            }
+        }
+
         // Generate Payroll for a specific month/year
         const { month, year } = req.body;
         try {
@@ -81,6 +126,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'PUT') {
         if (!checkPermission(user, 'finance', 'EDIT', res)) return;
+        const { type, id: queryId } = req.query;
+
+        if (type === 'staff') {
+            try {
+                const {
+                    firstName, lastName, type: staffType, role,
+                    email, phone, salaryType, basicSalary,
+                    bankName, accountNumber, status
+                } = req.body;
+
+                const data = {
+                    firstName,
+                    lastName,
+                    type: staffType,
+                    role: role || null,
+                    email: email?.trim() === '' ? null : email,
+                    phone: phone?.trim() === '' ? null : phone,
+                    salaryType: salaryType || 'Fixed',
+                    basicSalary: Number(basicSalary) || 0,
+                    bankName: bankName || null,
+                    accountNumber: accountNumber || null,
+                    status: status || 'Active'
+                };
+
+                const updated = await prisma.staff.update({
+                    where: { id: queryId as string },
+                    data
+                });
+
+                // Update global sync status - Use new Date()
+                await prisma.syncStatus.upsert({
+                    where: { id: 'global' },
+                    update: { lastUpdated: new Date() },
+                    create: { id: 'global', lastUpdated: new Date() }
+                });
+
+                await logAction(user.id, user.name, 'UPDATE_STAFF', `Updated staff member ${updated.firstName} ${updated.lastName}`, { module: 'Finance' });
+                return res.status(200).json(updated);
+            } catch (error: any) {
+                console.error('Update Staff Error:', error);
+                if (error.code === 'P2002') {
+                    return res.status(400).json({ error: 'A staff member with this email or phone already exists' });
+                }
+                return res.status(500).json({ error: error.message || 'Failed to update staff member' });
+            }
+        }
+
         // Update Payroll status (Review -> Approve -> Lock)
         const { id, status } = req.body;
         try {
@@ -97,7 +189,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             await logAction(user.id, user.name, 'UPDATE_PAYROLL', `Updated payroll status to ${status} for ${entry.staff.firstName} ${entry.staff.lastName}`, { module: 'Finance' });
 
+            // Create notifications for status changes
+            if (status === 'Reviewed') {
+                await prisma.notification.create({
+                    data: {
+                        role: 'Principal',
+                        title: 'Payroll Approval Needed',
+                        message: `Payroll for ${entry.staff.firstName} ${entry.staff.lastName} (${entry.month}/${entry.year}) is ready for approval.`,
+                        type: 'APPROVAL',
+                        link: '/finance?tab=Payroll'
+                    }
+                });
+            } else if (status === 'Approved') {
+                await prisma.notification.create({
+                    data: {
+                        role: 'Accountant',
+                        title: 'Payroll Approved',
+                        message: `Payroll for ${entry.staff.firstName} ${entry.staff.lastName} (${entry.month}/${entry.year}) has been approved.`,
+                        type: 'INFO',
+                        link: '/finance?tab=Payroll'
+                    }
+                });
+            }
+
             if (status === 'Locked') {
+
                 // Post to Ledger once locked
                 const expenseAccountCode = entry.staff.type === 'BOM_TEACHER' ? '5001' : '5002';
 
@@ -115,6 +231,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: 'Failed to update payroll' });
+        }
+    }
+
+    if (req.method === 'DELETE') {
+        if (!checkPermission(user, 'finance', 'EDIT', res)) return;
+        const { type, id } = req.query;
+
+        if (type === 'staff') {
+            try {
+                await prisma.staff.delete({ where: { id: id as string } });
+                await logAction(user.id, user.name, 'DELETE_STAFF', `Deleted staff member ID: ${id}`, { module: 'Finance' });
+                return res.status(200).json({ success: true });
+            } catch (error) {
+                return res.status(500).json({ error: 'Failed to delete staff member' });
+            }
         }
     }
 

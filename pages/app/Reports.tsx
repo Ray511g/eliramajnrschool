@@ -3,17 +3,20 @@ import { useSchool } from '../../context/SchoolContext';
 import { SUBJECTS } from '../../types';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import PeopleIcon from '@mui/icons-material/People';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import PaymentIcon from '@mui/icons-material/Payment';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DescriptionIcon from '@mui/icons-material/Description';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import PrintIcon from '@mui/icons-material/Print';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CBCProgressReportModal from '../../components/modals/CBCProgressReportModal';
 
 export default function Reports() {
-    const { students, teachers, attendance, exams, payments, results, settings, gradeFees } = useSchool();
+    const { students, teachers, attendance, exams, payments, results, settings, gradeFees, tryApi } = useSchool();
     const [selectedReport, setSelectedReport] = useState<string>('dashboard');
     const [viewingCBCStudentId, setViewingCBCStudentId] = useState<string | null>(null);
     const [reportFilter, setReportFilter] = useState({
@@ -21,6 +24,34 @@ export default function Reports() {
         term: settings.currentTerm,
     });
     const [studentSearch, setStudentSearch] = useState('');
+    const [expenses, setExpenses] = React.useState<any[]>([]);
+    const [payroll, setPayroll] = React.useState<any[]>([]);
+    const [accounts, setAccounts] = React.useState<any[]>([]);
+    const [loadingFinance, setLoadingFinance] = React.useState(false);
+
+    React.useEffect(() => {
+        if (selectedReport === 'finance-reports') {
+            fetchFinanceData();
+        }
+    }, [selectedReport]);
+
+    const fetchFinanceData = async () => {
+        setLoadingFinance(true);
+        try {
+            const [expRes, payRes, accRes] = await Promise.all([
+                tryApi('/api/finance/expenses'),
+                tryApi('/api/finance/payroll?type=entries'),
+                tryApi('/api/finance/accounts')
+            ]);
+            if (expRes) setExpenses(await expRes.json());
+            if (payRes) setPayroll(await payRes.json());
+            if (accRes) setAccounts(await accRes.json());
+        } catch (error) {
+            console.error('Failed to fetch report data');
+        } finally {
+            setLoadingFinance(false);
+        }
+    };
 
     const filteredStudents = students.filter(s =>
         `${s.firstName} ${s.lastName} ${s.admissionNumber}`.toLowerCase().includes(studentSearch.toLowerCase())
@@ -374,6 +405,16 @@ export default function Reports() {
             count: 0, // We could count assessment scores
             onAction: () => setSelectedReport('cbc-assessment'),
         },
+        {
+            id: 'finance-main',
+            title: 'Financial Ledger',
+            description: 'Full financial audit reports including income, expenditures, and budget status.',
+            icon: <AccountBalanceIcon />,
+            color: 'var(--accent-green)',
+            bg: 'rgba(16,185,129,0.15)',
+            count: payments.length,
+            onAction: () => setSelectedReport('finance-reports'),
+        },
     ];
 
     if (selectedReport === 'assessment') {
@@ -478,6 +519,99 @@ export default function Reports() {
                                                 </td>
                                             </tr>
                                         )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    if (selectedReport === 'finance-reports') {
+        return (
+            <div className="page-container">
+                <div className="page-header">
+                    <div className="page-header-left">
+                        <button className="btn-outline" style={{ marginBottom: 15 }} onClick={() => setSelectedReport('dashboard')}>
+                            ← Back to Reports
+                        </button>
+                        <h1>Institutional Financial Audit</h1>
+                        <p>Consolidated reports for income, expenditure, and payroll records</p>
+                    </div>
+                </div>
+
+                <div className="stat-cards-grid" style={{ marginBottom: 30 }}>
+                    <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => exportCSV(payments, 'income_audit')}>
+                        <TrendingUpIcon style={{ color: 'var(--accent-green)' }} />
+                        <h3>Income Report</h3>
+                        <p>Export all fee payments & revenue records</p>
+                    </div>
+                    <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => exportCSV(expenses, 'expenditure_audit')}>
+                        <TrendingDownIcon style={{ color: 'var(--accent-red)' }} />
+                        <h3>Expenditure Report</h3>
+                        <p>Full breakdown of school spending by category</p>
+                    </div>
+                    <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => exportCSV(payroll.map(p => ({
+                        'Staff': `${p.staff?.firstName} ${p.staff?.lastName}`,
+                        'Basic': p.basicSalary,
+                        'Allowances': p.totalAllowances,
+                        'Deductions': p.totalDeductions,
+                        'Net': p.netPay,
+                        'Period': `${p.month}/${p.year}`,
+                        'Status': p.status
+                    })), 'payroll_audit')}>
+                        <PeopleIcon style={{ color: 'var(--accent-blue)' }} />
+                        <h3>Payroll Summary</h3>
+                        <p>Consolidated staff salary & allowance records</p>
+                    </div>
+                </div>
+
+                {loadingFinance ? (
+                    <div style={{ padding: 40, textAlign: 'center' }}>
+                        <div className="spinner" style={{ margin: '0 auto 15px' }}></div>
+                        <p>Compiling financial data...</p>
+                    </div>
+                ) : (
+                    <div className="card">
+                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3>Comprehensive Financial Ledger</h3>
+                            <button className="btn-outline-sm" onClick={() => exportCSV(accounts, 'ledger_accounts')}>Export Chart of Accounts</button>
+                        </div>
+                        <div className="card-body">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Narration</th>
+                                        <th>Category</th>
+                                        <th style={{ textAlign: 'right' }}>Amount (KSh)</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[
+                                        ...payments.map(p => ({ date: p.date, narration: `Fee Payment: ${p.studentName}`, category: 'INCOME', amount: p.amount, status: 'Completed', type: 'green' })),
+                                        ...expenses.map(e => ({ date: e.createdAt, narration: e.description, category: 'EXPENSE', amount: e.amount, status: e.status, type: e.status === 'Paid' ? 'red' : 'orange' })),
+                                        ...payroll.filter(p => p.status === 'Locked').map(p => ({ date: p.updatedAt, narration: `Salary: ${p.staff?.firstName} ${p.staff?.lastName}`, category: 'PAYROLL', amount: p.netPay, status: 'Posted', type: 'red' }))
+                                    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((entry, idx) => (
+                                        <tr key={idx}>
+                                            <td>{new Date(entry.date).toLocaleDateString()}</td>
+                                            <td>{entry.narration}</td>
+                                            <td><span className={`badge ${entry.category === 'INCOME' ? 'green' : 'blue'}`}>{entry.category}</span></td>
+                                            <td style={{ textAlign: 'right', fontWeight: 600, color: entry.category === 'INCOME' ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                                                {entry.category === 'INCOME' ? '+' : '-'} {entry.amount.toLocaleString()}
+                                            </td>
+                                            <td><span className={`badge ${entry.type}`}>{entry.status}</span></td>
+                                        </tr>
+                                    ))}
+                                    {payments.length === 0 && expenses.length === 0 && payroll.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>
+                                                No financial entries found for the current audit period.
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>

@@ -9,64 +9,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
         if (!checkPermission(user, 'finance', 'VIEW', res)) return;
         try {
-            // 1. Total Income
-            const incomeAccounts = await prisma.account.findMany({ where: { type: 'INCOME' } });
-            const totalIncome = incomeAccounts.reduce((sum, a) => sum + a.balance, 0);
-
-            // 2. Total Expenses
-            const expenseAccounts = await prisma.account.findMany({ where: { type: 'EXPENSE' } });
-            const totalExpenses = expenseAccounts.reduce((sum, a) => sum + a.balance, 0);
-
-            // 3. Payroll Total (Current Month)
             const now = new Date();
-            const payroll = await prisma.payrollEntry.aggregate({
-                where: { month: now.getMonth() + 1, year: now.getFullYear(), status: 'Locked' },
-                _sum: { netPay: true }
-            });
-            const payrollTotal = payroll._sum.netPay || 0;
-
-            // 4. Net Balance (Cash + Bank)
-            const liquidAccounts = await prisma.account.findMany({
-                where: { code: { in: ['1001', '1002'] } }
-            });
-            const netBalance = liquidAccounts.reduce((sum, a) => sum + a.balance, 0);
-
-            // 5. Outstanding Fees (Accounts Receivable)
-            const arAccount = await prisma.account.findUnique({ where: { code: '1003' } });
-            const outstandingFees = arAccount?.balance || 0;
-
-            // 6. Budget Utilization
-            const budgets = await prisma.budget.findMany({
-                where: { year: now.getFullYear() }
-            });
-            const totalAllocated = budgets.reduce((sum, b) => sum + b.allocatedAmount, 0);
-            const totalSpent = budgets.reduce((sum, b) => sum + b.spentAmount, 0);
-            const budgetUtilization = totalAllocated > 0 ? (totalSpent / totalAllocated) * 100 : 0;
-
-            // 7. Recent Journal Entries
-            const journalEntries = await prisma.journalEntry.findMany({
-                take: 50,
-                orderBy: { date: 'desc' },
-                include: { account: true }
-            });
-
-            // 8. Cash Flow (Real aggregation from Journal Entries)
             const sixMonthsAgo = new Date();
             sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-            const entries = await prisma.journalEntry.findMany({
-                where: {
-                    date: { gte: sixMonthsAgo },
-                    account: { type: { in: ['INCOME', 'EXPENSE'] } }
-                },
-                include: { account: true }
-            });
+            const [
+                incomeAccounts,
+                expenseAccounts,
+                payroll,
+                liquidAccounts,
+                arAccount,
+                budgets,
+                journalEntries,
+                cashFlowEntries
+            ] = await Promise.all([
+                prisma.account.findMany({ where: { type: 'INCOME' } }),
+                prisma.account.findMany({ where: { type: 'EXPENSE' } }),
+                prisma.payrollEntry.aggregate({
+                    where: { month: now.getMonth() + 1, year: now.getFullYear(), status: 'Locked' },
+                    _sum: { netPay: true }
+                }),
+                prisma.account.findMany({ where: { code: { in: ['1001', '1002'] } } }),
+                prisma.account.findUnique({ where: { code: '1003' } }),
+                prisma.budget.findMany({ where: { year: now.getFullYear() } }),
+                prisma.journalEntry.findMany({
+                    take: 50,
+                    orderBy: { date: 'desc' },
+                    include: { account: true }
+                }),
+                prisma.journalEntry.findMany({
+                    where: {
+                        date: { gte: sixMonthsAgo },
+                        account: { type: { in: ['INCOME', 'EXPENSE'] } }
+                    },
+                    include: { account: true }
+                })
+            ]);
 
-            // Group by month
+            const totalIncome = incomeAccounts.reduce((sum: any, a: any) => sum + a.balance, 0);
+            const totalExpenses = expenseAccounts.reduce((sum: any, a: any) => sum + a.balance, 0);
+            const payrollTotal = payroll._sum.netPay || 0;
+            const netBalance = liquidAccounts.reduce((sum: any, a: any) => sum + a.balance, 0);
+            const outstandingFees = arAccount?.balance || 0;
+
+            const totalAllocated = budgets.reduce((sum: any, b: any) => sum + b.allocatedAmount, 0);
+            const totalSpent = budgets.reduce((sum: any, b: any) => sum + b.spentAmount, 0);
+            const budgetUtilization = totalAllocated > 0 ? (totalSpent / totalAllocated) * 100 : 0;
+
+            // Cash Flow Processing
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const cashFlowMap = new Map();
 
-            // Initialize last 6 months
             for (let i = 5; i >= 0; i--) {
                 const d = new Date();
                 d.setMonth(d.getMonth() - i);
@@ -74,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 cashFlowMap.set(monthName, { month: monthName, income: 0, expense: 0 });
             }
 
-            entries.forEach(entry => {
+            cashFlowEntries.forEach((entry: any) => {
                 const monthName = months[new Date(entry.date).getMonth()];
                 if (cashFlowMap.has(monthName)) {
                     const data = cashFlowMap.get(monthName);

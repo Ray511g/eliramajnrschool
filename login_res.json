@@ -1,0 +1,18 @@
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNtbHhmanZ2NDAwMDQ2YjRjdXF4aDg4amYiLCJlbWFpbCI6ImFkbWluQGVsaXJhbWEuYWMua2UiLCJyb2xlIjoiU3VwZXIgQWRtaW4iLCJuYW1lIjoiU2Nob29sIEFkbWluaXN0cmF0b3IiLCJwZXJtaXNzaW9ucyI6eyJmZWVzIjpbIlZJRVciLCJDUkVBVEUiLCJFRElUIiwiREVMRVRFIiwiUFVCTElTSCIsIkFQUFJPVkUiLCJSRVZFUlQiXSwiYXVkaXQiOlsiVklFVyJdLCJ1c2VycyI6WyJWSUVXIiwiQ1JFQVRFIiwiRURJVCIsIkRFTEVURSJdLCJhY2FkZW1pYyI6WyJWSUVXIiwiQ1JFQVRFIiwiRURJVCIsIkRFTEVURSIsIlBVQkxJU0giXSwic2V0dGluZ3MiOlsiVklFVyIsIkVESVQiXSwic3R1ZGVudHMiOlsiVklFVyIsIkNSRUFURSIsIkVESVQiLCJERUxFVEUiXSwidGVhY2hlcnMiOlsiVklFVyIsIkNSRUFURSIsIkVESVQiLCJERUxFVEUiXX0sImlhdCI6MTc3MTc2NjUwMSwiZXhwIjoxNzcyMzcxMzAxfQ.5sedyu-ICCSJ0CX6Kul1wTU3ZMoFOnSBDeuzGxBbuLM",
+  "user": {
+    "id": "cmlxfjvv400046b4cuqxh88jf",
+    "name": "School Administrator",
+    "email": "admin@elirama.ac.ke",
+    "role": "Super Admin",
+    "permissions": {
+      "fees": "VIEW CREATE EDIT DELETE PUBLISH APPROVE REVERT",
+      "audit": "VIEW",
+      "users": "VIEW CREATE EDIT DELETE",
+      "academic": "VIEW CREATE EDIT DELETE PUBLISH",
+      "settings": "VIEW EDIT",
+      "students": "VIEW CREATE EDIT DELETE",
+      "teachers": "VIEW CREATE EDIT DELETE"
+    }
+  }
+}

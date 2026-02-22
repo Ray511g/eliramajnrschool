@@ -1,0 +1,20 @@
+{
+  "id": "cmlxs2m7k00021j8b7uvbsvp3",
+  "admissionNumber": "ELR/2026/002",
+  "firstName": "Test",
+  "lastName": "User",
+  "gender": "Male",
+  "grade": "Grade 1",
+  "dateOfBirth": null,
+  "parentName": "Parent",
+  "parentPhone": "0711111111",
+  "parentEmail": null,
+  "address": null,
+  "status": "Active",
+  "enrollmentDate": "2026-02-22",
+  "totalFees": 10000,
+  "paidFees": 0,
+  "feeBalance": 10000,
+  "createdAt": "2026-02-22T13:22:54.321Z",
+  "updatedAt": "2026-02-22T13:22:54.321Z"
+}

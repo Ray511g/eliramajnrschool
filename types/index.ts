@@ -17,6 +17,25 @@ export interface Student {
     paidFees: number;
 }
 
+export interface Staff {
+    id: string;
+    firstName: string;
+    lastName: string;
+    type: 'BOM_TEACHER' | 'SUPPORT_STAFF';
+    role: string;
+    email?: string;
+    phone?: string;
+    salaryType: 'Fixed' | 'Hourly';
+    basicSalary: number;
+    allowances?: any[];
+    deductions?: any[];
+    bankName?: string;
+    accountNumber?: string;
+    status: 'Active' | 'Inactive';
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export interface Teacher {
     id: string;
     firstName: string;
