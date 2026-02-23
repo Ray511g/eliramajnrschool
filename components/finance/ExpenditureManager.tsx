@@ -75,7 +75,7 @@ const ExpenditureManager: React.FC = () => {
                             </div>
                             <div className="form-group">
                                 <label>Amount (KES)</label>
-                                <input type="number" className="form-control" value={form.amount} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) })} title="Amount" required />
+                                <input type="number" className="form-control" value={form.amount || ''} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} title="Amount" required />
                             </div>
                             <div className="form-group">
                                 <label>Supplier (Optional)</label>

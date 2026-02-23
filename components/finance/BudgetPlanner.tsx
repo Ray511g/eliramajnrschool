@@ -73,10 +73,11 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onUpdate }) => {
                                 <input
                                     className="form-control"
                                     type="number"
-                                    value={form.allocatedAmount}
-                                    onChange={(e) => setForm({ ...form, allocatedAmount: parseFloat(e.target.value) })}
+                                    value={form.allocatedAmount || ''}
+                                    onChange={(e) => setForm({ ...form, allocatedAmount: parseFloat(e.target.value) || 0 })}
                                     required
                                     min="1"
+                                    title="Allocation Amount"
                                 />
                             </div>
                             <div className="form-group">
@@ -84,9 +85,10 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onUpdate }) => {
                                 <input
                                     className="form-control"
                                     type="number"
-                                    value={form.year}
-                                    onChange={(e) => setForm({ ...form, year: parseInt(e.target.value) })}
+                                    value={form.year || ''}
+                                    onChange={(e) => setForm({ ...form, year: parseInt(e.target.value) || new Date().getFullYear() })}
                                     required
+                                    title="Financial Year"
                                 />
                             </div>
                         </div>

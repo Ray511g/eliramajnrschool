@@ -45,8 +45,8 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
                         {(stats?.cashFlow || []).map((d: any, i: number) => (
                             <div key={i} className="chart-bar-group">
                                 <div className="chart-bars">
-                                    <div className="chart-bar income" style={{ height: `${(d.income / (stats?.stats?.totalIncome || 1)) * 100}%` }}></div>
-                                    <div className="chart-bar expense" style={{ height: `${(d.expense / (stats?.stats?.totalExpenses || 1)) * 100}%` }}></div>
+                                    <div className="chart-bar income" style={{ height: `${((d.income || 0) / (stats?.stats?.totalIncome || 1)) * 100}%` }}></div>
+                                    <div className="chart-bar expense" style={{ height: `${((d.expense || 0) / (stats?.stats?.totalExpenses || 1)) * 100}%` }}></div>
                                 </div>
                                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.month}</span>
                             </div>

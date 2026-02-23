@@ -91,9 +91,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 budgets,
                 journalEntries
             });
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: 'Failed to fetch finance stats' });
+        } catch (error: any) {
+            console.error('FINANCE STATS ERROR:', error);
+            return res.status(500).json({
+                error: 'Failed to fetch finance stats',
+                message: error.message,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
         }
     }
     return res.status(405).json({ message: 'Method not allowed' });

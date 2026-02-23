@@ -378,3 +378,18 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model Supplier {
+  id            String   @id @default(cuid())
+  name          String
+  kraPin        String   @unique
+  contactPerson String?
+  phone         String
+  email         String?
+  bankName      String?
+  accountNumber String?
+  paymentTerms  String   @default("Net 30")
+  status        String   @default("Active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
