@@ -1,17 +1,33 @@
 import React, { useState } from 'react';
+import { useSchool } from '../../context/SchoolContext';
+import { useAuth } from '../../context/AuthContext';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import SearchIcon from '@mui/icons-material/Search';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import AddIcon from '@mui/icons-material/Add';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import UndoIcon from '@mui/icons-material/Undo';
+import LockIcon from '@mui/icons-material/Lock';
 
-interface GeneralLedgerProps {
-    accounts: any[];
-    journalEntries: any[];
-}
+const GeneralLedger: React.FC = () => {
+    const { user } = useAuth();
+    const {
+        accounts, journalEntries,
+        addChartOfAccount, updateChartOfAccount,
+        addJournalEntry, approveJournalEntry, reverseJournalEntry
+    } = useSchool();
 
-const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries }) => {
     const [activeTab, setActiveTab] = useState<'accounts' | 'journal'>('journal');
     const [searchTerm, setSearchTerm] = useState('');
+    const [showForm, setShowForm] = useState(false);
+    const [journalForm, setJournalForm] = useState({
+        description: '',
+        accountId: '',
+        debit: 0,
+        credit: 0,
+        date: new Date().toISOString().split('T')[0]
+    });
 
     const filteredEntries = (journalEntries || []).filter(e =>
         (e?.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -24,6 +40,17 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
         (a?.code || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const handleJournalSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const { user } = useAuth(); // Import useAuth
+        if (journalForm.debit === 0 && journalForm.credit === 0) {
+            alert('Must have either a debit or credit amount');
+            return;
+        }
+        await addJournalEntry({ ...journalForm, requestedBy: user?.name || 'System' });
+        setShowForm(false);
+    };
+
     const exportCSV = () => {
         const data = activeTab === 'journal' ? filteredEntries : filteredAccounts;
         if (data.length === 0) return;
@@ -32,7 +59,7 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
         let rows: any[] = [];
 
         if (activeTab === 'journal') {
-            headers = ['Date', 'Transaction ID', 'Account', 'Code', 'Description', 'Debit', 'Credit'];
+            headers = ['Date', 'Transaction ID', 'Account', 'Code', 'Description', 'Debit', 'Credit', 'Status'];
             rows = filteredEntries.map(e => [
                 new Date(e.date).toLocaleDateString(),
                 e.transactionId,
@@ -40,7 +67,8 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
                 e.account?.code,
                 e.description,
                 e.debit,
-                e.credit
+                e.credit,
+                e.status
             ]);
         } else {
             headers = ['Code', 'Account Name', 'Type', 'Category', 'Balance'];
@@ -68,7 +96,7 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
     };
 
     return (
-        <div className="general-ledger">
+        <div className="general-ledger animate-in">
             <div className="tab-nav">
                 <button
                     className={`tab-btn ${activeTab === 'journal' ? 'active' : ''}`}
@@ -94,11 +122,60 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <button className="btn-outline" onClick={exportCSV}>
-                    <FileDownloadIcon style={{ fontSize: 18, marginRight: 8 }} />
-                    Export CSV
-                </button>
+                <div style={{ display: 'flex', gap: 12 }}>
+                    {activeTab === 'journal' && (
+                        <button className="btn-primary" onClick={() => setShowForm(true)}>
+                            <AddIcon style={{ fontSize: 18, marginRight: 8 }} />
+                            New Posting
+                        </button>
+                    )}
+                    <button className="btn-outline" onClick={exportCSV}>
+                        <FileDownloadIcon style={{ fontSize: 18, marginRight: 8 }} />
+                        Export Audit Log
+                    </button>
+                </div>
             </div>
+
+            {showForm && (
+                <div className="card glass-panel" style={{ marginBottom: 24, padding: 24 }}>
+                    <h3 style={{ marginBottom: 16 }}>Manual Journal Posting</h3>
+                    <form onSubmit={handleJournalSubmit}>
+                        <div className="grid-3">
+                            <div className="form-group">
+                                <label>Target Account</label>
+                                <select className="form-control" value={journalForm.accountId} onChange={e => setJournalForm({ ...journalForm, accountId: e.target.value })} required>
+                                    <option value="">Select Account...</option>
+                                    {accounts.map(acc => (
+                                        <option key={acc.id} value={acc.id}>{acc.code} - {acc.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Date</label>
+                                <input type="date" className="form-control" value={journalForm.date} onChange={e => setJournalForm({ ...journalForm, date: e.target.value })} required />
+                            </div>
+                        </div>
+                        <div className="grid-3" style={{ marginTop: 16 }}>
+                            <div className="form-group">
+                                <label>Description</label>
+                                <input className="form-control" value={journalForm.description} onChange={e => setJournalForm({ ...journalForm, description: e.target.value })} placeholder="Purpose of entry..." required />
+                            </div>
+                            <div className="form-group">
+                                <label>Debit (KES)</label>
+                                <input type="number" className="form-control" value={journalForm.debit} onChange={e => setJournalForm({ ...journalForm, debit: parseFloat(e.target.value), credit: 0 })} />
+                            </div>
+                            <div className="form-group">
+                                <label>Credit (KES)</label>
+                                <input type="number" className="form-control" value={journalForm.credit} onChange={e => setJournalForm({ ...journalForm, credit: parseFloat(e.target.value), debit: 0 })} />
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+                            <button type="button" className="btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
+                            <button type="submit" className="btn-primary">Post Entry</button>
+                        </div>
+                    </form>
+                </div>
+            )}
 
             <div className="table-container card" style={{ padding: 0 }}>
                 {activeTab === 'journal' ? (
@@ -111,6 +188,8 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
                                 <th>Description</th>
                                 <th style={{ textAlign: 'right' }}>Debit</th>
                                 <th style={{ textAlign: 'right' }}>Credit</th>
+                                <th>Status</th>
+                                <th style={{ textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,10 +208,30 @@ const GeneralLedger: React.FC<GeneralLedgerProps> = ({ accounts, journalEntries 
                                     <td style={{ textAlign: 'right', color: entry.credit > 0 ? 'var(--accent-red)' : 'inherit', fontWeight: entry.credit > 0 ? 600 : 400 }}>
                                         {entry.credit > 0 ? entry.credit.toLocaleString() : '-'}
                                     </td>
+                                    <td>
+                                        <span className={`badge ${entry.status === 'Approved' ? 'green' : entry.status === 'Pending' ? 'orange' : 'red'}`}>
+                                            {entry.status}
+                                        </span>
+                                    </td>
+                                    <td style={{ textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                            {entry.status === 'Pending' && (
+                                                <button className="table-action-btn" onClick={() => approveJournalEntry(entry.id)} title="Approve & Post">
+                                                    <CheckCircleIcon style={{ fontSize: 16, color: 'var(--accent-green)' }} />
+                                                </button>
+                                            )}
+                                            {entry.status === 'Approved' && (
+                                                <button className="table-action-btn" onClick={() => { if (confirm('Reverse this transaction? This will create an offsetting entry.')) reverseJournalEntry(entry.id); }} title="Reverse Entry">
+                                                    <UndoIcon style={{ fontSize: 16, color: 'var(--accent-red)' }} />
+                                                </button>
+                                            )}
+                                            {entry.status === 'Reversed' && <LockIcon style={{ fontSize: 16, opacity: 0.3 }} />}
+                                        </div>
+                                    </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                                    <td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                                         No journal entries found.
                                     </td>
                                 </tr>

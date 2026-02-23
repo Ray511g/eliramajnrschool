@@ -4,7 +4,8 @@ import {
     Student, Teacher, AttendanceRecord, Exam, StudentResult, FeePayment, TimetableEntry,
     SchoolSettings, GradeLevel, GRADES, SUBJECTS, TERMS, PerformanceLevel, User, Role,
     FeeStructureItem, AuditLogItem, TimeSlot,
-    LearningArea, Strand, SubStrand, AssessmentItem, AssessmentScore, Staff // CBC
+    LearningArea, Strand, SubStrand, AssessmentItem, AssessmentScore, Staff, // CBC
+    Supplier, ChartOfAccount, JournalEntry, Expenditure // Finance
 } from '../types';
 import * as XLSX from 'xlsx';
 
@@ -27,8 +28,11 @@ interface SchoolContextType {
     gradeFees: Record<string, number>;
     timeSlots: TimeSlot[];
     results: StudentResult[];
-    expenses: any[]; // Added
-    payrollEntries: any[]; // Added
+    expenses: Expenditure[];
+    payrollEntries: any[];
+    suppliers: Supplier[];
+    accounts: ChartOfAccount[];
+    journalEntries: JournalEntry[];
     toasts: Toast[];
     loading: boolean;
     // CBC State
@@ -79,6 +83,18 @@ interface SchoolContextType {
     applyFeeStructure: (grade?: string) => Promise<void>;
     revertFeeStructure: (grade: string) => Promise<void>;
     fetchAuditLogs: () => Promise<void>;
+    // Enterprise Finance Module
+    addSupplier: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
+    updateSupplier: (id: string, updates: Partial<Supplier>) => Promise<void>;
+    deleteSupplier: (id: string) => Promise<void>;
+    addChartOfAccount: (account: Omit<ChartOfAccount, 'id'>) => Promise<void>;
+    updateChartOfAccount: (id: string, updates: Partial<ChartOfAccount>) => Promise<void>;
+    deleteChartOfAccount: (id: string) => Promise<void>;
+    addJournalEntry: (entry: Omit<JournalEntry, 'id' | 'transactionId' | 'status'>) => Promise<void>;
+    approveJournalEntry: (id: string) => Promise<void>;
+    reverseJournalEntry: (id: string) => Promise<void>;
+    requestExpenditure: (exp: Omit<Expenditure, 'id' | 'status' | 'createdAt'>) => Promise<void>;
+    actOnExpenditure: (id: string, action: 'APPROVE' | 'REJECT' | 'PAY') => Promise<void>;
     // CBC Methods
     saveLearningArea: (area: Omit<LearningArea, 'id'>) => Promise<boolean>;
     saveAssessmentScore: (score: AssessmentScore) => Promise<boolean>;
@@ -168,8 +184,11 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     // New Features State
     const [feeStructures, setFeeStructures] = useState<FeeStructureItem[]>([]);
     const [staff, setStaff] = useState<Staff[]>([]);
-    const [expenses, setExpenses] = useState<any[]>([]); // Added
-    const [payrollEntries, setPayrollEntries] = useState<any[]>([]); // Added
+    const [expenses, setExpenses] = useState<Expenditure[]>([]);
+    const [payrollEntries, setPayrollEntries] = useState<any[]>([]);
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [accounts, setAccounts] = useState<ChartOfAccount[]>([]);
+    const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
     const [systemUsers, setSystemUsers] = useState<User[]>([]);
@@ -256,8 +275,11 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 setFeeStructures(data.feeStructures);
                 setStaff(data.staff || []);
                 setBudgets(data.budgets || []);
-                setExpenses(data.expenses || []); // Added
-                setPayrollEntries(data.payrollEntries || []); // Added
+                setExpenses(data.expenses || []);
+                setPayrollEntries(data.payrollEntries || []);
+                setSuppliers(data.suppliers || []);
+                setAccounts(data.accounts || []);
+                setJournalEntries(data.journalEntries || []);
                 setRoles(data.roles);
                 lastSyncRef.current = data.lastUpdated;
             }
@@ -784,6 +806,101 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setTimetable(prev => prev.filter(t => t.id !== id));
     };
 
+    // ENTERPRISE FINANCE MODULE
+    const addSupplier = async (supplier: Omit<Supplier, 'id'>) => {
+        const apiRes = await tryApi(`${API_URL}/finance/suppliers`, { method: 'POST', body: JSON.stringify(supplier) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setSuppliers(prev => [...prev, data]);
+            showToast('Supplier registered successfully');
+        }
+    };
+
+    const updateSupplier = async (id: string, updates: Partial<Supplier>) => {
+        const apiRes = await tryApi(`${API_URL}/finance/suppliers?id=${id}`, { method: 'PUT', body: JSON.stringify(updates) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setSuppliers(prev => prev.map(s => s.id === id ? data : s));
+            showToast('Supplier profile updated');
+        }
+    };
+
+    const deleteSupplier = async (id: string) => {
+        const apiRes = await tryApi(`${API_URL}/finance/suppliers?id=${id}`, { method: 'DELETE' });
+        if (apiRes) {
+            setSuppliers(prev => prev.filter(s => s.id !== id));
+            showToast('Supplier removed from registry', 'info');
+        }
+    };
+
+    const addChartOfAccount = async (account: Omit<ChartOfAccount, 'id'>) => {
+        const apiRes = await tryApi(`${API_URL}/finance/accounts`, { method: 'POST', body: JSON.stringify(account) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setAccounts(prev => [...prev, data]);
+            showToast('Account added to Chart of Accounts');
+        }
+    };
+
+    const updateChartOfAccount = async (id: string, updates: Partial<ChartOfAccount>) => {
+        const apiRes = await tryApi(`${API_URL}/finance/accounts?id=${id}`, { method: 'PUT', body: JSON.stringify(updates) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setAccounts(prev => prev.map(a => a.id === id ? data : a));
+            showToast('Chart of Accounts updated');
+        }
+    };
+
+    const deleteChartOfAccount = async (id: string) => {
+        const apiRes = await tryApi(`${API_URL}/finance/accounts?id=${id}`, { method: 'DELETE' });
+        if (apiRes) {
+            setAccounts(prev => prev.filter(a => a.id !== id));
+            showToast('Account deleted', 'info');
+        }
+    };
+
+    const addJournalEntry = async (entry: Omit<JournalEntry, 'id' | 'transactionId' | 'status'>) => {
+        const apiRes = await tryApi(`${API_URL}/finance/journal`, { method: 'POST', body: JSON.stringify(entry) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setJournalEntries(prev => [...prev, data]);
+            showToast('Journal entry recorded and pending approval');
+        }
+    };
+
+    const approveJournalEntry = async (id: string) => {
+        const apiRes = await tryApi(`${API_URL}/finance/journal/approve?id=${id}`, { method: 'POST' });
+        if (apiRes) {
+            showToast('Journal entry approved and posted');
+            refreshData();
+        }
+    };
+
+    const reverseJournalEntry = async (id: string) => {
+        const apiRes = await tryApi(`${API_URL}/finance/journal/reverse?id=${id}`, { method: 'POST' });
+        if (apiRes) {
+            showToast('Journal entry reversed', 'info');
+            refreshData();
+        }
+    };
+
+    const requestExpenditure = async (exp: Omit<Expenditure, 'id' | 'status' | 'createdAt'>) => {
+        const apiRes = await tryApi(`${API_URL}/finance/expenses`, { method: 'POST', body: JSON.stringify(exp) });
+        if (apiRes) {
+            const data = await apiRes.json();
+            setExpenses(prev => [...prev, data]);
+            showToast('Expense request submitted');
+        }
+    };
+
+    const actOnExpenditure = async (id: string, action: 'APPROVE' | 'REJECT' | 'PAY') => {
+        const apiRes = await tryApi(`${API_URL}/finance/expenses/act?id=${id}&action=${action}`, { method: 'POST' });
+        if (apiRes) {
+            showToast(`Expense ${action.toLowerCase()} successfully`);
+            refreshData();
+        }
+    };
+
     // SETTINGS
     const updateSettings = async (data: Partial<SchoolSettings>) => {
         const apiRes = await tryApi(`${API_URL}/settings`, { method: 'PUT', body: JSON.stringify(data) });
@@ -1029,14 +1146,29 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             addRole,
             updateRole,
             deleteRole,
-            expenses, // Added
-            payrollEntries, // Added
+            expenses,
+            payrollEntries,
+            suppliers,
+            accounts,
+            journalEntries,
             // CBC
             learningAreas,
             assessmentScores,
             saveLearningArea,
             saveAssessmentScore,
-            saveBulkAssessmentScores
+            saveBulkAssessmentScores,
+            // Enterprise Finance
+            addSupplier,
+            updateSupplier,
+            deleteSupplier,
+            addChartOfAccount,
+            updateChartOfAccount,
+            deleteChartOfAccount,
+            addJournalEntry,
+            approveJournalEntry,
+            reverseJournalEntry,
+            requestExpenditure,
+            actOnExpenditure
         }}>
             {children}
         </SchoolContext.Provider>

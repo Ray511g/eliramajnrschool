@@ -7,6 +7,8 @@ import ExpenditureManager from '../../components/finance/ExpenditureManager';
 import PayrollManager from '../../components/finance/PayrollManager';
 import BudgetPlanner from '../../components/finance/BudgetPlanner';
 import GeneralLedger from '../../components/finance/GeneralLedger';
+import SupplierManager from '../../components/finance/SupplierManager';
+import FinancialReports from '../../components/finance/FinancialReports';
 
 // Icons
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -16,54 +18,36 @@ import GroupIcon from '@mui/icons-material/Group';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
-type FinanceTab = 'Dashboard' | 'Fees' | 'Expenditure' | 'Payroll' | 'Budget' | 'Ledger';
+type FinanceTab = 'Dashboard' | 'Fees' | 'Expenditure' | 'Suppliers' | 'Payroll' | 'Budget' | 'Ledger' | 'Reports';
 
 export default function FinancePage() {
     const { user } = useAuth();
-    const { tryApi, staff, addStaff, updateStaff, deleteStaff } = useSchool();
+    const {
+        tryApi, staff, addStaff, updateStaff, deleteStaff,
+        expenses, suppliers, accounts, journalEntries,
+        refreshData
+    } = useSchool();
     const [activeTab, setActiveTab] = useState<FinanceTab>('Dashboard');
     const [stats, setStats] = useState<any>(null);
-    const [accounts, setAccounts] = useState<any[]>([]);
-    const [expenses, setExpenses] = useState<any[]>([]);
-    const [payrollEntries, setPayrollEntries] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = async (force = false) => {
-        // If not forcing, and we have stats, don't refetch on every tab click
         if (!force && stats) return;
-
         setLoading(true);
         try {
-            const [statsRes, accountsRes, expensesRes, payrollRes] = await Promise.all([
-                tryApi('/api/finance/stats'),
-                tryApi('/api/finance/accounts'),
-                tryApi('/api/finance/expenses'),
-                tryApi('/api/finance/payroll?type=entries')
-            ]);
-
-            if (statsRes && accountsRes && expensesRes && payrollRes) {
-                const [statsData, accountsData, expensesData, payrollData] = await Promise.all([
-                    statsRes.json(),
-                    accountsRes.json(),
-                    expensesRes.json(),
-                    payrollRes.json()
-                ]);
-
-                setStats(statsData);
-                setAccounts(accountsData);
-                setExpenses(expensesData);
-                setPayrollEntries(payrollData);
+            const statsRes = await tryApi('/api/finance/stats');
+            if (statsRes) {
+                setStats(await statsRes.json());
             }
         } catch (error) {
-            console.error('Error fetching finance data:', error);
+            console.error('Error fetching finance stats:', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        // Initial load only
-        if (!stats) fetchData();
+        fetchData();
     }, []);
 
     const handleExpenseAction = async (id: string, action: string) => {
@@ -71,7 +55,7 @@ export default function FinancePage() {
             method: 'PUT',
             body: JSON.stringify({ id, action })
         });
-        if (apiRes) fetchData();
+        if (apiRes) refreshData();
     };
 
     const handleExpenseRequest = async (formData: any) => {
@@ -79,7 +63,7 @@ export default function FinancePage() {
             method: 'POST',
             body: JSON.stringify({ ...formData, requestedById: user?.id, requestedByName: user?.name })
         });
-        if (apiRes) fetchData();
+        if (apiRes) refreshData();
     };
 
     const handlePayrollGenerate = async (month: number, year: number) => {
@@ -87,7 +71,7 @@ export default function FinancePage() {
             method: 'POST',
             body: JSON.stringify({ month, year })
         });
-        if (apiRes) fetchData();
+        if (apiRes) refreshData();
     };
 
     const handlePayrollStatus = async (id: string, status: string) => {
@@ -95,16 +79,18 @@ export default function FinancePage() {
             method: 'PUT',
             body: JSON.stringify({ id, status })
         });
-        if (apiRes) fetchData();
+        if (apiRes) refreshData();
     };
 
     const tabs = [
         { id: 'Dashboard', icon: <DashboardIcon />, label: 'Dashboard' },
         { id: 'Fees', icon: <PaymentIcon />, label: 'Fee Management' },
         { id: 'Expenditure', icon: <AccountBalanceIcon />, label: 'Expenditure' },
+        { id: 'Suppliers', icon: <GroupIcon />, label: 'Suppliers' },
         { id: 'Payroll', icon: <GroupIcon />, label: 'Payroll' },
         { id: 'Budget', icon: <PieChartIcon />, label: 'Budgets' },
         { id: 'Ledger', icon: <ReceiptLongIcon />, label: 'General Ledger' },
+        { id: 'Reports', icon: <AssessmentIcon />, label: 'Financial Reports' },
     ] as const;
 
     const handleBudgetUpdate = async (formData: any) => {
@@ -112,7 +98,7 @@ export default function FinancePage() {
             method: 'POST',
             body: JSON.stringify(formData)
         });
-        if (apiRes) fetchData();
+        if (apiRes) refreshData();
     };
 
     if (loading && !stats) return <div className="loading-screen">Loading Finance System...</div>;
@@ -124,11 +110,11 @@ export default function FinancePage() {
                     <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <AccountBalanceIcon color="primary" /> Financial Management
                     </h1>
-                    <p className="page-subtitle">Ledger-Core School Financial System</p>
+                    <p className="page-subtitle">Enterprise Finance & Accounting Module</p>
                 </div>
             </div>
 
-            <div className="tab-nav">
+            <div className="tab-nav" style={{ overflowX: 'auto', flexWrap: 'nowrap', paddingBottom: 8 }}>
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
@@ -152,10 +138,11 @@ export default function FinancePage() {
                         user={user}
                     />
                 )}
+                {activeTab === 'Suppliers' && <SupplierManager />}
                 {activeTab === 'Payroll' && (
                     <PayrollManager
                         staff={staff}
-                        payrollEntries={payrollEntries || []}
+                        payrollEntries={stats?.payrollEntries || []}
                         onGenerate={handlePayrollGenerate}
                         onUpdateStatus={handlePayrollStatus}
                         onAddStaff={addStaff}
@@ -165,7 +152,8 @@ export default function FinancePage() {
                     />
                 )}
                 {activeTab === 'Budget' && <BudgetPlanner budgets={stats?.budgets || []} onUpdate={handleBudgetUpdate} />}
-                {activeTab === 'Ledger' && <GeneralLedger accounts={accounts} journalEntries={stats?.journalEntries || []} />}
+                {activeTab === 'Ledger' && <GeneralLedger />}
+                {activeTab === 'Reports' && <FinancialReports />}
             </div>
         </div>
     );

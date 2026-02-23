@@ -1,48 +1,51 @@
 import React, { useState } from 'react';
+import { useSchool } from '../../context/SchoolContext';
+import { useAuth } from '../../context/AuthContext';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PaymentIcon from '@mui/icons-material/Payment';
 import CancelIcon from '@mui/icons-material/Cancel';
+import PaymentsIcon from '@mui/icons-material/Payments';
 import FilePresentIcon from '@mui/icons-material/FilePresent';
 
-interface ExpenditureManagerProps {
-    expenses: any[];
-    onAction: (id: string, action: string) => void;
-    onRequest: (data: any) => void;
-    user: any;
-}
+const ExpenditureManager: React.FC = () => {
+    const { user, hasPermission } = useAuth();
+    const { expenses, suppliers, requestExpenditure, actOnExpenditure } = useSchool();
 
-const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAction, onRequest, user }) => {
+    const [searchTerm, setSearchTerm] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({
-        category: 'Utilities',
-        description: '',
+        category: '',
         amount: 0,
-        department: ''
+        description: '',
+        supplierId: '',
+        paymentMethod: 'Bank Transfer'
     });
 
-    const isPrincipalOrAdmin = user?.role === 'Super Admin' || user?.role === 'Principal';
-    const isAccountantOrAdmin = user?.role === 'Super Admin' || user?.role === 'Accountant' || user?.role === 'Finance Officer' || user?.role === 'Admin';
+    const filteredExpenses = (expenses || []).filter(e =>
+        e.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        e.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (form.amount <= 0) {
-            alert('Amount must be greater than zero');
-            return;
-        }
-        onRequest(form);
+        const requestedByName = user?.name || 'Unknown';
+        await requestExpenditure({ ...form, requestedBy: requestedByName });
         setShowForm(false);
-        setForm({ category: 'Utilities', description: '', amount: 0, department: '' });
+        setForm({ category: '', amount: 0, description: '', supplierId: '', paymentMethod: 'Bank Transfer' });
     };
 
+    const canApprove = hasPermission('finance', 'APPROVE');
+    const canPay = hasPermission('finance', 'PAY');
+
     return (
-        <div className="expenditure-manager">
+        <div className="expenditure-manager animate-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <div>
-                    <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Expenditure Requests</h2>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Manage school expense requests and approvals</p>
+                    <h2 style={{ fontSize: 18, fontWeight: 700 }}>Expenditure Controls</h2>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Request and approve school expenses</p>
                 </div>
-                {isAccountantOrAdmin && (
+                {!showForm && (
                     <button className="btn-primary" onClick={() => setShowForm(true)}>
                         <AddIcon style={{ fontSize: 18, marginRight: 8 }} />
                         Raise Request
@@ -51,49 +54,38 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
             </div>
 
             {showForm && (
-                <div className="card" style={{ marginBottom: 24, border: '1px solid var(--accent-blue)', background: 'rgba(59, 130, 246, 0.02)' }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>New Expense Request</h3>
+                <div className="card glass-panel" style={{ marginBottom: 24, padding: 24 }}>
+                    <h3 style={{ marginBottom: 20 }}>New Expense Request</h3>
                     <form onSubmit={handleSubmit}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+                        <div className="grid-3">
                             <div className="form-group">
-                                <label>Category</label>
-                                <select
-                                    className="form-control"
-                                    value={form.category}
-                                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                                >
-                                    <option>Utilities</option>
-                                    <option>Maintenance</option>
-                                    <option>Feeding</option>
-                                    <option>Academic Materials</option>
-                                    <option>Administration</option>
-                                    <option>Transport</option>
-                                    <option>Salaries</option>
+                                <label>Category / Purpose</label>
+                                <select className="form-control" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} title="Category" required>
+                                    <option value="">Select...</option>
+                                    <option value="Operational">Operational</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Supplies">Supplies</option>
+                                    <option value="Academic">Academic</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Amount (KES)</label>
-                                <input
-                                    className="form-control"
-                                    type="number"
-                                    value={form.amount}
-                                    onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) })}
-                                    required
-                                    min="0.01"
-                                    step="0.01"
-                                />
+                                <input type="number" className="form-control" value={form.amount} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) })} title="Amount" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Supplier (Optional)</label>
+                                <select className="form-control" value={form.supplierId} onChange={e => setForm({ ...form, supplierId: e.target.value })} title="Supplier">
+                                    <option value="">N/A / Walk-in</option>
+                                    {suppliers.map(s => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
-                        <div className="form-group">
-                            <label>Description / Particulars</label>
-                            <input
-                                className="form-control"
-                                type="text"
-                                value={form.description}
-                                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                placeholder="e.g. Electricity bill for Feb 2026"
-                                required
-                            />
+                        <div className="form-group" style={{ marginTop: 16 }}>
+                            <label>Detailed Description</label>
+                            <textarea className="form-control" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="What the funds will be used for..." title="Description" required rows={3}></textarea>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
                             <button type="button" className="btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
@@ -103,73 +95,76 @@ const ExpenditureManager: React.FC<ExpenditureManagerProps> = ({ expenses, onAct
                 </div>
             )}
 
-            <div className="table-container card" style={{ padding: 0 }}>
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th style={{ textAlign: 'right' }}>Amount</th>
-                            <th>Status</th>
-                            <th>Requested By</th>
-                            <th style={{ textAlign: 'right' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(expenses || []).length > 0 ? (expenses || []).map((exp) => (
-                            <tr key={exp?.id}>
-                                <td>{exp?.createdAt ? new Date(exp.createdAt).toLocaleDateString() : 'N/A'}</td>
-                                <td>
-                                    <div style={{ fontWeight: 500 }}>{exp?.description || 'No Description'}</div>
-                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{exp?.department || ''}</div>
-                                </td>
-                                <td><span className="badge blue">{exp?.category || 'General'}</span></td>
-                                <td style={{ textAlign: 'right', fontWeight: 600 }}>{(exp?.amount || 0).toLocaleString()}</td>
-                                <td>
-                                    <span className={`badge ${exp?.status === 'Paid' ? 'green' : exp?.status === 'Approved' ? 'blue' : exp?.status === 'Rejected' ? 'red' : ''}`}>
-                                        {exp?.status || 'Pending'}
-                                    </span>
-                                </td>
-                                <td>{exp?.requestedByName || 'Unknown'}</td>
-                                <td style={{ textAlign: 'right' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                                        {exp.status === 'Pending' && isPrincipalOrAdmin && (
-                                            <>
-                                                <button className="btn-outline" style={{ color: 'var(--accent-green)', borderColor: 'var(--accent-green)', padding: '4px 8px' }} onClick={() => onAction(exp.id, 'APPROVE')} title="Approve">
-                                                    <CheckCircleIcon fontSize="small" />
-                                                </button>
-                                                <button className="btn-outline" style={{ color: 'var(--accent-red)', borderColor: 'var(--accent-red)', padding: '4px 8px' }} onClick={() => onAction(exp.id, 'REJECT')} title="Reject">
-                                                    <CancelIcon fontSize="small" />
-                                                </button>
-                                            </>
-                                        )}
-                                        {exp.status === 'Approved' && isAccountantOrAdmin && (
-                                            <button className="btn-primary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => onAction(exp.id, 'PAY')}>
-                                                <PaymentIcon style={{ fontSize: 16, marginRight: 4 }} /> Pay
-                                            </button>
-                                        )}
-                                        {exp.status === 'Paid' && (
-                                            <span style={{ fontSize: 12, color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                <FilePresentIcon style={{ fontSize: 16 }} /> Posted
+            {!showForm && (
+                <>
+                    <div className="search-box" style={{ marginBottom: 20, maxWidth: 400 }}>
+                        <SearchIcon />
+                        <input type="text" placeholder="Search requests..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} title="Search" />
+                    </div>
+
+                    <div className="table-container card" style={{ padding: 0 }}>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Requestor</th>
+                                    <th style={{ textAlign: 'right' }}>Amount</th>
+                                    <th>Status</th>
+                                    <th style={{ textAlign: 'right' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredExpenses.length > 0 ? filteredExpenses.map(exp => (
+                                    <tr key={exp.id}>
+                                        <td>{new Date(exp.createdAt).toLocaleDateString()}</td>
+                                        <td>
+                                            <div style={{ fontWeight: 600 }}>{exp.category}</div>
+                                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{exp.description}</div>
+                                            {exp.supplierId && (
+                                                <div style={{ fontSize: 10, color: 'var(--accent-blue)' }}>
+                                                    Supplier: {suppliers.find(s => s.id === exp.supplierId)?.name || 'Unknown'}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td>{exp.requestedBy}</td>
+                                        <td style={{ textAlign: 'right', fontWeight: 700 }}>KES {exp.amount.toLocaleString()}</td>
+                                        <td>
+                                            <span className={`badge ${exp.status === 'Paid' ? 'green' : exp.status === 'Approved' ? 'blue' : exp.status === 'Pending' ? 'orange' : 'red'}`}>
+                                                {exp.status}
                                             </span>
-                                        )}
-                                        {exp.status === 'Rejected' && (
-                                            <span style={{ fontSize: 12, color: 'var(--accent-red)' }}>Rejected</span>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        )) : (
-                            <tr>
-                                <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                                    No expenditure requests found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                                        </td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                                {exp.status === 'Pending' && canApprove && (
+                                                    <>
+                                                        <button className="table-action-btn" onClick={() => actOnExpenditure(exp.id, 'APPROVE')} title="Approve Request">
+                                                            <CheckCircleIcon style={{ fontSize: 16, color: 'var(--accent-green)' }} />
+                                                        </button>
+                                                        <button className="table-action-btn danger" onClick={() => actOnExpenditure(exp.id, 'REJECT')} title="Reject Request">
+                                                            <CancelIcon style={{ fontSize: 16 }} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {exp.status === 'Approved' && canPay && (
+                                                    <button className="table-action-btn" onClick={() => actOnExpenditure(exp.id, 'PAY')} title="Process Payment">
+                                                        <PaymentsIcon style={{ fontSize: 16, color: 'var(--accent-blue)' }} />
+                                                    </button>
+                                                )}
+                                                {exp.status === 'Paid' && <FilePresentIcon style={{ fontSize: 16, opacity: 0.3 }} />}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No expense requests found.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

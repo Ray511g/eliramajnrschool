@@ -273,3 +273,67 @@ export interface AssessmentScore {
     level?: PerformanceLevel;
     remarks?: string;
 }
+// Enterprise Finance Module
+export interface Supplier {
+    id: string;
+    name: string;
+    kraPin: string;
+    contactPerson: string;
+    phone: string;
+    email: string;
+    bankName: string;
+    accountNumber: string;
+    paymentTerms: string;
+    status: 'Active' | 'Inactive';
+    createdAt?: string;
+}
+
+export interface ChartOfAccount {
+    id: string;
+    code: string;
+    name: string;
+    type: 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense';
+    category: string;
+    balance: number;
+    parentCode?: string;
+}
+
+export interface JournalEntry {
+    id: string;
+    transactionId: string;
+    date: string;
+    description: string;
+    accountId: string;
+    account?: ChartOfAccount;
+    debit: number;
+    credit: number;
+    status: 'Pending' | 'Approved' | 'Reversed';
+    requestedBy: string;
+    approvedBy?: string;
+}
+
+export interface Expenditure {
+    id: string;
+    supplierId?: string;
+    supplier?: Supplier;
+    category: string;
+    description: string;
+    amount: number;
+    status: 'Pending' | 'Approved' | 'Paid' | 'Rejected';
+    requestedBy: string;
+    requestedByName: string;
+    department?: string;
+    paymentMethod?: 'Bank' | 'Cash' | 'M-Pesa';
+    attachmentUrl?: string;
+    createdAt: string;
+}
+
+export interface Budget {
+    id: string;
+    year: number;
+    term?: string;
+    department: string;
+    category: string;
+    allocated: number;
+    spent: number;
+}
