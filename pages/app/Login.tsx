@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSchool } from '../../context/SchoolContext';
 import { useRouter } from 'next/router';
+import SchoolIcon from '@mui/icons-material/School';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import ArchitectureIcon from '@mui/icons-material/Architecture';
+import CalculateIcon from '@mui/icons-material/Calculate';
 import ErrorIcon from '@mui/icons-material/Error';
 
 export default function Login() {
@@ -32,7 +36,16 @@ export default function Login() {
     return (
         <div className="login-page">
             <div className="login-side-image">
+                <div className="education-animation-bg">
+                    <div className="floating-icon icon-1"><SchoolIcon /></div>
+                    <div className="floating-icon icon-2"><MenuBookIcon /></div>
+                    <div className="floating-icon icon-3"><ArchitectureIcon /></div>
+                    <div className="floating-icon icon-4"><CalculateIcon /></div>
+                    <div className="floating-icon icon-5"><SchoolIcon /></div>
+                    <div className="floating-icon icon-6"><MenuBookIcon /></div>
+                </div>
                 <div className="login-side-content">
+                    <div className="content-glow"></div>
                     <h2>Empowering the Future of Education</h2>
                     <p>Experience a seamless, secure, and modern way to manage school records, finances, and academic excellence with the Elirama ERP system.</p>
                 </div>
