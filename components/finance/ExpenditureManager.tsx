@@ -5,6 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import FilePresentIcon from '@mui/icons-material/FilePresent';
 
@@ -19,7 +20,7 @@ const ExpenditureManager: React.FC = () => {
         amount: 0,
         description: '',
         supplierId: '',
-        paymentMethod: 'Bank Transfer'
+        paymentMethod: 'Bank' as 'Bank' | 'Cash' | 'M-Pesa'
     });
 
     const filteredExpenses = (expenses || []).filter(e =>
@@ -30,9 +31,12 @@ const ExpenditureManager: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const requestedByName = user?.name || 'Unknown';
-        await requestExpenditure({ ...form, requestedBy: requestedByName });
-        setShowForm(false);
-        setForm({ category: '', amount: 0, description: '', supplierId: '', paymentMethod: 'Bank Transfer' });
+        await requestExpenditure({
+            ...form,
+            requestedBy: user?.id || 'unknown',
+            requestedByName: requestedByName
+        });
+        setForm({ category: '', amount: 0, description: '', supplierId: '', paymentMethod: 'Bank' });
     };
 
     const canApprove = hasPermission('finance', 'APPROVE');

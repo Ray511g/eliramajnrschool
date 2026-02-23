@@ -17,6 +17,7 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import GroupIcon from '@mui/icons-material/Group';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 
 type FinanceTab = 'Dashboard' | 'Fees' | 'Expenditure' | 'Suppliers' | 'Payroll' | 'Budget' | 'Ledger' | 'Reports';
 
@@ -101,43 +102,36 @@ export default function FinancePage() {
         if (apiRes) refreshData();
     };
 
-    if (loading && !stats) return <div className="loading-screen">Loading Finance System...</div>;
+    if (!user) return null;
 
     return (
-        <div className="page-container">
+        <div className="finance-page">
             <div className="page-header">
-                <div className="page-header-left">
-                    <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <AccountBalanceIcon color="primary" /> Financial Management
-                    </h1>
-                    <p className="page-subtitle">Enterprise Finance & Accounting Module</p>
+                <div className="header-content">
+                    <h1>Enterprise Finance & Accounting</h1>
+                    <p className="text-muted">School fiscal management and audit controls</p>
                 </div>
             </div>
 
-            <div className="tab-nav" style={{ overflowX: 'auto', flexWrap: 'nowrap', paddingBottom: 8 }}>
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                        onClick={() => setActiveTab(tab.id)}
-                    >
-                        {React.cloneElement(tab.icon as React.ReactElement, { style: { fontSize: 20 } })}
-                        {tab.label}
-                    </button>
-                ))}
+            <div className="tab-nav-container">
+                <div className="tab-nav scrollable">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                            onClick={() => setActiveTab(tab.id as FinanceTab)}
+                        >
+                            {tab.icon}
+                            <span>{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="finance-content">
                 {activeTab === 'Dashboard' && <FinanceDashboard stats={stats} />}
                 {activeTab === 'Fees' && <FeeManager />}
-                {activeTab === 'Expenditure' && (
-                    <ExpenditureManager
-                        expenses={expenses}
-                        onAction={handleExpenseAction}
-                        onRequest={handleExpenseRequest}
-                        user={user}
-                    />
-                )}
+                {activeTab === 'Expenditure' && <ExpenditureManager />}
                 {activeTab === 'Suppliers' && <SupplierManager />}
                 {activeTab === 'Payroll' && (
                     <PayrollManager
