@@ -20,12 +20,17 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import BadgeIcon from '@mui/icons-material/Badge';
 import InfoIcon from '@mui/icons-material/Info';
 
 export const PERMISSIONS = [
     { code: 'MANAGE_STUDENTS', label: 'Students Module' },
     { code: 'MANAGE_TEACHERS', label: 'Teachers Module' },
     { code: 'MANAGE_FINANCE', label: 'Finance & Fees' },
+    { code: 'MANAGE_COMMERCIAL', label: 'Commercial & Credit' },
+    { code: 'MANAGE_HR', label: 'HR & Payroll' },
+    { code: 'MANAGE_WORKFLOW', label: 'Workflow & Approvals' },
     { code: 'MANAGE_ATTENDANCE', label: 'Attendance' },
     { code: 'MANAGE_EXAMS', label: 'Exams/Grades' },
     { code: 'MANAGE_REPORTS', label: 'Reports' },
@@ -39,10 +44,13 @@ const navItems = [
     { path: '/students', icon: <PeopleIcon />, label: 'Students', permission: 'MANAGE_STUDENTS' },
     { path: '/teachers', icon: <SchoolIcon />, label: 'Teachers', permission: 'MANAGE_TEACHERS' },
     { path: '/attendance', icon: <EventNoteIcon />, label: 'Attendance', permission: 'MANAGE_ATTENDANCE' },
+    { path: '/timetable', icon: <ScheduleIcon />, label: 'Timetable', permission: 'MANAGE_TIMETABLE' },
+    { path: '/commercial', icon: <LocalShippingIcon />, label: 'Commercial', permission: 'MANAGE_COMMERCIAL' },
+    { path: '/hr', icon: <BadgeIcon />, label: 'HR & Payroll', permission: 'MANAGE_HR' },
+    { path: '/approvals', icon: <AssignmentIcon />, label: 'Workflow', permission: 'MANAGE_WORKFLOW' },
+    { path: '/fees', icon: <PaymentIcon />, label: 'Finance', permission: 'MANAGE_FINANCE' },
     { path: '/grades', icon: <GradeIcon />, label: 'Grades', permission: 'MANAGE_EXAMS' },
     { path: '/exams', icon: <AssignmentIcon />, label: 'Exams', permission: 'MANAGE_EXAMS' },
-    { path: '/timetable', icon: <ScheduleIcon />, label: 'Timetable', permission: 'MANAGE_TIMETABLE' },
-    { path: '/fees', icon: <PaymentIcon />, label: 'Finance', permission: 'MANAGE_FINANCE' },
     { path: '/results', icon: <AssessmentIcon />, label: 'Results', permission: 'MANAGE_REPORTS' },
     { path: '/reports', icon: <DescriptionIcon />, label: 'Reports', permission: 'MANAGE_REPORTS' },
     { path: '/communication', icon: <EmailIcon />, label: 'Communication', permission: 'MANAGE_COMMUNICATION' },
@@ -60,6 +68,20 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const { logout, user, hasPermission } = useAuth();
     const { serverStatus, settings } = useSchool();
     const router = useRouter();
+    const [pendingCount, setPendingCount] = React.useState(0);
+
+    React.useEffect(() => {
+        const fetchPending = async () => {
+            try {
+                const res = await fetch('/api/approvals?status=PENDING');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPendingCount(data.length);
+                }
+            } catch (e) { }
+        };
+        if (user) fetchPending();
+    }, [user]);
 
     const handleLogout = () => {
         logout();
@@ -85,6 +107,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             'MANAGE_STUDENTS': 'students',
             'MANAGE_TEACHERS': 'teachers',
             'MANAGE_FINANCE': 'fees',
+            'MANAGE_COMMERCIAL': 'fees', // Map to fees/finance for now
+            'MANAGE_HR': 'academic', // Map to academic/hr
+            'MANAGE_WORKFLOW': 'fees',
             'MANAGE_ATTENDANCE': 'attendance',
             'MANAGE_EXAMS': 'exams',
             'MANAGE_REPORTS': 'academic',

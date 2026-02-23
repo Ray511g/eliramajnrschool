@@ -315,41 +315,220 @@ model ExpenseRequest {
 }
 
 model Staff {
-  id             String   @id @default(cuid())
-  firstName      String
-  lastName       String
-  type           String   // BOM_TEACHER, SUPPORT_STAFF
-  role           String?
-  email          String?  @unique
-  phone          String?
-  salaryType     String   @default("Fixed") // Fixed, Hourly
-  basicSalary    Float    @default(0)
-  allowances     Json?    // Array of { name, amount }
-  deductions     Json?    // Array of { name, amount }
-  bankName       String?
-  accountNumber  String?
-  status         String   @default("Active")
-  payrollEntries PayrollEntry[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(cuid())
+  firstName       String
+  lastName        String
+  type            String   // BOM_TEACHER, SUPPORT_STAFF
+  role            String?
+  designation     String?  // e.g., "Senior Accountant"
+  department      String?  // e.g., "Administration", "Academics"
+  email           String?  @unique
+  phone           String?
+  kraPin          String?  @unique
+  nssfNumber      String?  @unique
+  nhifNumber      String?  @unique
+  bankName        String?
+  accountNumber   String?
+  salaryType      String   @default("Fixed") // Fixed, Hourly
+  basicSalary     Float    @default(0)
+  allowances      Json?    // Array of { name, amount }
+  deductions      Json?    // Array of { name, amount }
+  status          String   @default("Active")
+  
+  contracts       StaffContract[]
+  leaveRequests   LeaveRequest[]
+  loans           StaffLoan[]
+  payrollEntries  PayrollEntry[]
+  performance     PerformanceRecord[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model StaffContract {
+  id              String   @id @default(cuid())
+  staffId         String
+  staff           Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  type            String   // Permanent, Probation, Contract, Intern
+  startDate       DateTime
+  endDate         DateTime?
+  salaryAmount    Float
+  documentUrl     String?  // PDF link
+  status          String   @default("Active") // Active, Expired, Terminated
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model LeaveRequest {
+  id              String   @id @default(cuid())
+  staffId         String
+  staff           Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  type            String   // SICK, ANNUAL, MATERNITY, PATERNITY, COMPASSIONATE
+  startDate       DateTime
+  endDate         DateTime
+  days            Int
+  reason          String?
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedById    String?
+  createdAt       DateTime @default(now())
+}
+
+model StaffLoan {
+  id               String   @id @default(cuid())
+  staffId          String
+  staff            Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  amount           Float
+  interestRate     Float    @default(0)
+  repaymentPeriod  Int      // Months
+  monthlyDeduction Float
+  balance          Float
+  status           String   @default("ACTIVE") // ACTIVE, PAID, DEFAULTED
+  repayments       LoanRepayment[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model LoanRepayment {
+  id              String    @id @default(cuid())
+  loanId          String
+  loan            StaffLoan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  amount          Float
+  date            DateTime
+  payrollId       String?   // Link to payroll entry if auto-deducted
+  method          String    @default("PAYROLL") // PAYROLL, CASH, BANK_TRANSFER
+  createdAt       DateTime  @default(now())
+}
+
+model PerformanceRecord {
+  id              String   @id @default(cuid())
+  staffId         String
+  staff           Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  type            String   // APPRAISAL, WARNING, COMMENDATION, PROMOTION
+  date            DateTime
+  title           String
+  description     String
+  documentUrl     String?
+  createdAt       DateTime @default(now())
 }
 
 model PayrollEntry {
-  id            String   @id @default(cuid())
-  staffId       String
-  month         Int      // 1-12
-  year          Int
-  basicSalary   Float
-  totalAllowances Float @default(0)
-  totalDeductions Float @default(0)
-  netPay        Float
-  status        String   @default("Draft") // Draft, Reviewed, Approved, Locked
-  payslipUrl    String?
-  staff         Staff    @relation(fields: [staffId], references: [id])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(cuid())
+  staffId         String
+  month           Int      // 1-12
+  year            Int
+  basicSalary     Float
+  totalAllowances Float    @default(0)
+  totalDeductions Float    @default(0)
+  tax             Float    @default(0) // PAYE
+  nssf            Float    @default(0)
+  nhif            Float    @default(0)
+  netPay          Float
+  status          String   @default("Draft") // Draft, Pending Approval, Approved, Paid
+  payslipUrl      String?
+  journalPosted   Boolean  @default(false)
+  staff           Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@unique([staffId, month, year])
+}
+
+// Enterprise Workflow & Approvals
+model ApprovalRequest {
+  id              String   @id @default(cuid())
+  entityType      String   // PURCHASE_ORDER, FEE_AGREEMENT, PROMISSORY_NOTE, PAYROLL, SALARY_ADJUSTMENT, BUDGET_OVERRIDE, CONTRACT, ASSET_PURCHASE
+  entityId        String
+  requestedById   String
+  requestedByName String
+  currentLevel    Int      @default(1)
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, REVISION_REQUESTED
+  details         Json?    // Summary for listing UI
+  logs            ApprovalLog[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ApprovalLog {
+  id                String          @id @default(cuid())
+  requestId         String
+  request           ApprovalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approverId        String
+  approverName      String
+  action            String          // APPROVED, REJECTED, REVISION, DELEGATED, ESCALATED
+  comment           String?
+  signature         String?         // Hash or path to digital signature
+  createdAt         DateTime        @default(now())
+}
+
+// Commercial & Credit
+model CreditAgreement {
+  id                String   @id @default(cuid())
+  studentId         String
+  studentName       String
+  guardianId        String?
+  guardianName      String?
+  totalAmount       Float
+  interestRate      Float    @default(0)
+  penaltyRule       String?
+  documentUrl       String?  // Signed Agreement
+  status            String   @default("DRAFT") // DRAFT, PENDING, ACTIVE, COMPLETED, DEFAULTED
+  installments      Installment[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Installment {
+  id                String          @id @default(cuid())
+  agreementId       String
+  agreement         CreditAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  dueDate           DateTime
+  amount            Float
+  paidAmount        Float           @default(0)
+  status            String          @default("SCHEDULED") // SCHEDULED, PAID, OVERDUE
+  createdAt         DateTime        @default(now())
+}
+
+model PromissoryNote {
+  id                String   @id @default(cuid())
+  noteNumber        String   @unique
+  studentId         String
+  guardianName      String
+  amount            Float
+  interestRate      Float    @default(0)
+  issueDate         DateTime
+  maturityDate      DateTime
+  linkedInvoiceId   String?
+  status            String   @default("ACTIVE") // ACTIVE, OVERDUE, SETTLED, DEFAULTED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model SchoolServiceOrder {
+  id                String   @id @default(cuid())
+  studentId         String
+  serviceType       String   // TRANSPORT, HOSTEL, MEAL_PLAN, UNIFORM, SPECIAL_PROGRAM
+  amount            Float
+  recurring         Boolean  @default(false)
+  frequency         String?  // MONTHLY, TERMLY
+  nextBillingDate   DateTime?
+  status            String   @default("ACTIVE") // ACTIVE, SUSPENDED, COMPLETED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model PurchaseOrder {
+  id                String   @id @default(cuid())
+  poNumber          String   @unique
+  supplierId        String
+  supplierName      String
+  items             Json     // Array of { desc, qty, unitPrice, total }
+  totalAmount       Float
+  department        String
+  budgetCheck       Boolean  @default(false)
+  status            String   @default("DRAFT") // DRAFT, PENDING, APPROVED, RECEIVED, CANCELLED
+  journalPosted     Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Budget {
