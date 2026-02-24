@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
         if (!checkPermission(user, 'exams', 'VIEW', res)) return;
         const results = await prisma.result.findMany({
-            include: { student: true, exam: true }
+            include: { student: true }
         });
         return res.status(200).json(results);
     }

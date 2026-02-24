@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             if (type === 'finance') {
                 const totalFees = await prisma.student.aggregate({ _sum: { totalFees: true, paidFees: true } });
-                const expenses = await prisma.expenditure.findMany({ where: { status: 'PAID' } });
+                const expenses = await prisma.expenseRequest.findMany({ where: { status: 'PAID' } });
                 const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
                 return res.status(200).json({
