@@ -7,6 +7,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AddStaffModal from '../modals/AddStaffModal';
 import { Staff } from '../../types';
+import '../../styles/finance.css';
 
 interface PayrollManagerProps {
     staff: Staff[];
@@ -133,22 +134,25 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
         win.focus();
         setTimeout(() => {
             win.print();
-            // win.close();
         }, 500);
     };
 
     return (
-        <div className="payroll-manager">
+        <div className="payroll-manager animate-in">
             <div className="tab-nav">
                 <button
                     className={`tab-btn ${activeTab === 'payroll' ? 'active' : ''}`}
                     onClick={() => setActiveTab('payroll')}
+                    title="Process and review monthly staff payments"
+                    aria-label="Monthly Payroll Tab"
                 >
                     <ReceiptIcon style={{ fontSize: 20 }} /> Monthly Payroll
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'staff' ? 'active' : ''}`}
                     onClick={() => setActiveTab('staff')}
+                    title="Configure basic salaries and staff records"
+                    aria-label="Staff Configuration Tab"
                 >
                     <GroupIcon style={{ fontSize: 20 }} /> Staff Salary Configuration
                 </button>
@@ -156,18 +160,19 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
 
             {activeTab === 'payroll' ? (
                 <div className="payroll-entries">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
+                    <div className="finance-toolbar">
                         <div>
-                            <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Payroll Processing</h2>
-                            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Review and approve monthly staff payments</p>
+                            <h2 className="section-title">Payroll Processing</h2>
+                            <p className="text-muted text-xs">Review and approve monthly staff payments</p>
                         </div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <div className="finance-toolbar-right">
                             <select
                                 className="form-control"
                                 value={generateConfig.month}
                                 onChange={(e) => setGenerateConfig({ ...generateConfig, month: parseInt(e.target.value) })}
                                 style={{ width: 140 }}
-                                title="Select Month"
+                                title="Select Month for payroll"
+                                aria-label="Select payroll month"
                             >
                                 {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
                                     <option key={i} value={i + 1}>{m}</option>
@@ -179,25 +184,26 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                                 value={generateConfig.year}
                                 onChange={(e) => setGenerateConfig({ ...generateConfig, year: parseInt(e.target.value) })}
                                 style={{ width: 100 }}
-                                title="Select Year"
+                                title="Select Year for payroll"
+                                aria-label="Select payroll year"
                             />
-                            <button className="btn-primary" onClick={() => onGenerate(generateConfig.month, generateConfig.year)}>
-                                <PlayArrowIcon style={{ fontSize: 18, marginRight: 4 }} /> Generate
+                            <button className="btn btn-primary" onClick={() => onGenerate(generateConfig.month, generateConfig.year)} title="Calculate payroll for selected period" aria-label="Generate Payroll">
+                                <PlayArrowIcon className="mr-2" style={{ fontSize: 18 }} /> Generate
                             </button>
                         </div>
                     </div>
 
-                    <div className="table-container card" style={{ padding: 0 }}>
+                    <div className="table-container">
                         <table className="data-table">
                             <thead>
                                 <tr>
                                     <th>Staff Name</th>
-                                    <th style={{ textAlign: 'right' }}>Basic Salary</th>
-                                    <th style={{ textAlign: 'right' }}>Allowances</th>
-                                    <th style={{ textAlign: 'right' }}>Deductions</th>
-                                    <th style={{ textAlign: 'right' }}>Net Pay</th>
+                                    <th className="text-right">Basic Salary</th>
+                                    <th className="text-right">Allowances</th>
+                                    <th className="text-right">Deductions</th>
+                                    <th className="text-right">Net Pay</th>
                                     <th>Status</th>
-                                    <th style={{ textAlign: 'right' }}>Actions</th>
+                                    <th className="text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -207,37 +213,37 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                                         return filtered.map((entry) => (
                                             <tr key={entry.id}>
                                                 <td>
-                                                    <div style={{ fontWeight: 500 }}>{entry.staff?.firstName || 'Unknown'} {entry.staff?.lastName || ''}</div>
-                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{entry.staff?.role || 'N/A'}</div>
+                                                    <div className="data-table-name">{entry.staff?.firstName || 'Unknown'} {entry.staff?.lastName || ''}</div>
+                                                    <div className="text-muted text-xs">{entry.staff?.role || 'N/A'}</div>
                                                 </td>
-                                                <td style={{ textAlign: 'right' }}>{(entry.basicSalary || 0).toLocaleString()}</td>
-                                                <td style={{ textAlign: 'right', color: 'var(--accent-green)' }}>+ {(entry.totalAllowances || 0).toLocaleString()}</td>
-                                                <td style={{ textAlign: 'right', color: 'var(--accent-red)' }}>- {(entry.totalDeductions || 0).toLocaleString()}</td>
-                                                <td style={{ textAlign: 'right', fontWeight: 600 }}>{(entry.netPay || 0).toLocaleString()}</td>
+                                                <td className="text-right">{(entry.basicSalary || 0).toLocaleString()}</td>
+                                                <td className="text-right" style={{ color: '#10b981' }}>+ {(entry.totalAllowances || 0).toLocaleString()}</td>
+                                                <td className="text-right" style={{ color: '#ef4444' }}>- {(entry.totalDeductions || 0).toLocaleString()}</td>
+                                                <td className="text-right" style={{ fontWeight: 600 }}>{(entry.netPay || 0).toLocaleString()}</td>
                                                 <td>
-                                                    <span className={`badge ${entry.status === 'Locked' ? 'green' : entry.status === 'Approved' ? 'blue' : entry.status === 'Draft' ? 'neutral' : 'blue'}`}>
+                                                    <span className={`badge ${entry.status === 'Locked' ? 'green' : entry.status === 'Approved' ? 'blue' : entry.status === 'Draft' ? 'orange' : 'blue'}`}>
                                                         {entry.status}
                                                     </span>
                                                 </td>
-                                                <td style={{ textAlign: 'right' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                                <td className="text-right">
+                                                    <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
                                                         {entry.status === 'Draft' && (
-                                                            <button className="btn-outline" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => onUpdateStatus(entry.id, 'Reviewed')}>
+                                                            <button className="btn btn-outline" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => onUpdateStatus(entry.id, 'Reviewed')} title="Mark as reviewed by finance" aria-label="Mark Reviewed">
                                                                 Mark Reviewed
                                                             </button>
                                                         )}
                                                         {entry.status === 'Reviewed' && isAdminOrPrincipal && (
-                                                            <button className="btn-primary" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => onUpdateStatus(entry.id, 'Approved')}>
-                                                                <SaveIcon style={{ fontSize: 14, marginRight: 4 }} /> Approve
+                                                            <button className="btn btn-primary" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => onUpdateStatus(entry.id, 'Approved')} title="Approve for payment" aria-label="Approve Payroll">
+                                                                <SaveIcon className="mr-2" style={{ fontSize: 14 }} /> Approve
                                                             </button>
                                                         )}
                                                         {entry.status === 'Approved' && isAdminOrPrincipal && (
-                                                            <button className="btn-primary" style={{ padding: '4px 12px', fontSize: 12, background: 'var(--accent-red)' }} onClick={() => onUpdateStatus(entry.id, 'Locked')}>
-                                                                <LockIcon style={{ fontSize: 14, marginRight: 4 }} /> Lock & Post
+                                                            <button className="btn btn-primary red" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => onUpdateStatus(entry.id, 'Locked')} title="Lock entries and post to ledger" aria-label="Lock and Post">
+                                                                <LockIcon className="mr-2" style={{ fontSize: 14 }} /> Lock & Post
                                                             </button>
                                                         )}
                                                         {entry.status === 'Locked' && (
-                                                            <button className="btn-outline" style={{ padding: '4px 8px' }} title="Print Payslip" onClick={() => handlePrintPayslip(entry)}>
+                                                            <button className="action-btn" onClick={() => handlePrintPayslip(entry)} title="Generate and Print Payslip" aria-label="View Payslip">
                                                                 <VisibilityIcon style={{ fontSize: 16 }} />
                                                             </button>
                                                         )}
@@ -248,7 +254,7 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                                     }
                                     return (
                                         <tr>
-                                            <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                                            <td colSpan={7} className="p-10 text-center text-muted">
                                                 No payroll entries for this period. Click Generate to start.
                                             </td>
                                         </tr>
@@ -260,14 +266,14 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                 </div>
             ) : (
                 <div className="staff-config">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <div className="finance-toolbar">
                         <div>
-                            <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Staff Remuneration</h2>
-                            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Configure basic salaries and payment methods for employees</p>
+                            <h2 className="section-title">Staff Remuneration</h2>
+                            <p className="text-muted text-xs">Configure basic salaries and payment methods for employees</p>
                         </div>
                         {isAdminOrPrincipal && (
-                            <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
-                                Add Staff Member
+                            <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)} title="Register new staff member for payroll" aria-label="Add Staff">
+                                <GroupIcon className="mr-2" /> Add Staff Member
                             </button>
                         )}
                     </div>
@@ -280,7 +286,6 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                         }}
                         onAdd={(data) => {
                             if (editingStaff) {
-                                // update
                                 onUpdateStaff?.(editingStaff.id, data);
                             } else {
                                 onAddStaff?.(data);
@@ -288,56 +293,60 @@ const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, 
                         }}
                         initialData={editingStaff || undefined}
                     />
-                    <div className="table-container card" style={{ padding: 0 }}>
+                    <div className="table-container">
                         <table className="data-table">
                             <thead>
                                 <tr>
                                     <th>Name</th>
                                     <th>Type</th>
                                     <th>Role</th>
-                                    <th style={{ textAlign: 'right' }}>Basic Salary</th>
+                                    <th className="text-right">Basic Salary</th>
                                     <th>Bank Account</th>
                                     <th>Status</th>
-                                    <th style={{ textAlign: 'right' }}>Actions</th>
+                                    <th className="text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {staff.map((s) => (
                                     <tr key={s.id}>
-                                        <td style={{ fontWeight: 500 }}>{s.firstName} {s.lastName}</td>
+                                        <td className="data-table-name">{s.firstName} {s.lastName}</td>
                                         <td><span className="badge blue">{(s.type || '').replace('_', ' ')}</span></td>
                                         <td>{s.role}</td>
-                                        <td style={{ textAlign: 'right', fontWeight: 600 }}>{(s.basicSalary || 0).toLocaleString()}</td>
+                                        <td className="text-right" style={{ fontWeight: 600 }}>{(s.basicSalary || 0).toLocaleString()}</td>
                                         <td>
-                                            <div style={{ fontSize: 13 }}>{s.bankName || 'Not Set'}</div>
-                                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.accountNumber}</div>
+                                            <div className="text-sm">{s.bankName || 'Not Set'}</div>
+                                            <div className="text-muted text-xs">{s.accountNumber}</div>
                                         </td>
                                         <td>
-                                            <span className={`badge ${s.status === 'Active' ? 'green' : 'neutral'}`}>
+                                            <span className={`badge ${s.status === 'Active' ? 'green' : 'orange'}`}>
                                                 {s.status}
                                             </span>
                                         </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                        <td className="text-right">
+                                            <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
                                                 <button
-                                                    className="btn-outline"
-                                                    style={{ padding: '4px 8px' }}
+                                                    className="btn btn-outline"
+                                                    style={{ padding: '4px 12px', fontSize: 12 }}
                                                     onClick={() => {
                                                         setEditingStaff(s);
                                                         setIsAddModalOpen(true);
                                                     }}
+                                                    title="Modify staff payroll details"
+                                                    aria-label="Edit Staff"
                                                 >
                                                     Edit
                                                 </button>
                                                 {isAdminOrPrincipal && (
                                                     <button
-                                                        className="btn-outline"
-                                                        style={{ padding: '4px 8px', color: 'var(--accent-red)' }}
+                                                        className="btn btn-outline"
+                                                        style={{ padding: '4px 12px', fontSize: 12, color: '#ef4444' }}
                                                         onClick={() => {
                                                             if (confirm('Are you sure you want to remove this staff member?')) {
                                                                 onDeleteStaff?.(s.id);
                                                             }
                                                         }}
+                                                        title="Remove staff member from payroll"
+                                                        aria-label="Delete Staff"
                                                     >
                                                         Delete
                                                     </button>

@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import PhoneIcon from '@mui/icons-material/Phone';
 import BusinessIcon from '@mui/icons-material/Business';
+import '../../styles/finance.css';
 
 const SupplierManager: React.FC = () => {
     const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useSchool();
@@ -25,9 +26,9 @@ const SupplierManager: React.FC = () => {
         status: 'Active' as const
     });
 
-    const filteredSuppliers = suppliers.filter(s =>
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.kraPin.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredSuppliers = (suppliers || []).filter(s =>
+        (s?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s?.kraPin || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -57,63 +58,63 @@ const SupplierManager: React.FC = () => {
 
     return (
         <div className="supplier-manager animate-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <div className="finance-toolbar">
                 <div>
-                    <h2 style={{ fontSize: 18, fontWeight: 700 }}>Supplier Registry</h2>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Manage material providers and service vendors</p>
+                    <h2 className="section-title">Supplier Registry</h2>
+                    <p className="text-muted text-xs">Manage material providers and service vendors</p>
                 </div>
                 {!showForm && (
-                    <button className="btn-primary" onClick={() => setShowForm(true)}>
-                        <AddIcon style={{ fontSize: 18, marginRight: 8 }} />
+                    <button className="btn btn-primary" onClick={() => setShowForm(true)} title="Register a new vendor" aria-label="Add Supplier">
+                        <AddIcon className="mr-2" style={{ fontSize: 18 }} />
                         Add Supplier
                     </button>
                 )}
             </div>
 
             {showForm && (
-                <div className="card glass-panel" style={{ marginBottom: 24, border: '1px solid var(--accent-blue)' }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>
+                <div className="admin-section animate-in" style={{ marginBottom: 24, border: '1px solid #3b82f6' }}>
+                    <h3 className="section-title" style={{ marginBottom: 20 }}>
                         {editingId ? 'Edit Supplier' : 'Register New Supplier'}
                     </h3>
                     <form onSubmit={handleSubmit}>
                         <div className="grid-2">
                             <div className="form-group">
-                                <label>Company Name</label>
-                                <input className="form-control" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                                <label htmlFor="compName">Company Name</label>
+                                <input id="compName" className="form-control" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required title="Official company name" />
                             </div>
                             <div className="form-group">
-                                <label>KRA PIN</label>
-                                <input className="form-control" value={form.kraPin} onChange={e => setForm({ ...form, kraPin: e.target.value })} required />
+                                <label htmlFor="kraPin">KRA PIN</label>
+                                <input id="kraPin" className="form-control" value={form.kraPin} onChange={e => setForm({ ...form, kraPin: e.target.value })} required title="Tax registration number" />
                             </div>
                         </div>
                         <div className="grid-3" style={{ marginTop: 16 }}>
                             <div className="form-group">
-                                <label>Contact Person</label>
-                                <input className="form-control" value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} />
+                                <label htmlFor="contactP">Contact Person</label>
+                                <input id="contactP" className="form-control" value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} title="Primary contact person" />
                             </div>
                             <div className="form-group">
-                                <label>Phone</label>
-                                <input className="form-control" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} required />
+                                <label htmlFor="supPhone">Phone</label>
+                                <input id="supPhone" className="form-control" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} required title="Contact phone number" />
                             </div>
                             <div className="form-group">
-                                <label>Email</label>
-                                <input className="form-control" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                                <label htmlFor="supEmail">Email</label>
+                                <input id="supEmail" className="form-control" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} title="Contact email address" />
                             </div>
                         </div>
                         <div className="grid-2" style={{ marginTop: 16 }}>
                             <div className="form-group">
-                                <label>Bank Name</label>
-                                <input className="form-control" value={form.bankName} onChange={e => setForm({ ...form, bankName: e.target.value })} />
+                                <label htmlFor="supBank">Bank Name</label>
+                                <input id="supBank" className="form-control" value={form.bankName} onChange={e => setForm({ ...form, bankName: e.target.value })} title="Bank for payments" />
                             </div>
                             <div className="form-group">
-                                <label>Account Number</label>
-                                <input className="form-control" value={form.accountNumber} onChange={e => setForm({ ...form, accountNumber: e.target.value })} />
+                                <label htmlFor="supAcc">Account Number</label>
+                                <input id="supAcc" className="form-control" value={form.accountNumber} onChange={e => setForm({ ...form, accountNumber: e.target.value })} title="Bank account number" />
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-                            <button type="button" className="btn-outline" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
-                            <button type="submit" className="btn-primary">
-                                <SaveIcon style={{ fontSize: 18, marginRight: 8 }} />
+                            <button type="button" className="btn btn-outline" onClick={() => { setShowForm(false); setEditingId(null); }} title="Discard changes">Cancel</button>
+                            <button type="submit" className="btn btn-primary" title="Save supplier record">
+                                <SaveIcon className="mr-2" style={{ fontSize: 18 }} />
                                 {editingId ? 'Update Supplier' : 'Save Supplier'}
                             </button>
                         </div>
@@ -123,12 +124,22 @@ const SupplierManager: React.FC = () => {
 
             {!showForm && (
                 <>
-                    <div className="search-box" style={{ marginBottom: 20, maxWidth: 400 }}>
-                        <SearchIcon />
-                        <input type="text" placeholder="Search by name or PIN..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="search-input" />
+                    <div className="finance-nav-row">
+                        <div className="search-box-container">
+                            <SearchIcon className="search-box-icon" />
+                            <input
+                                type="text"
+                                className="form-control search-input-pl"
+                                placeholder="Search by name or PIN..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                title="Search through registered suppliers"
+                                aria-label="Search Suppliers"
+                            />
+                        </div>
                     </div>
 
-                    <div className="table-container card" style={{ padding: 0 }}>
+                    <div className="table-container">
                         <table className="data-table">
                             <thead>
                                 <tr>
@@ -137,37 +148,41 @@ const SupplierManager: React.FC = () => {
                                     <th>Contact</th>
                                     <th>Payment Terms</th>
                                     <th>Status</th>
-                                    <th style={{ textAlign: 'right' }}>Actions</th>
+                                    <th className="text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredSuppliers.length > 0 ? filteredSuppliers.map(s => (
                                     <tr key={s.id}>
                                         <td>
-                                            <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <BusinessIcon style={{ fontSize: 16, color: 'var(--accent-blue)' }} />
+                                            <div className="data-table-name" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <BusinessIcon style={{ fontSize: 16, color: '#3b82f6' }} />
                                                 {s.name}
                                             </div>
                                         </td>
                                         <td><code>{s.kraPin}</code></td>
                                         <td>
-                                            <div style={{ fontSize: 13 }}>{s.contactPerson}</div>
-                                            <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <div className="text-sm">{s.contactPerson}</div>
+                                            <div className="text-muted text-xs" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                 <PhoneIcon style={{ fontSize: 10 }} /> {s.phone}
                                             </div>
                                         </td>
                                         <td>{s.paymentTerms}</td>
                                         <td><span className={`badge ${s.status === 'Active' ? 'green' : 'red'}`}>{s.status}</span></td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                                                <button className="table-action-btn" onClick={() => handleEdit(s)} title="Edit"><EditIcon style={{ fontSize: 16 }} /></button>
-                                                <button className="table-action-btn danger" onClick={() => { if (confirm('Delete this supplier?')) deleteSupplier(s.id); }} title="Delete"><DeleteIcon style={{ fontSize: 16 }} /></button>
+                                        <td className="text-right">
+                                            <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
+                                                <button className="action-btn" onClick={() => handleEdit(s)} title="Edit supplier details" aria-label="Edit">
+                                                    <EditIcon style={{ fontSize: 18 }} />
+                                                </button>
+                                                <button className="action-btn" onClick={() => { if (confirm('Delete this supplier?')) deleteSupplier(s.id); }} title="Remove from registry" aria-label="Delete">
+                                                    <DeleteIcon style={{ fontSize: 18, color: '#ef4444' }} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                                        <td colSpan={6} className="p-20 text-center text-muted">
                                             No suppliers found matching your search.
                                         </td>
                                     </tr>

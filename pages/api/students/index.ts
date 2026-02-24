@@ -8,9 +8,6 @@ import fs from 'fs';
 import path from 'path';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const logPath = path.join(process.cwd(), 'api_debug.log');
-    fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${req.method} ${req.url}\nBody: ${JSON.stringify(req.body)}\nHeaders: ${JSON.stringify(req.headers)}\n\n`);
-
     corsHeaders(res);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -23,18 +20,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (method === 'GET') {
         if (!checkPermission(user, 'students', 'VIEW', res)) return;
         try {
-            const { grade, search } = req.query;
+            const { grade, search, page = '1', limit = '50', sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+            const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+            const take = parseInt(limit as string);
+
             const where: any = {};
             if (grade) where.grade = grade as string;
             if (search) {
+                const searchStr = search as string;
                 where.OR = [
-                    { firstName: { contains: search as string, mode: 'insensitive' } },
-                    { lastName: { contains: search as string, mode: 'insensitive' } },
-                    { admissionNumber: { contains: search as string, mode: 'insensitive' } },
+                    { firstName: { contains: searchStr, mode: 'insensitive' } },
+                    { lastName: { contains: searchStr, mode: 'insensitive' } },
+                    { admissionNumber: { contains: searchStr, mode: 'insensitive' } },
                 ];
             }
-            const students = await prisma.student.findMany({ where, orderBy: { createdAt: 'desc' } });
-            return res.status(200).json(students);
+
+            const [students, total] = await Promise.all([
+                prisma.student.findMany({
+                    where,
+                    orderBy: { [sortBy as string]: sortOrder as string },
+                    skip,
+                    take,
+                }),
+                prisma.student.count({ where })
+            ]);
+
+            return res.status(200).json({
+                students,
+                meta: {
+                    total,
+                    page: parseInt(page as string),
+                    limit: take,
+                    totalPages: Math.ceil(total / take)
+                }
+            });
         } catch (error) {
             console.error('API GET Students Error:', error);
             return res.status(500).json({ error: 'Failed to fetch students' });
@@ -46,18 +65,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
             const data = req.body;
 
+            // Basic Validation
+            if (!data.firstName || !data.lastName || !data.grade) {
+                return res.status(400).json({ error: 'Missing required fields: firstName, lastName, grade' });
+            }
+
             let admissionNumber = data.admissionNumber;
             if (!admissionNumber) {
                 const count = await prisma.student.count();
                 const year = new Date().getFullYear();
-                admissionNumber = `ELR/${year}/${(count + 1).toString().padStart(3, '0')}`;
+                // Sequential generation with zero padding
+                admissionNumber = `ELR/${year}/${(count + 1).toString().padStart(4, '0')}`;
             }
+
+            // Ensure unique admission number check manually for better error message
+            const existing = await prisma.student.findUnique({ where: { admissionNumber } });
+            if (existing) {
+                return res.status(400).json({ error: `Admission number ${admissionNumber} already exists` });
+            }
+
+            const totalFees = parseFloat(data.totalFees || 0);
+            const paidFees = parseFloat(data.paidFees || 0);
 
             const student = await prisma.student.create({
                 data: {
                     ...data,
                     admissionNumber,
-                    feeBalance: (data.totalFees || 0) - (data.paidFees || 0),
+                    totalFees,
+                    paidFees,
+                    feeBalance: totalFees - paidFees,
                 },
             });
 
@@ -73,17 +109,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(201).json(student);
         } catch (error: any) {
             console.error('API POST Student Error:', error);
-            // Check for unique constraint violation (admission number)
             if (error.code === 'P2002') {
-                return res.status(409).json({ error: 'Admission number already exists' });
+                return res.status(409).json({ error: 'A user with this unique field already exists' });
             }
-            return res.status(500).json({ error: error.message || 'Failed to create student' });
+            return res.status(500).json({ error: 'Failed to process student registration' });
         }
     }
 
-    const logMsg = `\n[${new Date().toISOString()}] 405 ERROR: ${req.method} ${req.url}\nHeaders: ${JSON.stringify(req.headers)}\n`;
-    fs.appendFileSync(logPath, logMsg);
-    console.error(`[405 ERROR] Method ${req.method} not allowed on /api/students. Expected GET or POST.`);
     res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }

@@ -12,33 +12,71 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const user = requireAuth(req, res);
     if (!user) return;
 
-    if (req.method === 'GET') {
+    const method = req.method?.toUpperCase();
+
+    if (method === 'GET') {
         if (!checkPermission(user, 'teachers', 'VIEW', res)) return;
-        const { search } = req.query;
-        const where: any = {};
-        if (search) {
-            where.OR = [
-                { firstName: { contains: search as string, mode: 'insensitive' } },
-                { lastName: { contains: search as string, mode: 'insensitive' } },
-                { email: { contains: search as string, mode: 'insensitive' } },
-            ];
+        try {
+            const { search, page = '1', limit = '50', sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+            const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+            const take = parseInt(limit as string);
+
+            const where: any = {};
+            if (search) {
+                const searchStr = search as string;
+                where.OR = [
+                    { firstName: { contains: searchStr, mode: 'insensitive' } },
+                    { lastName: { contains: searchStr, mode: 'insensitive' } },
+                    { email: { contains: searchStr, mode: 'insensitive' } },
+                    { phone: { contains: searchStr, mode: 'insensitive' } },
+                ];
+            }
+
+            const [teachers, total] = await Promise.all([
+                prisma.teacher.findMany({
+                    where,
+                    orderBy: { [sortBy as string]: sortOrder as string },
+                    skip,
+                    take,
+                }),
+                prisma.teacher.count({ where })
+            ]);
+
+            return res.status(200).json({
+                teachers,
+                meta: {
+                    total,
+                    page: parseInt(page as string),
+                    limit: take,
+                    totalPages: Math.ceil(total / take)
+                }
+            });
+        } catch (error) {
+            console.error('API GET Teachers Error:', error);
+            return res.status(500).json({ error: 'Failed to fetch teachers directory' });
         }
-        const teachers = await prisma.teacher.findMany({ where, orderBy: { createdAt: 'desc' } });
-        return res.status(200).json(teachers);
     }
 
-    if (req.method === 'POST') {
+    if (method === 'POST') {
         if (!checkPermission(user, 'teachers', 'CREATE', res)) return;
 
-        const { firstName, lastName, email, phone, joinDate } = req.body;
+        const data = req.body;
+        const { firstName, lastName, email, phone, joinDate } = data;
 
-        // Basic validation
+        // Validation logic
         if (!firstName || !lastName || !email || !phone || !joinDate) {
-            return res.status(400).json({ error: 'Missing required fields: firstName, lastName, email, phone, and joinDate are mandatory.' });
+            return res.status(400).json({ error: 'Personal details (name, email, phone) and hire date are required.' });
         }
 
         try {
-            const teacher = await prisma.teacher.create({ data: req.body });
+            const teacher = await prisma.teacher.create({
+                data: {
+                    ...data,
+                    // Ensure arrays are initialized if missing
+                    subjects: data.subjects || [],
+                    grades: data.grades || []
+                }
+            });
 
             await logAction(
                 user.id,
@@ -53,11 +91,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } catch (error: any) {
             console.error('Error creating teacher:', error);
             if (error.code === 'P2002') {
-                return res.status(400).json({ error: 'A teacher with this email already exists.' });
+                return res.status(409).json({ error: 'A teacher with this email address is already registered.' });
             }
-            return res.status(500).json({ error: 'Failed to register teacher. Please ensure all fields are correct.' });
+            return res.status(500).json({ error: 'System error during teacher registration.' });
         }
     }
 
-    res.status(405).json({ error: 'Method not allowed' });
+    res.setHeader('Allow', 'GET, POST');
+    return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }

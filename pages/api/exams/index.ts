@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../lib/prisma';
-import { requireAuth, corsHeaders } from '../../../lib/auth';
+import { requireAuth, checkPermission, corsHeaders } from '../../../lib/auth';
 import { touchSync } from '../../../lib/sync';
 import { logAction } from '../../../lib/audit';
 
@@ -11,29 +11,85 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const user = requireAuth(req, res);
     if (!user) return;
 
-    if (req.method === 'GET') {
-        const { grade, term } = req.query;
-        const where: any = {};
-        if (grade) where.grade = grade as string;
-        if (term) where.term = term as string;
-        const exams = await prisma.exam.findMany({ where, orderBy: { date: 'desc' } });
-        return res.status(200).json(exams);
+    const method = req.method?.toUpperCase();
+
+    if (method === 'GET') {
+        if (!checkPermission(user, 'exams', 'VIEW', res)) return;
+        try {
+            const { grade, term, subject, page = '1', limit = '50', search } = req.query;
+            const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+            const take = parseInt(limit as string);
+
+            const where: any = {};
+            if (grade) where.grade = grade as string;
+            if (term) where.term = term as string;
+            if (subject) where.subject = subject as string;
+            if (search) {
+                where.name = { contains: search as string, mode: 'insensitive' };
+            }
+
+            const [exams, total] = await Promise.all([
+                prisma.exam.findMany({
+                    where,
+                    orderBy: { date: 'desc' },
+                    skip,
+                    take,
+                }),
+                prisma.exam.count({ where })
+            ]);
+
+            return res.status(200).json({
+                exams,
+                meta: {
+                    total,
+                    page: parseInt(page as string),
+                    limit: take,
+                    totalPages: Math.ceil(total / take)
+                }
+            });
+        } catch (error: any) {
+            console.error('API GET Exams Error:', error);
+            return res.status(500).json({ error: 'Failed to retrieve examination schedule' });
+        }
     }
 
-    if (req.method === 'POST') {
-        const exam = await prisma.exam.create({ data: req.body });
+    if (method === 'POST') {
+        if (!checkPermission(user, 'exams', 'EDIT', res)) return;
+        try {
+            const { name, subject, grade, date, term, totalMarks, type } = req.body;
 
-        await logAction(
-            user.id,
-            user.name,
-            'CREATE_EXAM',
-            `Scheduled new exam: ${exam.name} for ${exam.grade} (${exam.subject})`,
-            (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
-        );
+            if (!name || !subject || !grade || !date || !term) {
+                return res.status(400).json({ error: 'Missing required exam details (Name, Subject, Grade, Date, Term)' });
+            }
 
-        await touchSync();
-        return res.status(201).json(exam);
+            const exam = await prisma.exam.create({
+                data: {
+                    name,
+                    subject,
+                    grade,
+                    date,
+                    term,
+                    type: type || 'Final',
+                    totalMarks: parseInt(totalMarks?.toString()) || 100
+                }
+            });
+
+            await logAction(
+                user.id,
+                user.name,
+                'CREATE_EXAM',
+                `Scheduled ${exam.type} exam: ${exam.name} for ${exam.grade} [${exam.subject}]`,
+                { module: 'exams' }
+            );
+
+            await touchSync();
+            return res.status(201).json(exam);
+        } catch (error: any) {
+            console.error('API POST Exam Error:', error);
+            return res.status(500).json({ error: 'System error while scheduling exam' });
+        }
     }
 
-    res.status(405).json({ error: 'Method not allowed' });
+    res.setHeader('Allow', 'GET, POST');
+    return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }

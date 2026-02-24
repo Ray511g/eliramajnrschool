@@ -15,7 +15,8 @@ export async function postTransaction(
     transactionId: string,
     entries: TransactionEntry[],
     reference?: string,
-    date: Date = new Date()
+    date: Date = new Date(),
+    externalTx?: any // Optional external transaction client
 ) {
     // 1. Validate balance
     const totalDebit = entries.reduce((sum, e) => sum + e.debit, 0);
@@ -25,9 +26,8 @@ export async function postTransaction(
         throw new Error(`Transaction imbalanced: Debit (${totalDebit}) !== Credit (${totalCredit})`);
     }
 
-    return await prisma.$transaction(async (tx: any) => {
+    const execute = async (tx: any) => {
         const results = [];
-
         for (const entry of entries) {
             // Find account
             const account = await tx.account.findUnique({
@@ -39,8 +39,6 @@ export async function postTransaction(
             }
 
             // Update account balance
-            // For ASSET and EXPENSE: Debit increases, Credit decreases
-            // For LIABILITY, EQUITY, INCOME: Credit increases, Debit decreases
             let balanceChange = 0;
             if (['ASSET', 'EXPENSE'].includes(account.type)) {
                 balanceChange = entry.debit - entry.credit;
@@ -68,7 +66,12 @@ export async function postTransaction(
 
             results.push(journal);
         }
-
         return results;
-    });
+    };
+
+    if (externalTx) {
+        return await execute(externalTx);
+    } else {
+        return await prisma.$transaction(execute);
+    }
 }

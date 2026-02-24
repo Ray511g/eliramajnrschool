@@ -9,9 +9,10 @@ import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import UndoIcon from '@mui/icons-material/Undo';
 import LockIcon from '@mui/icons-material/Lock';
+import '../../styles/finance.css';
 
 const GeneralLedger: React.FC = () => {
-    const { user } = useAuth();
+    const { user: authUser } = useAuth();
     const {
         accounts, journalEntries,
         addChartOfAccount, updateChartOfAccount,
@@ -42,12 +43,11 @@ const GeneralLedger: React.FC = () => {
 
     const handleJournalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const { user } = useAuth(); // Import useAuth
         if (journalForm.debit === 0 && journalForm.credit === 0) {
             alert('Must have either a debit or credit amount');
             return;
         }
-        await addJournalEntry({ ...journalForm, requestedBy: user?.name || 'System' });
+        await addJournalEntry({ ...journalForm, requestedBy: authUser?.name || 'System' });
         setShowForm(false);
     };
 
@@ -101,49 +101,63 @@ const GeneralLedger: React.FC = () => {
                 <button
                     className={`tab-btn ${activeTab === 'journal' ? 'active' : ''}`}
                     onClick={() => setActiveTab('journal')}
+                    title="View Journal Posting History"
+                    aria-label="Journal Entries Tab"
                 >
                     <ReceiptLongIcon style={{ fontSize: 20 }} /> Journal Entries
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'accounts' ? 'active' : ''}`}
                     onClick={() => setActiveTab('accounts')}
+                    title="View Chart of Accounts & Balances"
+                    aria-label="Chart of Accounts Tab"
                 >
                     <AccountTreeIcon style={{ fontSize: 20 }} /> Chart of Accounts
                 </button>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16 }}>
-                <div className="search-box" style={{ flex: 1, maxWidth: 400 }}>
-                    <SearchIcon />
+            <div className="finance-nav-row">
+                <div className="search-box-container">
+                    <SearchIcon className="search-box-icon" />
                     <input
                         type="text"
+                        className="form-control search-input-pl"
                         placeholder={`Search ${activeTab === 'journal' ? 'entries' : 'accounts'}...`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        title={`Search ${activeTab}`}
+                        aria-label={`Search ${activeTab}`}
                     />
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
+                <div className="finance-toolbar-right">
                     {activeTab === 'journal' && (
-                        <button className="btn-primary" onClick={() => setShowForm(true)}>
-                            <AddIcon style={{ fontSize: 18, marginRight: 8 }} />
+                        <button className="btn btn-primary" onClick={() => setShowForm(true)} title="Add manual journal entry" aria-label="New Posting">
+                            <AddIcon className="mr-2" style={{ fontSize: 18 }} />
                             New Posting
                         </button>
                     )}
-                    <button className="btn-outline" onClick={exportCSV}>
-                        <FileDownloadIcon style={{ fontSize: 18, marginRight: 8 }} />
-                        Export Audit Log
+                    <button className="btn btn-outline" onClick={exportCSV} title="Download current view as CSV" aria-label="Export Data">
+                        <FileDownloadIcon className="mr-2" style={{ fontSize: 18 }} />
+                        Export CSV
                     </button>
                 </div>
             </div>
 
             {showForm && (
-                <div className="card glass-panel" style={{ marginBottom: 24, padding: 24 }}>
+                <div className="admin-section animate-in" style={{ marginBottom: 24 }}>
                     <h3 style={{ marginBottom: 16 }}>Manual Journal Posting</h3>
                     <form onSubmit={handleJournalSubmit}>
                         <div className="grid-3">
                             <div className="form-group">
-                                <label>Target Account</label>
-                                <select className="form-control" value={journalForm.accountId} onChange={e => setJournalForm({ ...journalForm, accountId: e.target.value })} required>
+                                <label htmlFor="targetAcc">Target Account</label>
+                                <select
+                                    id="targetAcc"
+                                    className="form-control"
+                                    value={journalForm.accountId}
+                                    onChange={e => setJournalForm({ ...journalForm, accountId: e.target.value })}
+                                    required
+                                    title="Select the account to post to"
+                                >
                                     <option value="">Select Account...</option>
                                     {accounts.map(acc => (
                                         <option key={acc.id} value={acc.id}>{acc.code} - {acc.name}</option>
@@ -151,33 +165,63 @@ const GeneralLedger: React.FC = () => {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Date</label>
-                                <input type="date" className="form-control" value={journalForm.date} onChange={e => setJournalForm({ ...journalForm, date: e.target.value })} required />
+                                <label htmlFor="postDate">Date</label>
+                                <input
+                                    id="postDate"
+                                    type="date"
+                                    className="form-control"
+                                    value={journalForm.date}
+                                    onChange={e => setJournalForm({ ...journalForm, date: e.target.value })}
+                                    required
+                                    title="Date of transaction"
+                                />
                             </div>
                         </div>
                         <div className="grid-3" style={{ marginTop: 16 }}>
                             <div className="form-group">
-                                <label>Description</label>
-                                <input className="form-control" value={journalForm.description} onChange={e => setJournalForm({ ...journalForm, description: e.target.value })} placeholder="Purpose of entry..." required />
+                                <label htmlFor="description">Description</label>
+                                <input
+                                    id="description"
+                                    className="form-control"
+                                    value={journalForm.description}
+                                    onChange={e => setJournalForm({ ...journalForm, description: e.target.value })}
+                                    placeholder="Purpose of entry..."
+                                    required
+                                    title="Brief explanation of entry"
+                                />
                             </div>
                             <div className="form-group">
-                                <label>Debit (KES)</label>
-                                <input type="number" className="form-control" value={journalForm.debit} onChange={e => setJournalForm({ ...journalForm, debit: parseFloat(e.target.value), credit: 0 })} />
+                                <label htmlFor="debitVal">Debit (KES)</label>
+                                <input
+                                    id="debitVal"
+                                    type="number"
+                                    className="form-control"
+                                    value={journalForm.debit}
+                                    onChange={e => setJournalForm({ ...journalForm, debit: parseFloat(e.target.value), credit: 0 })}
+                                    title="Amount to debit"
+                                />
                             </div>
                             <div className="form-group">
-                                <label>Credit (KES)</label>
-                                <input type="number" className="form-control" value={journalForm.credit} onChange={e => setJournalForm({ ...journalForm, credit: parseFloat(e.target.value), debit: 0 })} />
+                                <label htmlFor="creditVal">Credit (KES)</label>
+                                <input
+                                    id="creditVal"
+                                    type="number"
+                                    className="form-control"
+                                    value={journalForm.credit}
+                                    onChange={e => setJournalForm({ ...journalForm, credit: parseFloat(e.target.value), debit: 0 })}
+                                    title="Amount to credit"
+                                />
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-                            <button type="button" className="btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
-                            <button type="submit" className="btn-primary">Post Entry</button>
+                            <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)} title="Cancel entry creation">Cancel</button>
+                            <button type="submit" className="btn btn-primary" title="Post entry to ledger">Post Entry</button>
                         </div>
                     </form>
                 </div>
             )}
 
-            <div className="table-container card" style={{ padding: 0 }}>
+            <div className="table-container">
                 {activeTab === 'journal' ? (
                     <table className="data-table">
                         <thead>
@@ -186,26 +230,26 @@ const GeneralLedger: React.FC = () => {
                                 <th>Transaction ID</th>
                                 <th>Account</th>
                                 <th>Description</th>
-                                <th style={{ textAlign: 'right' }}>Debit</th>
-                                <th style={{ textAlign: 'right' }}>Credit</th>
+                                <th className="text-right">Debit</th>
+                                <th className="text-right">Credit</th>
                                 <th>Status</th>
-                                <th style={{ textAlign: 'right' }}>Actions</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredEntries.length > 0 ? filteredEntries.map((entry, i) => (
                                 <tr key={entry.id || i}>
                                     <td>{new Date(entry.date).toLocaleDateString()}</td>
-                                    <td><code style={{ fontSize: 11 }}>{entry.transactionId}</code></td>
+                                    <td><code className="text-xs">{entry.transactionId}</code></td>
                                     <td>
-                                        <div style={{ fontWeight: 500 }}>{entry.account?.name}</div>
-                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{entry.account?.code}</div>
+                                        <div className="data-table-name">{entry.account?.name}</div>
+                                        <div className="text-muted text-xs">{entry.account?.code}</div>
                                     </td>
                                     <td>{entry.description}</td>
-                                    <td style={{ textAlign: 'right', color: entry.debit > 0 ? 'var(--accent-green)' : 'inherit', fontWeight: entry.debit > 0 ? 600 : 400 }}>
+                                    <td className="text-right" style={{ color: entry.debit > 0 ? '#10b981' : 'inherit', fontWeight: entry.debit > 0 ? 600 : 400 }}>
                                         {entry.debit > 0 ? entry.debit.toLocaleString() : '-'}
                                     </td>
-                                    <td style={{ textAlign: 'right', color: entry.credit > 0 ? 'var(--accent-red)' : 'inherit', fontWeight: entry.credit > 0 ? 600 : 400 }}>
+                                    <td className="text-right" style={{ color: entry.credit > 0 ? '#ef4444' : 'inherit', fontWeight: entry.credit > 0 ? 600 : 400 }}>
                                         {entry.credit > 0 ? entry.credit.toLocaleString() : '-'}
                                     </td>
                                     <td>
@@ -213,25 +257,25 @@ const GeneralLedger: React.FC = () => {
                                             {entry.status}
                                         </span>
                                     </td>
-                                    <td style={{ textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                    <td className="text-right">
+                                        <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
                                             {entry.status === 'Pending' && (
-                                                <button className="table-action-btn" onClick={() => approveJournalEntry(entry.id)} title="Approve & Post">
-                                                    <CheckCircleIcon style={{ fontSize: 16, color: 'var(--accent-green)' }} />
+                                                <button className="action-btn" onClick={() => approveJournalEntry(entry.id)} title="Approve & Post" aria-label="Approve posting">
+                                                    <CheckCircleIcon style={{ fontSize: 16, color: '#10b981' }} />
                                                 </button>
                                             )}
                                             {entry.status === 'Approved' && (
-                                                <button className="table-action-btn" onClick={() => { if (confirm('Reverse this transaction? This will create an offsetting entry.')) reverseJournalEntry(entry.id); }} title="Reverse Entry">
-                                                    <UndoIcon style={{ fontSize: 16, color: 'var(--accent-red)' }} />
+                                                <button className="action-btn delete" onClick={() => { if (confirm('Reverse this transaction? This will create an offsetting entry.')) reverseJournalEntry(entry.id); }} title="Reverse Entry" aria-label="Reverse posting">
+                                                    <UndoIcon style={{ fontSize: 16 }} />
                                                 </button>
                                             )}
-                                            {entry.status === 'Reversed' && <LockIcon style={{ fontSize: 16, opacity: 0.3 }} />}
+                                            {entry.status === 'Reversed' && <LockIcon style={{ fontSize: 16, opacity: 0.3 }} title="Entry Locked" />}
                                         </div>
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                                    <td colSpan={8} className="p-10 text-center text-muted">
                                         No journal entries found.
                                     </td>
                                 </tr>
@@ -246,17 +290,17 @@ const GeneralLedger: React.FC = () => {
                                 <th>Account Name</th>
                                 <th>Type</th>
                                 <th>Category</th>
-                                <th style={{ textAlign: 'right' }}>Balance</th>
+                                <th className="text-right">Balance</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredAccounts.map((acc) => (
                                 <tr key={acc.id}>
                                     <td><code>{acc.code}</code></td>
-                                    <td style={{ fontWeight: 500 }}>{acc.name}</td>
-                                    <td><span className={`badge ${acc.type.toLowerCase()} blue`}>{acc.type}</span></td>
+                                    <td className="data-table-name">{acc.name}</td>
+                                    <td><span className={`badge blue`}>{acc.type}</span></td>
                                     <td>{acc.category}</td>
-                                    <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                                    <td className="text-right" style={{ fontWeight: 600 }}>
                                         {acc.balance.toLocaleString()}
                                     </td>
                                 </tr>

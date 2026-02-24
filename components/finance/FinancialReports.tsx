@@ -3,21 +3,18 @@ import { useSchool } from '../../context/SchoolContext';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PrintIcon from '@mui/icons-material/Print';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import '../../styles/finance.css';
 
 type ReportType = 'P&L' | 'BalanceSheet' | 'TrialBalance' | 'Aging';
 
 const FinancialReports: React.FC = () => {
-    const { settings, accounts, expenses, payments, suppliers } = useSchool();
+    const { settings, accounts } = useSchool();
     const [reportType, setReportType] = useState<ReportType>('P&L');
-    const [period, setPeriod] = useState(new Date().getFullYear().toString());
+    const period = new Date().getFullYear().toString();
 
     const generatePL = () => {
-        // Simple logic for demonstration
-        const revenue = accounts.filter(a => a.type === 'Revenue').reduce((sum, a) => sum + a.balance, 0);
-        const expensesTotal = accounts.filter(a => a.type === 'Expense').reduce((sum, a) => sum + a.balance, 0);
+        const revenue = (accounts || []).filter(a => a.type === 'Revenue').reduce((sum, a) => sum + (a.balance || 0), 0);
+        const expensesTotal = (accounts || []).filter(a => a.type === 'Expense').reduce((sum, a) => sum + (a.balance || 0), 0);
         return { revenue, expenses: expensesTotal, net: revenue - expensesTotal };
     };
 
@@ -25,27 +22,29 @@ const FinancialReports: React.FC = () => {
 
     return (
         <div className="financial-reports animate-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <div className="finance-toolbar">
                 <div>
-                    <h2 style={{ fontSize: 18, fontWeight: 700 }}>Financial Reporting</h2>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Audit-ready financial statements and analysis</p>
+                    <h2 className="section-title">Financial Reporting</h2>
+                    <p className="text-muted text-xs">Audit-ready financial statements and analysis</p>
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                    <button className="btn-outline">
-                        <PrintIcon style={{ fontSize: 18, marginRight: 8 }} /> Print
+                <div className="finance-toolbar-right">
+                    <button className="btn btn-outline" title="Print this report" aria-label="Print">
+                        <PrintIcon className="mr-2" style={{ fontSize: 18 }} /> Print
                     </button>
-                    <button className="btn-primary">
-                        <FileDownloadIcon style={{ fontSize: 18, marginRight: 8 }} /> Export PDF
+                    <button className="btn btn-primary" title="Export to PDF format" aria-label="Export PDF">
+                        <FileDownloadIcon className="mr-2" style={{ fontSize: 18 }} /> Export PDF
                     </button>
                 </div>
             </div>
 
-            <div className="tab-nav small" style={{ marginBottom: 24 }}>
+            <div className="tab-nav" style={{ marginBottom: 24 }}>
                 {(['P&L', 'BalanceSheet', 'TrialBalance', 'Aging'] as ReportType[]).map(r => (
                     <button
                         key={r}
                         className={`tab-btn ${reportType === r ? 'active' : ''}`}
                         onClick={() => setReportType(r)}
+                        title={`Switch to ${r} report view`}
+                        aria-label={`${r} Report`}
                     >
                         {r === 'P&L' && 'Profit & Loss'}
                         {r === 'BalanceSheet' && 'Balance Sheet'}
@@ -55,55 +54,55 @@ const FinancialReports: React.FC = () => {
                 ))}
             </div>
 
-            <div className="report-content card glass-panel">
-                <div className="report-header" style={{ textAlign: 'center', marginBottom: 40, borderBottom: '1px solid var(--border-color)', paddingBottom: 20 }}>
-                    <h1 style={{ fontSize: 24, fontWeight: 800 }}>{settings.schoolName}</h1>
-                    <h2 style={{ fontSize: 18, color: 'var(--text-secondary)' }}>
+            <div className="report-container card">
+                <div style={{ textAlign: 'center', marginBottom: 40, borderBottom: '1px solid var(--border-color)', paddingBottom: 20 }}>
+                    <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>{settings.schoolName}</h1>
+                    <h2 style={{ fontSize: 18, color: 'var(--text-secondary)', marginTop: 8 }}>
                         {reportType === 'P&L' ? 'Statement of Comprehensive Income' :
                             reportType === 'BalanceSheet' ? 'Statement of Financial Position' :
                                 reportType === 'TrialBalance' ? 'Trial Balance' : 'Accounts Aging Summary'}
                     </h2>
-                    <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>For the Year Ended 31st December {period}</p>
+                    <p className="text-muted text-xs" style={{ marginTop: 8 }}>For the Year Ended 31st December {period}</p>
                 </div>
 
                 {reportType === 'P&L' && (
                     <div className="pl-report">
-                        <div className="report-row header">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '2px solid var(--border-color)', fontWeight: 700 }}>
                             <span>Description</span>
-                            <span style={{ textAlign: 'right' }}>Amount (KES)</span>
+                            <span className="text-right">Amount (KES)</span>
                         </div>
 
-                        <div className="report-section">
-                            <h3 className="section-title">REVENUE</h3>
-                            {accounts.filter(a => a.type === 'Revenue').map(acc => (
-                                <div key={acc.id} className="report-row">
+                        <div style={{ marginTop: 24 }}>
+                            <h3 className="section-title" style={{ fontSize: 14, color: '#3b82f6' }}>REVENUE</h3>
+                            {(accounts || []).filter(a => a.type === 'Revenue').map(acc => (
+                                <div key={acc.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                                     <span>{acc.name}</span>
-                                    <span style={{ textAlign: 'right' }}>{acc.balance.toLocaleString()}</span>
+                                    <span className="text-right">{acc.balance.toLocaleString()}</span>
                                 </div>
                             ))}
-                            <div className="report-row total">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', marginTop: 8, borderTop: '1px solid #333', borderBottom: '1px solid #333', fontWeight: 700 }}>
                                 <span>TOTAL REVENUE</span>
-                                <span style={{ textAlign: 'right' }}>{pl.revenue.toLocaleString()}</span>
+                                <span className="text-right">{pl.revenue.toLocaleString()}</span>
                             </div>
                         </div>
 
-                        <div className="report-section" style={{ marginTop: 24 }}>
-                            <h3 className="section-title">EXPENSES</h3>
-                            {accounts.filter(a => a.type === 'Expense').map(acc => (
-                                <div key={acc.id} className="report-row">
+                        <div style={{ marginTop: 32 }}>
+                            <h3 className="section-title" style={{ fontSize: 14, color: '#ef4444' }}>EXPENSES</h3>
+                            {(accounts || []).filter(a => a.type === 'Expense').map(acc => (
+                                <div key={acc.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                                     <span>{acc.name}</span>
-                                    <span style={{ textAlign: 'right' }}>({acc.balance.toLocaleString()})</span>
+                                    <span className="text-right">({acc.balance.toLocaleString()})</span>
                                 </div>
                             ))}
-                            <div className="report-row total">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', marginTop: 8, borderTop: '1px solid #333', borderBottom: '1px solid #333', fontWeight: 700 }}>
                                 <span>TOTAL EXPENSES</span>
-                                <span style={{ textAlign: 'right' }}>({pl.expenses.toLocaleString()})</span>
+                                <span className="text-right">({pl.expenses.toLocaleString()})</span>
                             </div>
                         </div>
 
-                        <div className="report-row net-income" style={{ marginTop: 40, paddingTop: 20, borderTop: '2px double var(--border-color)' }}>
+                        <div style={{ marginTop: 40, paddingTop: 20, borderTop: '2px double #333', display: 'flex', justifyContent: 'space-between' }}>
                             <span style={{ fontWeight: 800, fontSize: 18 }}>NET PROFIT / (LOSS)</span>
-                            <span style={{ textAlign: 'right', fontWeight: 800, fontSize: 18, color: pl.net >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                            <span className="text-right" style={{ fontWeight: 800, fontSize: 18, color: pl.net >= 0 ? '#10b981' : '#ef4444' }}>
                                 KES {pl.net.toLocaleString()}
                             </span>
                         </div>
@@ -112,21 +111,21 @@ const FinancialReports: React.FC = () => {
 
                 {reportType === 'BalanceSheet' && (
                     <div className="bs-report">
-                        <div className="report-section">
-                            <h3 className="section-title">ASSETS</h3>
-                            {accounts.filter(a => a.type === 'Asset').map(acc => (
-                                <div key={acc.id} className="report-row">
+                        <div style={{ marginTop: 24 }}>
+                            <h3 className="section-title" style={{ fontSize: 14, color: '#3b82f6' }}>ASSETS</h3>
+                            {(accounts || []).filter(a => a.type === 'Asset').map(acc => (
+                                <div key={acc.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                                     <span>{acc.name}</span>
-                                    <span style={{ textAlign: 'right' }}>{acc.balance.toLocaleString()}</span>
+                                    <span className="text-right">{acc.balance.toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>
-                        <div className="report-section" style={{ marginTop: 24 }}>
-                            <h3 className="section-title">LIABILITIES & EQUITY</h3>
-                            {accounts.filter(a => a.type === 'Liability' || a.type === 'Equity').map(acc => (
-                                <div key={acc.id} className="report-row">
+                        <div style={{ marginTop: 32 }}>
+                            <h3 className="section-title" style={{ fontSize: 14, color: '#8b5cf6' }}>LIABILITIES & EQUITY</h3>
+                            {(accounts || []).filter(a => a.type === 'Liability' || a.type === 'Equity').map(acc => (
+                                <div key={acc.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                                     <span>{acc.name}</span>
-                                    <span style={{ textAlign: 'right' }}>{acc.balance.toLocaleString()}</span>
+                                    <span className="text-right">{acc.balance.toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>
@@ -134,45 +133,16 @@ const FinancialReports: React.FC = () => {
                 )}
 
                 {(reportType === 'TrialBalance' || reportType === 'Aging') && (
-                    <div style={{ textAlign: 'center', padding: 80 }}>
-                        <AssessmentIcon style={{ fontSize: 64, color: 'var(--text-muted)', opacity: 0.3 }} />
-                        <h3 style={{ marginTop: 16 }}>Advanced Report Module</h3>
-                        <p style={{ color: 'var(--text-muted)' }}>This enterprise report is being synthesized based on real-time ledger data.</p>
-                        <button className="btn-primary" style={{ marginTop: 20 }}>Process Real-time Data</button>
+                    <div className="p-20 text-center text-muted" style={{ padding: '80px 20px' }}>
+                        <AssessmentIcon style={{ fontSize: 64, opacity: 0.2, marginBottom: 16 }} />
+                        <h3>Advanced Report Module</h3>
+                        <p style={{ fontSize: 14 }}>This enterprise report is being synthesized based on real-time ledger data.</p>
+                        <button className="btn btn-primary" style={{ marginTop: 24 }} title="Reload and reconcile reports" aria-label="Process Data">
+                            Process Real-time Data
+                        </button>
                     </div>
                 )}
             </div>
-
-            <style jsx>{`
-                .report-content {
-                    padding: 60px;
-                    max-width: 900px;
-                    margin: 0 auto;
-                    background: white !important;
-                    color: #1a1a1a !important;
-                    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-                }
-                .report-row {
-                    display: flex;
-                    justify-content: space-between;
-                    padding: 8px 0;
-                    border-bottom: 1px solid #f0f0f0;
-                }
-                .section-title {
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #666;
-                    margin-bottom: 12px;
-                    margin-top: 24px;
-                    letter-spacing: 1px;
-                }
-                .total {
-                    font-weight: 700;
-                    border-bottom: 1px solid #333;
-                    border-top: 1px solid #333;
-                    margin-top: 8px;
-                }
-            `}</style>
         </div>
     );
 };

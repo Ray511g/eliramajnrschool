@@ -15,6 +15,7 @@ import RecordPaymentModal from '../modals/RecordPaymentModal';
 import ReceiptModal from '../modals/ReceiptModal';
 import FeeStructureModal from '../modals/FeeStructureModal';
 import Pagination from '../common/Pagination';
+import '../../styles/finance.css';
 
 const FeeManager: React.FC = () => {
     const { students, payments, settings, updateGradeFees, deletePayment } = useSchool();
@@ -130,24 +131,24 @@ const FeeManager: React.FC = () => {
 
     return (
         <div className="fee-manager">
-            <div className="toolbar" style={{ justifyContent: 'space-between', marginBottom: 20 }}>
+            <div className="finance-toolbar">
                 <div className="toolbar-left">
-                    <h2 style={{ fontSize: 18, fontWeight: 600 }}>Student Fee Management</h2>
+                    <h2 className="section-title">Student Fee Management</h2>
                 </div>
-                <div className="toolbar-right" style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-outline" onClick={() => setShowStructure(true)}>
-                        <LocalAtmIcon style={{ fontSize: 18 }} /> Fee Structure
+                <div className="finance-toolbar-right">
+                    <button className="btn btn-outline" onClick={() => setShowStructure(true)} title="Set or update fee types per grade" aria-label="Fee Structure Settings">
+                        <LocalAtmIcon className="mr-2" style={{ fontSize: 18 }} /> Fee Structure
                     </button>
-                    <button className="btn btn-outline" onClick={handlePrint}>
-                        <PrintIcon style={{ fontSize: 18 }} /> Print List
+                    <button className="btn btn-outline" onClick={handlePrint} title="Generate and print collection report" aria-label="Print Statement">
+                        <PrintIcon className="mr-2" style={{ fontSize: 18 }} /> Print List
                     </button>
-                    <button className="btn btn-primary green" onClick={() => setShowPayModal(true)}>
-                        <AddIcon style={{ fontSize: 18 }} /> Record Payment
+                    <button className="btn btn-primary green" onClick={() => setShowPayModal(true)} title="Open form to record new student payment" aria-label="Record New Payment">
+                        <AddIcon className="mr-2" style={{ fontSize: 18 }} /> Record Payment
                     </button>
                 </div>
             </div>
 
-            <div className="stats-grid" style={{ marginBottom: 24 }}>
+            <div className="finance-stats-container">
                 <div className="stat-card blue">
                     <div className="stat-card-value">KSh {totalFees.toLocaleString()}</div>
                     <div className="stat-card-label">Total Expected</div>
@@ -158,36 +159,36 @@ const FeeManager: React.FC = () => {
                 </div>
                 <div className="stat-card red">
                     <div className="stat-card-value">KSh {pending.toLocaleString()}</div>
-                    <div className="stat-card-label">Pending</div>
+                    <div className="stat-card-label">Pending Arrears</div>
                 </div>
                 <div className="stat-card purple">
                     <div className="stat-card-value">{collectionRate}%</div>
-                    <div className="stat-card-label">Rate</div>
+                    <div className="stat-card-label">Collection Rate</div>
                 </div>
             </div>
 
             <div className="admin-section" style={{ marginBottom: 24 }}>
-                <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                    <h3 className="section-title" style={{ margin: 0 }}>Fee Transactions History</h3>
-                    <div className="filter-row" style={{ display: 'flex', gap: 12 }}>
-                        <div className="search-box">
-                            <SearchIcon style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: 18 }} />
+                <div className="finance-toolbar">
+                    <h3 className="section-title">Fee Transactions History</h3>
+                    <div className="finance-toolbar-right">
+                        <div className="search-box-container">
+                            <SearchIcon className="search-box-icon" />
                             <input
                                 type="text"
-                                className="form-control"
+                                className="form-control search-input-pl"
                                 placeholder="Search transactions..."
-                                style={{ paddingLeft: 35, minWidth: 250 }}
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                title="Search transactions"
+                                title="Search transactions by name or receipt"
+                                aria-label="Search transactions"
                             />
                         </div>
                         <select
-                            className="form-control"
-                            style={{ width: 120 }}
+                            className="form-control filter-select"
                             value={termFilter}
                             onChange={e => setTermFilter(e.target.value)}
-                            title="Filter by term"
+                            title="Filter transactions by school term"
+                            aria-label="Filter by Term"
                         >
                             <option value="All">All Terms</option>
                             <option value="Term 1">Term 1</option>
@@ -195,11 +196,11 @@ const FeeManager: React.FC = () => {
                             <option value="Term 3">Term 3</option>
                         </select>
                         <select
-                            className="form-control"
-                            style={{ width: 130 }}
+                            className="form-control filter-select"
                             value={methodFilter}
                             onChange={e => setMethodFilter(e.target.value)}
-                            title="Filter by payment method"
+                            title="Filter by payment method used"
+                            aria-label="Filter by Method"
                         >
                             <option value="All">All Methods</option>
                             <option value="Cash">Cash</option>
@@ -230,25 +231,25 @@ const FeeManager: React.FC = () => {
                                 paginatedPayments.map(p => (
                                     <tr key={p.id}>
                                         <td><span className="receipt-badge">{p.receiptNumber}</span></td>
-                                        <td><div style={{ fontWeight: 500 }}>{p.studentName}</div></td>
+                                        <td><div className="data-table-name">{p.studentName}</div></td>
                                         <td>{p.grade}</td>
                                         <td>{p.term}</td>
                                         <td>{p.method}</td>
-                                        <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.reference || '-'}</td>
-                                        <td style={{ fontWeight: 700, color: '#10b981' }}>KSh {p.amount.toLocaleString()}</td>
+                                        <td className="text-muted text-xs">{p.reference || '-'}</td>
+                                        <td className="data-table-amount">KSh {p.amount.toLocaleString()}</td>
                                         <td>{new Date(p.date).toLocaleDateString()}</td>
                                         <td>
-                                            <div className="action-buttons">
-                                                <button title="Print Receipt" className="action-btn" onClick={() => setSelectedReceipt(p)}><ReceiptIcon fontSize="small" /></button>
-                                                <button title="Edit Record" className="action-btn" onClick={() => setEditingPayment(p)}><EditIcon fontSize="small" /></button>
-                                                <button title="Delete Record" className="action-btn delete" onClick={() => { if (confirm('Are you sure you want to delete this payment record? This will adjust the student balance.')) deletePayment(p.id); }}><DeleteIcon fontSize="small" /></button>
+                                            <div className="action-buttons-flex">
+                                                <button title="Print Receipt" className="action-btn" onClick={() => setSelectedReceipt(p)} aria-label="Print receipt"><ReceiptIcon fontSize="small" /></button>
+                                                <button title="Edit Record" className="action-btn" onClick={() => setEditingPayment(p)} aria-label="Edit payment"><EditIcon fontSize="small" /></button>
+                                                <button title="Delete Record" className="action-btn delete" onClick={() => { if (confirm('Are you sure you want to delete this payment record? This will adjust the student balance.')) deletePayment(p.id); }} aria-label="Delete payment"><DeleteIcon fontSize="small" /></button>
                                             </div>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={9} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <td colSpan={9} className="p-10 text-center text-muted">
                                         {searchQuery || termFilter !== 'All' || methodFilter !== 'All'
                                             ? 'No transactions found matching your filters.'
                                             : 'No fee transactions recorded yet.'}
@@ -267,8 +268,8 @@ const FeeManager: React.FC = () => {
             </div>
 
             <div className="admin-section">
-                <h3 className="section-title">Student Balances Overivew</h3>
-                <div className="table-container" style={{ maxHeight: 400, overflowY: 'auto' }}>
+                <h3 className="section-title">Student Balances Overview</h3>
+                <div className="scrollable-table-container">
                     <table className="data-table">
                         <thead>
                             <tr>
@@ -283,10 +284,10 @@ const FeeManager: React.FC = () => {
                             {students.length > 0 ? (
                                 students.map(s => (
                                     <tr key={s.id}>
-                                        <td><div style={{ fontWeight: 500 }}>{s.firstName} {s.lastName}</div></td>
+                                        <td><div className="data-table-name">{s.firstName} {s.lastName}</div></td>
                                         <td>{s.grade}</td>
-                                        <td style={{ color: '#10b981' }}>KES {s.paidFees.toLocaleString()}</td>
-                                        <td style={{ fontWeight: 600, color: s.feeBalance > 0 ? '#ef4444' : '#10b981' }}>
+                                        <td className="data-table-amount">KES {s.paidFees.toLocaleString()}</td>
+                                        <td className={`font-semibold ${s.feeBalance > 0 ? 'text-danger' : 'text-success'}`}>
                                             KES {s.feeBalance.toLocaleString()}
                                         </td>
                                         <td>
@@ -298,7 +299,7 @@ const FeeManager: React.FC = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <td colSpan={5} className="p-10 text-center text-muted">
                                         No students registered in the system.
                                     </td>
                                 </tr>

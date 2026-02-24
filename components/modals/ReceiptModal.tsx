@@ -3,6 +3,7 @@ import { useSchool } from '../../context/SchoolContext';
 import CloseIcon from '@mui/icons-material/Close';
 import PrintIcon from '@mui/icons-material/Print';
 import DownloadIcon from '@mui/icons-material/Download';
+import '../../styles/finance.css';
 
 interface FeePayment {
     id: string;
@@ -103,28 +104,26 @@ export default function ReceiptModal({ payment, onClose }: Props) {
         win.document.write(receiptHTML);
         win.document.close();
         win.focus();
-        // Trigger print dialog (user can save as PDF)
         setTimeout(() => { win.print(); }, 500);
     };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-                <div className="modal-header">
+                <div className="receipt-modal-header">
                     <h2>Payment Receipt</h2>
-                    <button className="modal-close" onClick={onClose}><CloseIcon /></button>
+                    <button className="modal-close" onClick={onClose} title="Close receipt" aria-label="Close modal"><CloseIcon /></button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body p-20">
                     <div className="receipt-content">
-                        {/* Header */}
                         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--accent-blue)', letterSpacing: 1 }}>
+                            <div style={{ fontSize: 20, fontWeight: 800, color: '#3b82f6', letterSpacing: 1 }}>
                                 {settings.schoolName}
                             </div>
-                            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                            <div className="text-muted text-xs" style={{ marginTop: 4 }}>
                                 {settings.address} | {settings.phone}
                             </div>
-                            <span className="badge blue" style={{ marginTop: 8, display: 'inline-block', fontSize: 11, letterSpacing: 1 }}>
+                            <span className="badge blue" style={{ marginTop: 8, display: 'inline-block', letterSpacing: 1 }}>
                                 OFFICIAL RECEIPT
                             </span>
                         </div>
@@ -170,17 +169,16 @@ export default function ReceiptModal({ payment, onClose }: Props) {
 
                         <hr className="receipt-divider" />
 
-                        {/* Amount box */}
                         <div style={{
-                            background: 'rgba(34,197,94,0.08)',
-                            border: '2px solid var(--accent-green)',
+                            background: 'rgba(16,185,129,0.05)',
+                            border: '2px solid #10b981',
                             borderRadius: 10,
                             padding: '16px',
                             textAlign: 'center',
                             margin: '12px 0'
                         }}>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Amount Paid</div>
-                            <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--accent-green)', marginTop: 4 }}>
+                            <div className="text-muted text-xs uppercase" style={{ letterSpacing: 1 }}>Amount Paid</div>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#10b981', marginTop: 4 }}>
                                 KSh {payment.amount.toLocaleString()}
                             </div>
                         </div>
@@ -188,29 +186,29 @@ export default function ReceiptModal({ payment, onClose }: Props) {
                         <div style={{ textAlign: 'center' }}>
                             <span style={{
                                 display: 'inline-block',
-                                border: '2px solid var(--accent-green)',
-                                color: 'var(--accent-green)',
+                                border: '2px solid #10b981',
+                                color: '#10b981',
                                 padding: '4px 20px',
                                 borderRadius: 4,
                                 fontWeight: 700,
-                                fontSize: 14,
+                                fontSize: 13,
                                 transform: 'rotate(-5deg)',
-                                letterSpacing: 2
+                                letterSpacing: 1
                             }}>✓ PAID</span>
                         </div>
 
-                        <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginTop: 16 }}>
+                        <p className="text-center text-muted text-xs" style={{ marginTop: 16 }}>
                             Thank you for your payment. This is an official receipt.
                         </p>
                     </div>
                 </div>
-                <div className="modal-footer">
-                    <button className="btn-outline" onClick={onClose}>Close</button>
-                    <button className="btn-outline" onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <DownloadIcon style={{ fontSize: 18 }} /> Download PDF
+                <div className="modal-footer" style={{ borderTop: '1px dashed var(--border-color)' }}>
+                    <button className="btn btn-outline" onClick={onClose} title="Dismiss receipt">Close</button>
+                    <button className="btn btn-outline" onClick={handleDownload} title="Save as PDF" aria-label="Download PDF">
+                        <DownloadIcon className="mr-2" style={{ fontSize: 18 }} /> PDF
                     </button>
-                    <button className="btn-primary" onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <PrintIcon style={{ fontSize: 18 }} /> Print Receipt
+                    <button className="btn btn-primary" onClick={handlePrint} title="Print direct to printer" aria-label="Print receipt">
+                        <PrintIcon className="mr-2" style={{ fontSize: 18 }} /> Print
                     </button>
                 </div>
             </div>

@@ -5,13 +5,14 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import GroupIcon from '@mui/icons-material/Group';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import PieChartIcon from '@mui/icons-material/PieChart';
+import '../../styles/finance.css';
 
 interface FinanceDashboardProps {
     stats: any;
 }
 
 const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
-    if (!stats) return <div>Loading Stats...</div>;
+    if (!stats) return <div className="p-20 text-center">Loading Stats...</div>;
 
     const cards = [
         { label: 'Total Income', value: stats?.stats?.totalIncome || 0, icon: <TrendingUpIcon />, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
@@ -23,10 +24,10 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
     ];
 
     return (
-        <div className="finance-dashboard">
-            <div className="stats-grid">
+        <div className="finance-dashboard animate-in">
+            <div className="finance-stats-container">
                 {cards.map((card, i) => (
-                    <div key={i} className="stat-card premium-card">
+                    <div key={i} className="stat-card">
                         <div className="stat-icon" style={{ backgroundColor: card.bg, color: card.color }}>
                             {card.icon}
                         </div>
@@ -48,7 +49,7 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
                                     <div className="chart-bar income" style={{ height: `${((d.income || 0) / (stats?.stats?.totalIncome || 1)) * 100}%` }}></div>
                                     <div className="chart-bar expense" style={{ height: `${((d.expense || 0) / (stats?.stats?.totalExpenses || 1)) * 100}%` }}></div>
                                 </div>
-                                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.month}</span>
+                                <span className="text-muted text-xs">{d.month}</span>
                             </div>
                         ))}
                     </div>
@@ -65,12 +66,12 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
                 </div>
 
                 <div className="admin-section">
-                    <h3 className="section-title">Budget Utilization</h3>
+                    <h3 className="section-title">Budget Utilization Summary</h3>
                     <div className="budget-list" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {(stats?.budgets || []).length > 0 ? stats.budgets.map((b: any, i: number) => (
                             <div key={i} className="budget-item">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
-                                    <span>{b.category} ({b.department})</span>
+                                    <span className="data-table-name">{b.category} <span className="text-muted text-xs">({b.department})</span></span>
                                     <span style={{ fontWeight: 600 }}>{Math.round(b.utilization || 0)}%</span>
                                 </div>
                                 <div className="progress-container">
@@ -85,7 +86,7 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ stats }) => {
                                 </div>
                             </div>
                         )) : (
-                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                            <div className="p-20 text-center text-muted">
                                 No budgets defined for the current period.
                             </div>
                         )}

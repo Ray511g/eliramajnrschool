@@ -5,9 +5,9 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import AssessmentIcon from '@mui/icons-material/Assessment';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import FilePresentIcon from '@mui/icons-material/FilePresent';
+import '../../styles/finance.css';
 
 const ExpenditureManager: React.FC = () => {
     const { user, hasPermission } = useAuth();
@@ -37,6 +37,7 @@ const ExpenditureManager: React.FC = () => {
             requestedByName: requestedByName
         });
         setForm({ category: '', amount: 0, description: '', supplierId: '', paymentMethod: 'Bank' });
+        setShowForm(false);
     };
 
     const canApprove = hasPermission('finance', 'APPROVE');
@@ -44,27 +45,34 @@ const ExpenditureManager: React.FC = () => {
 
     return (
         <div className="expenditure-manager animate-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <div className="finance-toolbar">
                 <div>
-                    <h2 style={{ fontSize: 18, fontWeight: 700 }}>Expenditure Controls</h2>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Request and approve school expenses</p>
+                    <h2 className="section-title">Expenditure Controls</h2>
+                    <p className="text-muted text-xs">Request and approve school expenses</p>
                 </div>
                 {!showForm && (
-                    <button className="btn-primary" onClick={() => setShowForm(true)}>
-                        <AddIcon style={{ fontSize: 18, marginRight: 8 }} />
+                    <button className="btn btn-primary" onClick={() => setShowForm(true)} title="Create a new fund request" aria-label="Raise Request">
+                        <AddIcon className="mr-2" style={{ fontSize: 18 }} />
                         Raise Request
                     </button>
                 )}
             </div>
 
             {showForm && (
-                <div className="card glass-panel" style={{ marginBottom: 24, padding: 24 }}>
-                    <h3 style={{ marginBottom: 20 }}>New Expense Request</h3>
+                <div className="admin-section animate-in" style={{ marginBottom: 24, border: '1px solid #3b82f6' }}>
+                    <h3 className="section-title" style={{ marginBottom: 20 }}>New Expense Request</h3>
                     <form onSubmit={handleSubmit}>
                         <div className="grid-3">
                             <div className="form-group">
-                                <label>Category / Purpose</label>
-                                <select className="form-control" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} title="Category" required>
+                                <label htmlFor="expCat">Category / Purpose</label>
+                                <select
+                                    id="expCat"
+                                    className="form-control"
+                                    value={form.category}
+                                    onChange={e => setForm({ ...form, category: e.target.value })}
+                                    title="Categorize the expense"
+                                    required
+                                >
                                     <option value="">Select...</option>
                                     <option value="Operational">Operational</option>
                                     <option value="Maintenance">Maintenance</option>
@@ -74,12 +82,26 @@ const ExpenditureManager: React.FC = () => {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Amount (KES)</label>
-                                <input type="number" className="form-control" value={form.amount || ''} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} title="Amount" required />
+                                <label htmlFor="expAmt">Amount (KES)</label>
+                                <input
+                                    id="expAmt"
+                                    type="number"
+                                    className="form-control"
+                                    value={form.amount || ''}
+                                    onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
+                                    title="Enter requested amount"
+                                    required
+                                />
                             </div>
                             <div className="form-group">
-                                <label>Supplier (Optional)</label>
-                                <select className="form-control" value={form.supplierId} onChange={e => setForm({ ...form, supplierId: e.target.value })} title="Supplier">
+                                <label htmlFor="expSupplier">Supplier (Optional)</label>
+                                <select
+                                    id="expSupplier"
+                                    className="form-control"
+                                    value={form.supplierId}
+                                    onChange={e => setForm({ ...form, supplierId: e.target.value })}
+                                    title="Associate with a registered supplier"
+                                >
                                     <option value="">N/A / Walk-in</option>
                                     {suppliers.map(s => (
                                         <option key={s.id} value={s.id}>{s.name}</option>
@@ -88,12 +110,21 @@ const ExpenditureManager: React.FC = () => {
                             </div>
                         </div>
                         <div className="form-group" style={{ marginTop: 16 }}>
-                            <label>Detailed Description</label>
-                            <textarea className="form-control" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="What the funds will be used for..." title="Description" required rows={3}></textarea>
+                            <label htmlFor="expDesc">Detailed Description</label>
+                            <textarea
+                                id="expDesc"
+                                className="form-control"
+                                value={form.description}
+                                onChange={e => setForm({ ...form, description: e.target.value })}
+                                placeholder="What the funds will be used for..."
+                                title="Explain the need for funds"
+                                required
+                                rows={3}
+                            ></textarea>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-                            <button type="button" className="btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
-                            <button type="submit" className="btn-primary">Submit for Approval</button>
+                            <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)} title="Cancel request">Cancel</button>
+                            <button type="submit" className="btn btn-primary" title="Submit request for internal approval">Submit Request</button>
                         </div>
                     </form>
                 </div>
@@ -101,21 +132,31 @@ const ExpenditureManager: React.FC = () => {
 
             {!showForm && (
                 <>
-                    <div className="search-box" style={{ marginBottom: 20, maxWidth: 400 }}>
-                        <SearchIcon />
-                        <input type="text" placeholder="Search requests..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} title="Search" />
+                    <div className="finance-nav-row">
+                        <div className="search-box-container">
+                            <SearchIcon className="search-box-icon" />
+                            <input
+                                type="text"
+                                className="form-control search-input-pl"
+                                placeholder="Search by description or category..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                title="Search through fund requests"
+                                aria-label="Search Expenses"
+                            />
+                        </div>
                     </div>
 
-                    <div className="table-container card" style={{ padding: 0 }}>
+                    <div className="table-container">
                         <table className="data-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
                                     <th>Description</th>
                                     <th>Requestor</th>
-                                    <th style={{ textAlign: 'right' }}>Amount</th>
+                                    <th className="text-right">Amount</th>
                                     <th>Status</th>
-                                    <th style={{ textAlign: 'right' }}>Actions</th>
+                                    <th className="text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -123,45 +164,45 @@ const ExpenditureManager: React.FC = () => {
                                     <tr key={exp.id}>
                                         <td>{new Date(exp.createdAt).toLocaleDateString()}</td>
                                         <td>
-                                            <div style={{ fontWeight: 600 }}>{exp.category}</div>
-                                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{exp.description}</div>
+                                            <div className="data-table-name">{exp.category}</div>
+                                            <div className="text-muted text-xs">{exp.description}</div>
                                             {exp.supplierId && (
-                                                <div style={{ fontSize: 10, color: 'var(--accent-blue)' }}>
+                                                <div style={{ fontSize: 10, color: '#3b82f6', marginTop: 4 }}>
                                                     Supplier: {suppliers.find(s => s.id === exp.supplierId)?.name || 'Unknown'}
                                                 </div>
                                             )}
                                         </td>
                                         <td>{exp.requestedBy}</td>
-                                        <td style={{ textAlign: 'right', fontWeight: 700 }}>KES {exp.amount.toLocaleString()}</td>
+                                        <td className="text-right" style={{ fontWeight: 700 }}>KES {exp.amount.toLocaleString()}</td>
                                         <td>
                                             <span className={`badge ${exp.status === 'Paid' ? 'green' : exp.status === 'Approved' ? 'blue' : exp.status === 'Pending' ? 'orange' : 'red'}`}>
                                                 {exp.status}
                                             </span>
                                         </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                        <td className="text-right">
+                                            <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
                                                 {exp.status === 'Pending' && canApprove && (
                                                     <>
-                                                        <button className="table-action-btn" onClick={() => actOnExpenditure(exp.id, 'APPROVE')} title="Approve Request">
-                                                            <CheckCircleIcon style={{ fontSize: 16, color: 'var(--accent-green)' }} />
+                                                        <button className="action-btn" onClick={() => actOnExpenditure(exp.id, 'APPROVE')} title="Approve this fund request" aria-label="Approve">
+                                                            <CheckCircleIcon style={{ fontSize: 18, color: '#10b981' }} />
                                                         </button>
-                                                        <button className="table-action-btn danger" onClick={() => actOnExpenditure(exp.id, 'REJECT')} title="Reject Request">
-                                                            <CancelIcon style={{ fontSize: 16 }} />
+                                                        <button className="action-btn" onClick={() => actOnExpenditure(exp.id, 'REJECT')} title="Reject this fund request" aria-label="Reject">
+                                                            <CancelIcon style={{ fontSize: 18, color: '#ef4444' }} />
                                                         </button>
                                                     </>
                                                 )}
                                                 {exp.status === 'Approved' && canPay && (
-                                                    <button className="table-action-btn" onClick={() => actOnExpenditure(exp.id, 'PAY')} title="Process Payment">
-                                                        <PaymentsIcon style={{ fontSize: 16, color: 'var(--accent-blue)' }} />
+                                                    <button className="action-btn" onClick={() => actOnExpenditure(exp.id, 'PAY')} title="Process disbursement" aria-label="Pay">
+                                                        <PaymentsIcon style={{ fontSize: 18, color: '#3b82f6' }} />
                                                     </button>
                                                 )}
-                                                {exp.status === 'Paid' && <FilePresentIcon style={{ fontSize: 16, opacity: 0.3 }} />}
+                                                {exp.status === 'Paid' && <FilePresentIcon style={{ fontSize: 18, opacity: 0.3 }} />}
                                             </div>
                                         </td>
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No expense requests found.</td>
+                                        <td colSpan={6} className="p-20 text-center text-muted">No expense requests found.</td>
                                     </tr>
                                 )}
                             </tbody>

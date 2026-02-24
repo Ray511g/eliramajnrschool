@@ -8,9 +8,6 @@ import fs from 'fs';
 import path from 'path';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const logPath = path.join(process.cwd(), 'api_debug.log');
-    fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${req.method} ${req.url} (ID: ${req.query.id})\nBody: ${JSON.stringify(req.body)}\nHeaders: ${JSON.stringify(req.headers)}\n\n`);
-
     corsHeaders(res);
     if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -22,11 +19,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
         if (!checkPermission(user, 'students', 'VIEW', res)) return;
         try {
-            const student = await prisma.student.findUnique({ where: { id: id as string } });
+            const student = await prisma.student.findUnique({
+                where: { id: id as string },
+                include: {
+                    _count: {
+                        select: {
+                            attendance: true,
+                            payments: true,
+                            results: true
+                        }
+                    }
+                }
+            });
             if (!student) return res.status(404).json({ error: 'Student not found' });
             return res.status(200).json(student);
         } catch (error) {
-            return res.status(500).json({ error: 'Failed to fetch student' });
+            console.error('API GET Student Detail Error:', error);
+            return res.status(500).json({ error: 'Failed to fetch student details' });
         }
     }
 
@@ -37,16 +46,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const existing = await prisma.student.findUnique({ where: { id: id as string } });
             if (!existing) return res.status(404).json({ error: 'Student not found' });
 
+            // Recalculate balance if fee fields are modified
             if (data.totalFees !== undefined || data.paidFees !== undefined) {
-                const totalFees = data.totalFees ?? existing.totalFees;
-                const paidFees = data.paidFees ?? existing.paidFees;
+                const totalFees = parseFloat(data.totalFees ?? existing.totalFees);
+                const paidFees = parseFloat(data.paidFees ?? existing.paidFees);
+                data.totalFees = totalFees;
+                data.paidFees = paidFees;
                 data.feeBalance = totalFees - paidFees;
             }
-            // Remove fields that shouldn't be sent to Prisma
-            delete data.id;
-            delete data.createdAt;
-            delete data.updatedAt;
-            const student = await prisma.student.update({ where: { id: id as string }, data });
+
+            // Clean data for Prisma (prevent updating metadata or ID)
+            const cleanData = { ...data };
+            delete cleanData.id;
+            delete cleanData.createdAt;
+            delete cleanData.updatedAt;
+            delete cleanData.admissionNumber; // Prevent changing admission number via PUT
+
+            const student = await prisma.student.update({
+                where: { id: id as string },
+                data: cleanData
+            });
 
             await logAction(
                 user.id,
@@ -59,7 +78,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             await touchSync();
             return res.status(200).json(student);
         } catch (error: any) {
-            return res.status(500).json({ error: 'Failed to update student' });
+            console.error('API PUT Student Error:', error);
+            return res.status(500).json({ error: 'Failed to update student records' });
         }
     }
 
@@ -67,32 +87,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!checkPermission(user, 'students', 'DELETE', res)) return;
         try {
             const student = await prisma.student.findUnique({ where: { id: id as string } });
-            if (!student) return res.status(404).json({ error: 'Student not found in database' });
+            if (!student) return res.status(404).json({ error: 'Student record not found' });
 
-            // First delete related records to avoid foreign key constraints
-            await prisma.attendance.deleteMany({ where: { studentId: id as string } });
-            await prisma.payment.deleteMany({ where: { studentId: id as string } });
-            await prisma.result.deleteMany({ where: { studentId: id as string } });
-            await prisma.student.delete({ where: { id: id as string } });
+            // Use transaction for atomic deletion
+            await prisma.$transaction([
+                prisma.attendance.deleteMany({ where: { studentId: id as string } }),
+                prisma.payment.deleteMany({ where: { studentId: id as string } }),
+                prisma.result.deleteMany({ where: { studentId: id as string } }),
+                prisma.assessmentScore.deleteMany({ where: { studentId: id as string } }),
+                prisma.student.delete({ where: { id: id as string } })
+            ]);
 
             await logAction(
                 user.id,
                 user.name,
                 'DELETE_STUDENT',
-                `Permanently deleted student: ${student.firstName} ${student.lastName} (${student.admissionNumber})`,
+                `Full record deletion for student: ${student.firstName} ${student.lastName} (${student.admissionNumber})`,
                 { module: 'students' }
             );
 
             await touchSync();
-            return res.status(200).json({ success: true });
+            return res.status(200).json({ success: true, message: 'Student and related records deleted successfully' });
         } catch (error: any) {
-            console.error('Delete student error:', error);
-            return res.status(500).json({ error: 'Failed to delete student' });
+            console.error('Delete student transaction error:', error);
+            return res.status(500).json({ error: 'Failed to safely delete student and related data' });
         }
     }
 
-    const logMsg = `\n[${new Date().toISOString()}] 405 ERROR on /[id]: ${req.method} ${req.url}\nHeaders: ${JSON.stringify(req.headers)}\n`;
-    fs.appendFileSync(logPath, logMsg);
-    console.warn(`[405] Method ${req.method} not allowed on /api/students/${id}`);
-    res.status(405).json({ error: `Method ${req.method} not allowed` });
+    res.setHeader('Allow', 'GET, PUT, DELETE');
+    return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
