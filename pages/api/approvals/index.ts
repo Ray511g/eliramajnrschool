@@ -3,13 +3,18 @@ import { prisma } from '../../../lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'GET') {
-        const { status } = req.query;
-        const requests = await prisma.approvalRequest.findMany({
-            where: status ? { status: status as string } : undefined,
-            orderBy: { createdAt: 'desc' },
-            include: { logs: true }
-        });
-        return res.status(200).json(requests);
+        try {
+            const { status } = req.query;
+            const requests = await prisma.approvalRequest.findMany({
+                where: status ? { status: status as string } : undefined,
+                orderBy: { createdAt: 'desc' },
+                include: { logs: true }
+            });
+            return res.status(200).json(requests);
+        } catch (error: any) {
+            console.error('Approvals Fetch Error:', error);
+            return res.status(500).json({ error: error.message || 'Internal Server Error' });
+        }
     }
 
     res.setHeader('Allow', ['GET']);

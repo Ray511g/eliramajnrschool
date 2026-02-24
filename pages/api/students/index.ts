@@ -83,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const logMsg = `\n[${new Date().toISOString()}] 405 ERROR: ${req.method} ${req.url}\nHeaders: ${JSON.stringify(req.headers)}\n`;
     fs.appendFileSync(logPath, logMsg);
-    console.warn(`[405] Method ${req.method} not allowed on /api/students`);
+    console.error(`[405 ERROR] Method ${req.method} not allowed on /api/students. Expected GET or POST.`);
     res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
