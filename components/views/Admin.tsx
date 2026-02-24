@@ -233,44 +233,49 @@ export default function Admin() {
             </div>
 
             <div className="admin-layout-container">
-                <aside className="admin-side-nav">
-                    <div className="admin-nav-header">
-                        <h4>Control Panel</h4>
-                        {isPending && <div className="spinner-small"></div>}
+                <div className="admin-nav-container">
+                    <div className="admin-horizontal-nav">
+                        <nav className="admin-nav-tabs">
+                            {[
+                                { id: 'settings', label: 'School Settings', icon: <SettingsIcon className="nav-icon" /> },
+                                { id: 'timetable', label: 'Timetable Setup', icon: <SchoolIcon className="nav-icon" /> },
+                                { id: 'users', label: 'User Management', icon: <GroupIcon className="nav-icon" /> },
+                                { id: 'roles', label: 'Access Control', icon: <SecurityIcon className="nav-icon" /> },
+                                { id: 'fees', label: 'Fee Structure', icon: <PaymentIcon className="nav-icon" /> },
+                                { id: 'audit', label: 'System Audit', icon: <HistoryIcon className="nav-icon" /> },
+                            ].map(module => (
+                                <button
+                                    key={module.id}
+                                    className={`admin-nav-tab ${activeTab === module.id ? 'active' : ''}`}
+                                    onClick={() => setActiveTab(module.id as any)}
+                                >
+                                    {module.icon}
+                                    <span className="nav-label">{module.label}</span>
+                                    {activeTab === module.id && <div className="active-indicator" />}
+                                </button>
+                            ))}
+                            {(user?.role === 'Principal' || user?.role === 'Super Admin') && (
+                                <button
+                                    className={`admin-nav-tab ${activeTab === 'approvals' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('approvals')}
+                                >
+                                    <RuleIcon className="nav-icon" />
+                                    <span className="nav-label">Approvals</span>
+                                    {(expenses.filter(e => e.status === 'Pending').length + payrollEntries.filter(p => p.status === 'Reviewed').length) > 0 && (
+                                        <span className="badge">
+                                            {expenses.filter(e => e.status === 'Pending').length + payrollEntries.filter(p => p.status === 'Reviewed').length}
+                                        </span>
+                                    )}
+                                    {activeTab === 'approvals' && <div className="active-indicator" />}
+                                </button>
+                            )}
+                        </nav>
+                        <div className="admin-nav-header-mini">
+                            <h4>Admin Panel</h4>
+                            {isPending && <div className="spinner-small" style={{ marginLeft: 8 }}></div>}
+                        </div>
                     </div>
-                    <nav className="admin-nav">
-                        {[
-                            { id: 'settings', label: 'School Settings', icon: <SettingsIcon /> },
-                            { id: 'timetable', label: 'Timetable Setup', icon: <SchoolIcon /> },
-                            { id: 'users', label: 'User Management', icon: <GroupIcon /> },
-                            { id: 'roles', label: 'Access Control', icon: <SecurityIcon /> },
-                            { id: 'fees', label: 'Fee Structure', icon: <PaymentIcon /> },
-                            { id: 'audit', label: 'System Audit', icon: <HistoryIcon /> },
-                        ].map(module => (
-                            <button
-                                key={module.id}
-                                className={`admin-nav-item ${activeTab === module.id ? 'active' : ''}`}
-                                onClick={() => setActiveTab(module.id as any)}
-                            >
-                                {React.cloneElement(module.icon)}
-                                {module.label}
-                            </button>
-                        ))}
-                        {(user?.role === 'Principal' || user?.role === 'Super Admin') && (
-                            <button
-                                className={`admin-nav-item ${activeTab === 'approvals' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('approvals')}
-                            >
-                                <RuleIcon /> Pending Approvals
-                                {(expenses.filter(e => e.status === 'Pending').length + payrollEntries.filter(p => p.status === 'Reviewed').length) > 0 && (
-                                    <span className="badge red">
-                                        {expenses.filter(e => e.status === 'Pending').length + payrollEntries.filter(p => p.status === 'Reviewed').length}
-                                    </span>
-                                )}
-                            </button>
-                        )}
-                    </nav>
-                </aside>
+                </div>
 
                 <div className="admin-main">
                     <div className="admin-grid-2">
@@ -1659,6 +1664,6 @@ export default function Admin() {
 
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

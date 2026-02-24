@@ -20,6 +20,13 @@ export default function Students() {
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const router = React.useMemo(() => typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null, []);
+
+    React.useEffect(() => {
+        if (router?.get('action') === 'add') {
+            setShowAddModal(true);
+        }
+    }, [router]);
 
     const filtered = students.filter(s => {
         const matchSearch = `${s.firstName} ${s.lastName} ${s.admissionNumber}`.toLowerCase().includes(search.toLowerCase());

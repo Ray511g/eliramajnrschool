@@ -49,6 +49,15 @@ export default function FinancePage() {
 
     useEffect(() => {
         fetchData();
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab');
+        const action = params.get('action');
+
+        if (tab && ['Dashboard', 'Fees', 'Expenditure', 'Suppliers', 'Payroll', 'Budget', 'Ledger', 'Reports'].includes(tab)) {
+            setActiveTab(tab as FinanceTab);
+        } else if (action === 'record') {
+            setActiveTab('Fees');
+        }
     }, []);
 
     const handleExpenseAction = async (id: string, action: string) => {
