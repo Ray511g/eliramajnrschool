@@ -7,19 +7,55 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AddStaffModal from '../modals/AddStaffModal';
 import { Staff } from '../../types';
+import { useSchool } from '../../context/SchoolContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface PayrollManagerProps {
-    staff: Staff[];
-    payrollEntries: any[];
-    onGenerate: (month: number, year: number) => void;
-    onUpdateStatus: (id: string, status: string) => void;
+    staff?: Staff[];
+    payrollEntries?: any[];
+    onGenerate?: (month: number, year: number) => void;
+    onUpdateStatus?: (id: string, status: string) => void;
     onAddStaff?: (staff: Omit<Staff, 'id'>) => void;
     onUpdateStaff?: (id: string, updates: Partial<Staff>) => void;
     onDeleteStaff?: (id: string) => void;
-    user: any;
+    user?: any;
 }
 
-const PayrollManager: React.FC<PayrollManagerProps> = ({ staff, payrollEntries, onGenerate, onUpdateStatus, onAddStaff, onUpdateStaff, onDeleteStaff, user }) => {
+const PayrollManager: React.FC<PayrollManagerProps> = (props) => {
+    const context = useSchool();
+    const auth = useAuth();
+
+    // Use props if provided, otherwise fallback to context
+    const staff = props.staff || context.staff || [];
+    const payrollEntries = props.payrollEntries || context.payrollEntries || [];
+    const user = props.user || auth.user;
+
+    const onGenerate = props.onGenerate || (async (month, year) => {
+        const res = await context.tryApi('/api/hr/payroll/run', {
+            method: 'POST',
+            body: JSON.stringify({ month, year, requestedBy: { id: user?.id, name: user?.name } })
+        });
+        if (res) {
+            context.showToast('Payroll initiated', 'success');
+            context.refreshData();
+        }
+    });
+
+    const onUpdateStatus = props.onUpdateStatus || (async (id: string, status: string) => {
+        const res = await context.tryApi(`/api/hr/payroll/status?id=${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ status })
+        });
+        if (res) {
+            context.showToast('Status updated', 'success');
+            context.refreshData();
+        }
+    });
+
+    const onAddStaff = props.onAddStaff || context.addStaff;
+    const onUpdateStaff = props.onUpdateStaff || context.updateStaff;
+    const onDeleteStaff = props.onDeleteStaff || context.deleteStaff;
+
     const [activeTab, setActiveTab] = useState<'staff' | 'payroll'>('payroll');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingStaff, setEditingStaff] = useState<Staff | null>(null);

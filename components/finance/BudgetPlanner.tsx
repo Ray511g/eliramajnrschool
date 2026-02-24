@@ -3,13 +3,27 @@ import PieChartIcon from '@mui/icons-material/PieChart';
 import AddIcon from '@mui/icons-material/Add';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import WarningIcon from '@mui/icons-material/Warning';
+import { useSchool } from '../../context/SchoolContext';
 
 interface BudgetPlannerProps {
-    budgets: any[];
-    onUpdate: (data: any) => void;
+    budgets?: any[];
+    onUpdate?: (data: any) => void;
 }
 
-const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onUpdate }) => {
+const BudgetPlanner: React.FC<BudgetPlannerProps> = (props) => {
+    const context = useSchool();
+    const budgets = props.budgets || context.budgets || [];
+    const onUpdate = props.onUpdate || (async (data: any) => {
+        const res = await context.tryApi('/api/finance/budgets', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        if (res) {
+            context.showToast('Budget allocated', 'success');
+            context.refreshData();
+        }
+    });
+
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({
         year: new Date().getFullYear(),

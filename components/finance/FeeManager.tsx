@@ -50,18 +50,14 @@ const FeeManager: React.FC = () => {
         return filteredPayments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     }, [filteredPayments, currentPage, itemsPerPage]);
 
-    const handlePrint = () => {
-        window.print();
-    };
-
     const handleDownload = () => {
-        // Simple download logic
-        const blob = new Blob([JSON.stringify(filteredPayments, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `FeePayments_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filteredPayments));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "fee_payments.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
     };
 
     return (
@@ -129,7 +125,7 @@ const FeeManager: React.FC = () => {
                         <tr>
                             <th>Student</th>
                             <th>Receipt</th>
-                            <th>Term / Year</th>
+                            <th>Term / Date</th>
                             <th>Method</th>
                             <th className="text-right">Amount</th>
                             <th className="text-right">Actions</th>
@@ -148,7 +144,7 @@ const FeeManager: React.FC = () => {
                                     <div className="data-table-name">{p.receiptNumber}</div>
                                     <div className="text-xs text-muted">{new Date(p.date).toLocaleDateString()}</div>
                                 </td>
-                                <td>{p.term} {p.academicYear}</td>
+                                <td>{p.term}</td>
                                 <td><span className="badge blue">{p.method}</span></td>
                                 <td className="text-right" style={{ fontWeight: 600 }}>KSh {p.amount.toLocaleString()}</td>
                                 <td className="text-right">
@@ -171,7 +167,8 @@ const FeeManager: React.FC = () => {
                 <div style={{ marginTop: 24 }}>
                     <Pagination
                         currentPage={currentPage}
-                        totalPages={Math.ceil(filteredPayments.length / itemsPerPage)}
+                        itemsPerPage={itemsPerPage}
+                        totalItems={filteredPayments.length}
                         onPageChange={setCurrentPage}
                     />
                 </div>
@@ -180,7 +177,7 @@ const FeeManager: React.FC = () => {
             {showPayModal && (
                 <RecordPaymentModal
                     onClose={() => { setShowPayModal(false); setEditingPayment(null); }}
-                    editData={editingPayment || undefined}
+                    payment={editingPayment || undefined}
                 />
             )}
 

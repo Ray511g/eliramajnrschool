@@ -163,26 +163,26 @@ const ExpenditureManager: React.FC = () => {
                                 <td><span className="badge blue">{e.category}</span></td>
                                 <td className="text-right" style={{ fontWeight: 600 }}>KSh {e.amount.toLocaleString()}</td>
                                 <td>
-                                    <span className={`badge ${e.status === 'PAID' ? 'green' :
-                                            e.status === 'APPROVED' ? 'blue' :
-                                                e.status === 'PENDING' ? 'orange' : 'red'
+                                    <span className={`badge ${e.status === 'Paid' ? 'green' :
+                                        e.status === 'Approved' ? 'blue' :
+                                            e.status === 'Pending' ? 'orange' : 'red'
                                         }`}>
                                         {e.status}
                                     </span>
                                 </td>
                                 <td className="text-right">
                                     <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
-                                        {e.status === 'PENDING' && canApprove && (
+                                        {e.status === 'Pending' && canApprove && (
                                             <button className="action-btn" style={{ color: '#10b981' }} onClick={() => actOnExpenditure(e.id, 'APPROVE')} title="Approve Request">
                                                 <CheckCircleIcon style={{ fontSize: 20 }} />
                                             </button>
                                         )}
-                                        {e.status === 'APPROVED' && canPay && (
+                                        {e.status === 'Approved' && canPay && (
                                             <button className="action-btn" style={{ color: '#3b82f6' }} onClick={() => actOnExpenditure(e.id, 'PAY')} title="Mark as Paid">
                                                 <PaymentsIcon style={{ fontSize: 20 }} />
                                             </button>
                                         )}
-                                        {e.status === 'PENDING' && canApprove && (
+                                        {e.status === 'Pending' && canApprove && (
                                             <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => actOnExpenditure(e.id, 'REJECT')} title="Decline Request">
                                                 <CancelIcon style={{ fontSize: 20 }} />
                                             </button>
