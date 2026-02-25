@@ -77,7 +77,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onAdd, i
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-container animate-in" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
+            <div className="modal animate-in" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div className="stat-icon" style={{ padding: 8, backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
@@ -88,13 +88,13 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onAdd, i
                             <p className="text-muted text-xs">Enter personnel and remuneration details</p>
                         </div>
                     </div>
-                    <button className="action-btn" onClick={onClose} aria-label="Close modal" title="Close">
+                    <button className="modal-close" onClick={onClose} aria-label="Close modal" title="Close">
                         <CloseIcon />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="modal-body">
+                    <div className="modal-body custom-scrollbar" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                         <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                             <div className="form-group">
                                 <label htmlFor="firstName" className="form-label">First Name</label>
@@ -130,6 +130,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onAdd, i
                                     title="Staff Category"
                                 >
                                     <option value="SUPPORT_STAFF">Support Staff</option>
+                                    <option value="TEACHER">Teaching Staff (Private)</option>
                                     <option value="BOM_TEACHER">BOM Teacher / Contractual</option>
                                     <option value="ADMIN">Administration</option>
                                 </select>

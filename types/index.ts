@@ -21,7 +21,7 @@ export interface Staff {
     id: string;
     firstName: string;
     lastName: string;
-    type: 'BOM_TEACHER' | 'SUPPORT_STAFF' | 'ADMIN';
+    type: 'TEACHER' | 'BOM_TEACHER' | 'SUPPORT_STAFF' | 'ADMIN';
     role: string;
     department?: string;
     email?: string;

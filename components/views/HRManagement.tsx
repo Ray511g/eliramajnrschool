@@ -8,12 +8,13 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { useSchool } from '../../context/SchoolContext';
 import AddStaffModal from '../../components/modals/AddStaffModal';
+import PayrollManager from '../finance/PayrollManager';
 import SearchIcon from '@mui/icons-material/Search';
 
 export default function HRManagementPage() {
     const { user } = useAuth();
     const {
-        staff, addStaff, updateStaff,
+        staff, addStaff, updateStaff, payrollEntries,
         showToast, tryApi, refreshData, loading
     } = useSchool();
     const [activeTab, setActiveTab] = useState('staff');
@@ -166,16 +167,11 @@ export default function HRManagementPage() {
                             </table>
                         )
                     ) : activeTab === 'payroll' ? (
-                        <div className="p-60 text-center">
-                            <PaymentsIcon style={{ fontSize: 64, color: 'rgba(59, 130, 246, 0.2)', marginBottom: 20 }} />
-                            <h3>Payroll Management Console</h3>
-                            <p className="text-muted" style={{ maxWidth: 400, margin: '0 auto 24px' }}>
-                                Use the Button above to initiate a new payroll run. Past payrolls can be viewed in the Financial Reports section.
-                            </p>
-                            <div className="badge blue" style={{ fontSize: 12, padding: '8px 16px' }}>
-                                Payroll generates ledger entries automatically after final approval.
-                            </div>
-                        </div>
+                        <PayrollManager
+                            staff={staff}
+                            payrollEntries={payrollEntries}
+                            user={user}
+                        />
                     ) : (
                         <div className="p-60 text-center">
                             <TrendingUpIcon style={{ fontSize: 64, color: 'rgba(59, 130, 246, 0.2)', marginBottom: 20 }} />

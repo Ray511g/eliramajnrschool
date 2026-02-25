@@ -215,7 +215,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (status === 'Locked') {
 
                 // Post to Ledger once locked
-                const expenseAccountCode = entry.staff.type === 'BOM_TEACHER' ? '5001' : '5002';
+                const expenseAccountCode = (entry.staff.type === 'BOM_TEACHER' || entry.staff.type === 'TEACHER') ? '5001' : '5002';
 
                 await postTransaction(
                     `PAY-${entry.id}`,

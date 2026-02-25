@@ -256,7 +256,7 @@ const PayrollManager: React.FC<PayrollManagerProps> = (props) => {
                                                 <td className="text-right" style={{ color: '#ef4444' }}>- {(entry.totalDeductions || 0).toLocaleString()}</td>
                                                 <td className="text-right" style={{ fontWeight: 600 }}>{(entry.netPay || 0).toLocaleString()}</td>
                                                 <td>
-                                                    <span className={`badge ${entry.status === 'Locked' ? 'green' : entry.status === 'Approved' ? 'blue' : entry.status === 'Draft' ? 'orange' : 'blue'}`}>
+                                                    <span className={`badge ${entry.status === 'Locked' ? 'green' : entry.status === 'Approved' ? 'green' : entry.status === 'Reviewed' ? 'blue' : entry.status === 'Draft' ? 'orange' : 'blue'}`}>
                                                         {entry.status}
                                                     </span>
                                                 </td>
@@ -277,7 +277,7 @@ const PayrollManager: React.FC<PayrollManagerProps> = (props) => {
                                                                 <LockIcon className="mr-2" style={{ fontSize: 14 }} /> Lock & Post
                                                             </button>
                                                         )}
-                                                        {entry.status === 'Locked' && (
+                                                        {(entry.status === 'Approved' || entry.status === 'Locked') && (
                                                             <button className="action-btn" onClick={() => handlePrintPayslip(entry)} title="Generate and Print Payslip" aria-label="View Payslip">
                                                                 <VisibilityIcon style={{ fontSize: 16 }} />
                                                             </button>
