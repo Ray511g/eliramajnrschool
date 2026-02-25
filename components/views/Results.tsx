@@ -35,21 +35,6 @@ export default function Results() {
     const [selectedGrade, setSelectedGrade] = useState('');
     const [selectedExamId, setSelectedExamId] = useState('');
 
-    useEffect(() => {
-        if (router.query.grade) setSelectedGrade(router.query.grade as string);
-        if (router.query.examId) {
-            setSelectedExamId(router.query.examId as string);
-            setActiveTab('exams');
-        }
-    }, [router.query]);
-
-    // Automatically load results when selections change
-    useEffect(() => {
-        if (selectedExamId || selectedAssessmentId) {
-            handleLoadResults();
-        }
-    }, [selectedExamId, selectedAssessmentId]);
-
     // CBC Hierarchy Selection
     const [selectedAreaId, setSelectedAreaId] = useState('');
     const [selectedStrandId, setSelectedStrandId] = useState('');
@@ -91,6 +76,22 @@ export default function Results() {
             setLocalResults(newLocal);
         }
     };
+
+    useEffect(() => {
+        if (router.query.grade) setSelectedGrade(router.query.grade as string);
+        if (router.query.examId) {
+            setSelectedExamId(router.query.examId as string);
+            setActiveTab('exams');
+        }
+    }, [router.query]);
+
+    // Automatically load results when selections change
+    useEffect(() => {
+        if (selectedExamId || selectedAssessmentId) {
+            handleLoadResults();
+        }
+    }, [selectedExamId, selectedAssessmentId]);
+
 
     const handleUpdateMark = (studentId: string, marks: number) => {
         const level = calculateLevel(marks);
