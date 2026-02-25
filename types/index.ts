@@ -146,7 +146,8 @@ export interface User {
 export interface Role {
     id: string;
     name: string;
-    permissions: Record<string, string[]>;
+    description?: string;
+    permissions: string[];
     _count?: {
         users: number;
     };
@@ -168,6 +169,7 @@ export interface SchoolSettings {
     financeSignature?: string;     // Base64 or URL
     paybillNumber?: string;
     logo?: string;
+    schoolStamp?: string;         // Base64 or URL
     timeSlots?: TimeSlot[];
     earlyYearsEnabled: boolean;
     primaryEnabled: boolean;

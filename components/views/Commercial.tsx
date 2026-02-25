@@ -14,6 +14,7 @@ import AddPurchaseOrderModal from '../../components/modals/AddPurchaseOrderModal
 import PurchaseOrderDetailsModal from '../../components/modals/PurchaseOrderDetailsModal';
 import ServiceOrderDetailsModal from '../../components/modals/ServiceOrderDetailsModal';
 import PromissoryNoteDetailsModal from '../../components/modals/PromissoryNoteDetailsModal';
+import CreditScheduleModal from '../../components/modals/CreditScheduleModal';
 import { useSchool } from '../../context/SchoolContext';
 
 export default function CommercialPage() {
@@ -35,6 +36,7 @@ export default function CommercialPage() {
     const [selectedPO, setSelectedPO] = useState<any>(null);
     const [selectedService, setSelectedService] = useState<any>(null);
     const [selectedNote, setSelectedNote] = useState<any>(null);
+    const [selectedCredit, setSelectedCredit] = useState<any>(null);
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -212,7 +214,13 @@ export default function CommercialPage() {
                                                 <td>{item.installments?.length || 0} Scheduled</td>
                                                 <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status || 'Pending'}</span></td>
                                                 <td className="text-right">
-                                                    <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }}>View Schedule</button>
+                                                    <button
+                                                        className="btn btn-outline"
+                                                        style={{ padding: '4px 10px', fontSize: 12 }}
+                                                        onClick={() => setSelectedCredit(item)}
+                                                    >
+                                                        View Schedule
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -379,6 +387,7 @@ export default function CommercialPage() {
                 />
             )}
             {selectedNote && <PromissoryNoteDetailsModal note={selectedNote} onClose={() => setSelectedNote(null)} />}
+            {selectedCredit && <CreditScheduleModal agreement={selectedCredit} onClose={() => setSelectedCredit(null)} />}
         </div>
     );
 }

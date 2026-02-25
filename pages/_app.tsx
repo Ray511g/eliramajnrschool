@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app';
 import '../styles/globals.css';
 import '../styles/finance.css';
+import '../styles/admin.css';
 import { AuthProvider } from '../context/AuthContext';
 import { SchoolProvider } from '../context/SchoolContext';
 

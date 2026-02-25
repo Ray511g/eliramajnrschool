@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import PrintIcon from '@mui/icons-material/Print';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import { useSchool } from '../../context/SchoolContext';
 
 interface Props {
     order: any;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function ServiceOrderDetailsModal({ order, student, onClose }: Props) {
+    const { settings } = useSchool();
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -73,12 +75,19 @@ export default function ServiceOrderDetailsModal({ order, student, onClose }: Pr
                 <div className="modal-body" ref={printRef}>
                     <div className="header">
                         <div>
-                            <h1 style={{ margin: 0, color: '#3b82f6' }}>SERVICE ENROLLMENT</h1>
+                            {settings.logo ? (
+                                <img src={settings.logo} alt="Logo" style={{ height: 60 }} />
+                            ) : (
+                                <h1 style={{ margin: 0, color: 'var(--primary)' }}>{settings.schoolName}</h1>
+                            )}
+                            <p style={{ margin: '4px 0', fontSize: 13, color: '#666' }}>{settings.motto}</p>
+                            <h2 style={{ margin: '15px 0 0 0', color: '#3b82f6', fontSize: 24 }}>SERVICE ENROLLMENT</h2>
                             <p style={{ margin: '4px 0', fontSize: 14 }}>Ref: {order.id.slice(-8).toUpperCase()}</p>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                            <h3 style={{ margin: 0 }}>Elirama School</h3>
-                            <p style={{ margin: 0, fontSize: 12, color: '#666' }}>Commercial Records</p>
+                            <h3 style={{ margin: 0 }}>{settings.schoolName}</h3>
+                            <p style={{ margin: 0, fontSize: 12, color: '#666' }}>{settings.address}</p>
+                            <p style={{ margin: 0, fontSize: 12, color: '#666' }}>{settings.phone} | {settings.email}</p>
                         </div>
                     </div>
 

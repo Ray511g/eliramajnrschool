@@ -66,6 +66,7 @@ interface SchoolContextType {
     uploadStudents: (file: File) => Promise<void>;
     uploadTeachers: (file: File) => Promise<void>;
     uploadExams: (file: File) => Promise<void>;
+    downloadTemplate: (type: string) => void;
     systemUsers: User[];
     addSystemUser: (user: Omit<User, 'id' | 'lastLogin' | 'status'>) => void;
     updateSystemUser: (id: string, updates: Partial<User>) => void;
@@ -1092,6 +1093,18 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         window.location.reload();
     };
 
+    const downloadTemplate = (type: string) => {
+        let headers: string[] = [];
+        if (type === 'students') headers = ['Name', 'AdmissionNumber', 'Grade', 'Gender', 'Phone', 'Address'];
+        if (type === 'teachers') headers = ['Name', 'EmployeeID', 'Subjects', 'Grade', 'Phone', 'Address'];
+        if (type === 'exams') headers = ['Exam Name', 'Subject', 'Grade', 'Date', 'Term', 'Type', 'Total Marks'];
+
+        const ws = XLSX.utils.aoa_to_sheet([headers]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Template");
+        XLSX.writeFile(wb, `${type}_template.xlsx`);
+    };
+
     const timeSlots = settings.timeSlots && settings.timeSlots.length > 0 ? settings.timeSlots : defaultTimeSlots;
 
     const activeGrades = useMemo(() => {
@@ -1154,6 +1167,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             uploadStudents,
             uploadTeachers,
             uploadExams,
+            downloadTemplate,
             systemUsers,
             addSystemUser,
             updateSystemUser,

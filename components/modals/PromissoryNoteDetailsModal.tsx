@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import PrintIcon from '@mui/icons-material/Print';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import { useSchool } from '../../context/SchoolContext';
 
 interface Props {
     note: any;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function PromissoryNoteDetailsModal({ note, onClose }: Props) {
+    const { settings } = useSchool();
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -69,6 +71,13 @@ export default function PromissoryNoteDetailsModal({ note, onClose }: Props) {
                 </div>
 
                 <div className="modal-body" ref={printRef}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                        {settings.logo ? (
+                            <img src={settings.logo} alt="School Logo" style={{ height: 60 }} />
+                        ) : (
+                            <h2 style={{ margin: 0 }}>{settings.schoolName}</h2>
+                        )}
+                    </div>
                     <div className="legal-header">
                         <div className="legal-title">Promissory Note</div>
                         <p style={{ margin: '10px 0 0 0' }}>Ref: {note.noteNumber}</p>
@@ -76,7 +85,7 @@ export default function PromissoryNoteDetailsModal({ note, onClose }: Props) {
 
                     <div className="content-body">
                         <p><strong>DATE:</strong> {new Date(note.issueDate).toLocaleDateString()}</p>
-                        <p><strong>FOR VALUE RECEIVED</strong>, the undersigned <strong>{note.guardianName}</strong> (the "Maker"), promises to pay to the order of <strong>Elirama School</strong> (the "Holder"), the principal sum of <strong>KSh {note.amount.toLocaleString()}</strong> (Kenya Shillings).</p>
+                        <p><strong>FOR VALUE RECEIVED</strong>, the undersigned <strong>{note.guardianName}</strong> (the "Maker"), promises to pay to the order of <strong>{settings.schoolName}</strong> (the "Holder"), the principal sum of <strong>KSh {note.amount.toLocaleString()}</strong> (Kenya Shillings).</p>
 
                         <p>This principal sum shall be due and payable in full on or before <strong>{new Date(note.maturityDate).toLocaleDateString()}</strong> (the "Maturity Date").</p>
 
@@ -92,7 +101,7 @@ export default function PromissoryNoteDetailsModal({ note, onClose }: Props) {
                         </div>
                         <div className="sig-box">
                             <p style={{ margin: 0, fontWeight: 'bold' }}>Authorized Official</p>
-                            <p style={{ margin: 0, fontSize: 11 }}>For Elirama School</p>
+                            <p style={{ margin: 0, fontSize: 11 }}>For {settings.schoolName}</p>
                         </div>
                     </div>
                 </div>
