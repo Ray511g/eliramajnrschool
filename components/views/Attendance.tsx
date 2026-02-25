@@ -146,19 +146,19 @@ export default function Attendance() {
     };
 
     return (
-        <div className="page-container">
-            <div className="page-header">
+        <div className="page-container glass-overlay" style={{ padding: '24px 32px' }}>
+            <div className="page-header animate-up" style={{ marginBottom: '24px' }}>
                 <div className="page-header-left">
-                    <h1>Attendance</h1>
-                    <div className="tabs" style={{ marginTop: 10 }}>
+                    <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '4px' }}>Attendance</h1>
+                    <div className="tabs" style={{ marginTop: 8 }}>
                         <button className={`tab-btn ${activeTab === 'mark' ? 'active' : ''}`} onClick={() => setActiveTab('mark')}>Mark Attendance</button>
-                        <button className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>Attendance Reports</button>
-                        <button className={`tab-btn ${activeTab === 'insights' ? 'active' : ''}`} onClick={() => setActiveTab('insights')}>Attendance Insights</button>
+                        <button className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>Reports</button>
+                        <button className={`tab-btn ${activeTab === 'insights' ? 'active' : ''}`} onClick={() => setActiveTab('insights')}>Insights</button>
                     </div>
                 </div>
                 <div className="page-header-right">
                     {activeTab === 'mark' && (
-                        <button className="btn-outline" onClick={printAttendanceSheet}>
+                        <button className="btn-premium outline" onClick={printAttendanceSheet}>
                             <PrintIcon style={{ fontSize: 18 }} /> Print Sheet
                         </button>
                     )}
@@ -167,34 +167,34 @@ export default function Attendance() {
 
             {activeTab === 'mark' ? (
                 <>
-                    <div className="stats-grid">
-                        <div className="stat-card green">
-                            <div className="stat-card-header">
-                                <div className="stat-card-value">{presentCount}</div>
-                                <CheckCircleIcon style={{ color: 'var(--accent-green)', fontSize: 28 }} />
+                    <div className="stats-grid animate-up" style={{ gap: '16px', marginBottom: '24px' }}>
+                        <div className="premium-card" style={{ padding: '16px' }}>
+                            <div className="flex-between">
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10b981' }}>{presentCount}</div>
+                                <CheckCircleIcon style={{ color: '#10b981', fontSize: 24 }} />
                             </div>
-                            <div className="stat-card-label">Present</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginTop: '4px' }}>Present</div>
                         </div>
-                        <div className="stat-card red">
-                            <div className="stat-card-header">
-                                <div className="stat-card-value">{absentCount}</div>
-                                <CancelIcon style={{ color: 'var(--accent-red)', fontSize: 28 }} />
+                        <div className="premium-card" style={{ padding: '16px' }}>
+                            <div className="flex-between">
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f43f5e' }}>{absentCount}</div>
+                                <CancelIcon style={{ color: '#f43f5e', fontSize: 24 }} />
                             </div>
-                            <div className="stat-card-label">Absent</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginTop: '4px' }}>Absent</div>
                         </div>
-                        <div className="stat-card orange">
-                            <div className="stat-card-header">
-                                <div className="stat-card-value">{lateCount}</div>
-                                <AccessTimeIcon style={{ color: 'var(--accent-orange)', fontSize: 28 }} />
+                        <div className="premium-card" style={{ padding: '16px' }}>
+                            <div className="flex-between">
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f59e0b' }}>{lateCount}</div>
+                                <AccessTimeIcon style={{ color: '#f59e0b', fontSize: 24 }} />
                             </div>
-                            <div className="stat-card-label">Late</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginTop: '4px' }}>Late</div>
                         </div>
-                        <div className="stat-card cyan">
-                            <div className="stat-card-header">
-                                <div className="stat-card-value">{excusedCount}</div>
-                                <InfoIcon style={{ color: 'var(--accent-cyan)', fontSize: 28 }} />
+                        <div className="premium-card" style={{ padding: '16px' }}>
+                            <div className="flex-between">
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#06b6d4' }}>{excusedCount}</div>
+                                <InfoIcon style={{ color: '#06b6d4', fontSize: 24 }} />
                             </div>
-                            <div className="stat-card-label">Excused</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginTop: '4px' }}>Excused</div>
                         </div>
                     </div>
 
@@ -223,11 +223,14 @@ export default function Attendance() {
                         </div>
                     )}
 
-                    <div className="attendance-list-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                        <h3><CalendarTodayIcon style={{ fontSize: 18, marginRight: 8 }} />Mark Attendance - {filteredStudents.length} Students</h3>
+                    <div className="attendance-list-header animate-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <CalendarTodayIcon style={{ fontSize: 18, color: 'var(--accent-blue)' }} />
+                            Mark Attendance - {filteredStudents.length} Students
+                        </h3>
                         {!isLocked && (
-                            <button className="btn-primary" onClick={handleSave}>
-                                <SaveIcon style={{ fontSize: 18 }} /> Save Attendance
+                            <button className="btn-premium" onClick={handleSave}>
+                                <SaveIcon style={{ fontSize: 18 }} /> Save Changes
                             </button>
                         )}
                     </div>

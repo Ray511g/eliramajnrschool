@@ -57,42 +57,42 @@ export default function Students() {
     };
 
     return (
-        <div className="page-container">
-            <div className="page-header">
+        <div className="page-container glass-overlay" style={{ padding: '24px 32px' }}>
+            <div className="page-header animate-up">
                 <div className="page-header-left">
-                    <h1>Students</h1>
-                    <p>Manage student information and records</p>
+                    <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '4px' }}>Students</h1>
+                    <p style={{ opacity: 0.7, fontWeight: 500 }}>Manage student information and records</p>
                 </div>
                 <div className="page-header-right">
                     {hasPermission('students', 'CREATE') && (
-                        <button className="btn-primary green" onClick={() => setShowAddModal(true)}>
+                        <button className="btn-premium" onClick={() => setShowAddModal(true)}>
                             <AddIcon style={{ fontSize: 18 }} /> Add Student
                         </button>
                     )}
                 </div>
             </div>
 
-            <div className="stats-grid">
-                <div className="stat-card blue">
-                    <div className="stat-card-value">{students.length}</div>
-                    <div className="stat-card-label">Total Students</div>
+            <div className="stats-grid animate-up" style={{ gap: '20px', marginBottom: '32px' }}>
+                <div className="premium-card" style={{ padding: '20px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Total Students</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--accent-blue)', margin: '4px 0' }}>{students.length}</div>
                 </div>
-                <div className="stat-card green">
-                    <div className="stat-card-value">{active}</div>
-                    <div className="stat-card-label">Active Students</div>
+                <div className="premium-card" style={{ padding: '20px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Active Students</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--accent-green)', margin: '4px 0' }}>{active}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-card-value">{male}</div>
-                    <div className="stat-card-label">Male</div>
+                <div className="premium-card" style={{ padding: '20px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Male</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0' }}>{male}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-card-value">{female}</div>
-                    <div className="stat-card-label">Female</div>
+                <div className="premium-card" style={{ padding: '20px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Female</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0' }}>{female}</div>
                 </div>
             </div>
 
-            <div className="search-filter-bar">
-                <div className="search-input-wrapper">
+            <div className="search-filter-bar animate-up" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', marginBottom: '24px' }}>
+                <div className="search-input-wrapper" style={{ flex: 1 }}>
                     <SearchIcon className="search-icon" />
                     <input
                         id="searchStudents"
@@ -100,6 +100,7 @@ export default function Students() {
                         type="text"
                         className="search-input"
                         placeholder="Search by name or admission number..."
+                        style={{ background: 'transparent' }}
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                     />
@@ -109,6 +110,7 @@ export default function Students() {
                     name="gradeFilter"
                     title="Filter students by grade"
                     className="filter-select"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)' }}
                     value={gradeFilter}
                     onChange={e => setGradeFilter(e.target.value)}
                 >

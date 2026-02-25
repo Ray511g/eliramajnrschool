@@ -40,43 +40,43 @@ export default function Teachers() {
     };
 
     return (
-        <div className="page-container">
-            <div className="page-header">
+        <div className="page-container glass-overlay" style={{ padding: '24px 32px' }}>
+            <div className="page-header animate-up">
                 <div className="page-header-left">
-                    <h1 className="page-title">Teaching Faculty</h1>
-                    <p className="page-subtitle">Manage pedagogical staff, subject assignments, and operational status</p>
+                    <h1 className="page-title text-gradient" style={{ fontSize: '2.5rem', marginBottom: '4px' }}>Teaching Faculty</h1>
+                    <p className="page-subtitle" style={{ opacity: 0.7, fontWeight: 500 }}>Manage pedagogical staff, subject assignments, and operational status</p>
                 </div>
                 <div className="page-header-right">
-                    <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                    <button className="btn-premium" onClick={() => setShowAddModal(true)}>
                         <AddIcon style={{ fontSize: 18 }} /> Register New Teacher
                     </button>
                 </div>
             </div>
 
-            <div className="stats-grid">
-                <div className="stat-card blue">
-                    <div className="stat-card-header">
-                        <div className="stat-card-label">Total Faculty</div>
-                        <div className="stat-card-icon"><GroupIcon /></div>
+            <div className="stats-grid animate-up" style={{ gap: '20px', marginBottom: '32px' }}>
+                <div className="premium-card" style={{ padding: '24px' }}>
+                    <div className="stat-card-header" style={{ marginBottom: '16px' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Total Faculty</div>
+                        <div className="stat-card-icon" style={{ color: 'var(--accent-purple)' }}><GroupIcon /></div>
                     </div>
-                    <div className="stat-card-value">{teachers?.length || 0}</div>
-                    <div className="stat-card-sub">Registered Staff</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>{teachers?.length || 0}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Registered Staff</div>
                 </div>
-                <div className="stat-card green">
-                    <div className="stat-card-header">
-                        <div className="stat-card-label">Active Duty</div>
-                        <div className="stat-card-icon"><CheckCircleIcon /></div>
+                <div className="premium-card" style={{ padding: '24px' }}>
+                    <div className="stat-card-header" style={{ marginBottom: '16px' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Active Duty</div>
+                        <div className="stat-card-icon" style={{ color: '#10b981' }}><CheckCircleIcon /></div>
                     </div>
-                    <div className="stat-card-value">{active}</div>
-                    <div className="stat-card-sub green">Verified & Active</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10b981', marginBottom: '4px' }}>{active}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#10b981' }}>Verified & Active</div>
                 </div>
-                <div className="stat-card purple">
-                    <div className="stat-card-header">
-                        <div className="stat-card-label">Curriculum Scope</div>
-                        <div className="stat-card-icon"><ClassIcon /></div>
+                <div className="premium-card" style={{ padding: '24px' }}>
+                    <div className="stat-card-header" style={{ marginBottom: '16px' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Curriculum Scope</div>
+                        <div className="stat-card-icon" style={{ color: 'var(--accent-blue)' }}><ClassIcon /></div>
                     </div>
-                    <div className="stat-card-value">{totalSubjects}</div>
-                    <div className="stat-card-sub">Unique Subjects Taught</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>{totalSubjects}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Unique Subjects Taught</div>
                 </div>
             </div>
 
