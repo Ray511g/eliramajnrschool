@@ -40,8 +40,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 } : undefined
             });
 
-            const entry = await prisma.payrollEntry.create({
-                data: {
+            const entry = await prisma.payrollEntry.upsert({
+                where: {
+                    staffId_month_year: {
+                        staffId: staff.id,
+                        month,
+                        year
+                    }
+                },
+                update: {
+                    basicSalary: staff.basicSalary,
+                    totalAllowances: result.grossSalary - staff.basicSalary,
+                    totalDeductions: result.totalDeductions,
+                    tax: result.paye,
+                    nssf: result.nssf,
+                    nhif: result.nhif,
+                    housingLevy: result.housingLevy || 0,
+                    netPay: result.netPay,
+                },
+                create: {
                     staffId: staff.id,
                     month,
                     year,

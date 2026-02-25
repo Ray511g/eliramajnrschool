@@ -14,6 +14,40 @@ export default function Communication() {
     const [messageBody, setMessageBody] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
+    const TEMPLATES = [
+        {
+            title: 'Fee Balance (Short)',
+            body: 'Dear Parent, this is a reminder that {student_name} has an outstanding fee balance of KSh {balance}. Please clear it soon. - {school_name}'
+        },
+        {
+            title: 'Fee Balance (Formal)',
+            body: 'Dear Guardian,\n\nOur records indicate that {student_name} has a pending fee balance of KSh {balance}. We kindly request you to settle this by the end of this week. For inquiries, contact the accounts office.\n\nRegards,\n{school_name}'
+        },
+        {
+            title: 'Report Cards Ready',
+            body: 'Dear parent, the {term} academic results for {student_name} are now ready. You can download the report card from the school portal or visit the office.\n\n{school_name}'
+        },
+        {
+            title: 'PTA Meeting',
+            body: 'Dear parent, we invite you to our PTA meeting scheduled for this Friday at 2:00 PM in the school hall. Attendance is mandatory as we discuss {student_name}\'s progress.\n\n{school_name}'
+        },
+        {
+            title: 'School Reopening',
+            body: 'Exciting news! {school_name} reopens for {term} on Monday at 8:00 AM. We look forward to welcome back {student_name} and other students.\n\n{school_name}'
+        }
+    ];
+
+    const applyTemplate = (template: string, student?: typeof students[0]) => {
+        let text = template;
+        if (student) {
+            text = text.replace(/{student_name}/g, `${student.firstName} ${student.lastName}`);
+            text = text.replace(/{balance}/g, student.feeBalance.toLocaleString());
+        }
+        text = text.replace(/{school_name}/g, settings.schoolName);
+        text = text.replace(/{term}/g, settings.currentTerm);
+        setMessageBody(text);
+    };
+
     const filteredStudents = students.filter(s => {
         const matchesGrade = selectedGrade === 'All' || s.grade === selectedGrade;
         const matchesSearch = `${s.firstName} ${s.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -213,8 +247,7 @@ export default function Communication() {
     };
 
     const draftFeeReminder = (student: typeof students[0]) => {
-        const msg = `Dear Parent, this is a reminder that ${student.firstName} has an outstanding fee balance of KSh ${student.feeBalance.toLocaleString()}. Please clear it soon. - Elirama School`;
-        setMessageBody(msg);
+        applyTemplate(TEMPLATES[0].body, student);
     };
 
     return (
@@ -270,11 +303,27 @@ export default function Communication() {
                     </div>
 
                     <div className="form-group">
-                        <label>Message Content</label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <label style={{ marginBottom: 0 }}>Message Content</label>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <select
+                                    className="filter-select"
+                                    style={{ padding: '4px 8px', fontSize: 13 }}
+                                    title="Choose a message template"
+                                    onChange={(e) => applyTemplate(e.target.value)}
+                                    defaultValue=""
+                                >
+                                    <option value="" disabled>Select Template...</option>
+                                    {TEMPLATES.map((t, idx) => (
+                                        <option key={idx} value={t.body}>{t.title}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                         <textarea
                             className="form-control"
-                            rows={4}
-                            placeholder="Type your message here..."
+                            rows={6}
+                            placeholder="Type your message here... Use {student_name}, {balance}, {term} for dynamic data."
                             value={messageBody}
                             onChange={e => setMessageBody(e.target.value)}
                         ></textarea>

@@ -14,9 +14,13 @@ import PrintIcon from '@mui/icons-material/Print';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CBCProgressReportModal from '../../components/modals/CBCProgressReportModal';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
+} from 'recharts';
 
 export default function Reports() {
-    const { students, teachers, attendance, exams, payments, results, settings, gradeFees, tryApi } = useSchool();
+    const { students, teachers, attendance, exams, payments, results, settings, gradeFees, tryApi, activeGrades, expenses } = useSchool();
     const [selectedReport, setSelectedReport] = useState<string>('dashboard');
     const [viewingCBCStudentId, setViewingCBCStudentId] = useState<string | null>(null);
     const [reportFilter, setReportFilter] = useState({
@@ -24,7 +28,7 @@ export default function Reports() {
         term: settings.currentTerm,
     });
     const [studentSearch, setStudentSearch] = useState('');
-    const [expenses, setExpenses] = React.useState<any[]>([]);
+    const [financeExpenses, setFinanceExpenses] = React.useState<any[]>([]);
     const [payroll, setPayroll] = React.useState<any[]>([]);
     const [accounts, setAccounts] = React.useState<any[]>([]);
     const [loadingFinance, setLoadingFinance] = React.useState(false);
@@ -43,7 +47,7 @@ export default function Reports() {
                 tryApi('/api/finance/payroll?type=entries'),
                 tryApi('/api/finance/accounts')
             ]);
-            if (expRes) setExpenses(await expRes.json());
+            if (expRes) setFinanceExpenses(await expRes.json());
             if (payRes) setPayroll(await payRes.json());
             if (accRes) setAccounts(await accRes.json());
         } catch (error) {
@@ -415,7 +419,246 @@ export default function Reports() {
             count: payments.length,
             onAction: () => setSelectedReport('finance-reports'),
         },
+        {
+            id: 'analytics',
+            title: 'Visual Analytics',
+            description: 'Interactive charts and insights on institutional growth and performance trends.',
+            icon: <TrendingUpIcon />,
+            color: 'var(--accent-purple)',
+            bg: 'rgba(168,85,247,0.15)',
+            count: 4,
+            onAction: () => setSelectedReport('visual-analytics'),
+        },
+        {
+            id: 'audit',
+            title: 'Financial Audit',
+            description: 'Comprehensive financial statement including income, expenses and ledger summary.',
+            icon: <PrintIcon />,
+            color: 'var(--accent-orange)',
+            bg: 'rgba(245,158,11,0.15)',
+            count: 1,
+            onAction: () => handlePrintFinancialAudit(),
+        },
     ];
+
+    const handlePrintFinancialAudit = () => {
+        const incomeTotal = payments.reduce((sum, p) => sum + p.amount, 0);
+        const expenseTotal = (typeof expenses !== 'undefined' ? expenses : []).reduce((sum: number, e: any) => sum + e.amount, 0);
+        const balance = incomeTotal - expenseTotal;
+
+        const auditHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Financial Audit Report - ${settings.schoolName}</title>
+                <style>
+                    body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
+                    .header { border-bottom: 3px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; }
+                    .school-name { font-size: 28px; font-weight: 800; color: #1e3a8a; margin: 0; }
+                    .report-info { text-align: right; font-size: 12px; color: #64748b; }
+                    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+                    .summary-card { padding: 20px; border-radius: 12px; color: white; }
+                    .card-label { font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; opacity: 0.9; }
+                    .card-value { font-size: 24px; font-weight: 800; }
+                    .blue { background: #3b82f6; }
+                    .red { background: #ef4444; }
+                    .green { background: #10b981; }
+                    
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; }
+                    td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+                    .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1 class="school-name">${settings.schoolName}</h1>
+                        <p style="margin: 5px 0; color: #64748b;">${settings.motto}</p>
+                    </div>
+                    <div class="report-info">
+                        <strong>FINANCIAL AUDIT REPORT</strong><br/>
+                        Period: ${settings.currentTerm} ${settings.currentYear}<br/>
+                        Generated: ${new Date().toLocaleString()}
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card blue">
+                        <div class="card-label">Total Income</div>
+                        <div class="card-value">KSh ${incomeTotal.toLocaleString()}</div>
+                    </div>
+                    <div class="summary-card red">
+                        <div class="card-label">Total Expenditure</div>
+                        <div class="card-value">KSh ${expenseTotal.toLocaleString()}</div>
+                    </div>
+                    <div class="summary-card green">
+                        <div class="card-label">Net Balance</div>
+                        <div class="card-value">KSh ${balance.toLocaleString()}</div>
+                    </div>
+                </div>
+
+                <h3>Recent Income (Fees)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Student</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${payments.slice(-10).reverse().map(p => `
+                            <tr>
+                                <td>${p.date}</td>
+                                <td>${p.studentName}</td>
+                                <td>${p.method} - ${p.reference}</td>
+                                <td style="font-weight: 700;">KSh ${p.amount.toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="footer">
+                    This is an official financial summary generated by ${settings.schoolName} Management System.
+                </div>
+            </body>
+            </html>
+        `;
+
+        const win = window.open('', '_blank');
+        if (!win) return;
+        win.document.write(auditHTML);
+        win.document.close();
+        win.focus();
+        setTimeout(() => { win.print(); win.close(); }, 500);
+    };
+
+    if (selectedReport === 'visual-analytics') {
+        const gradeData = activeGrades.map(g => {
+            const gradeStudents = students.filter(s => s.grade === g);
+            const gradeResults = results.filter(r => {
+                const s = students.find(st => st.id === r.studentId);
+                return s?.grade === g;
+            });
+            const avg = gradeResults.length > 0 ? gradeResults.reduce((sum, r) => sum + r.marks, 0) / gradeResults.length : 0;
+            return { name: g, students: gradeStudents.length, performance: Math.round(avg) };
+        });
+
+        const financeData = [
+            { name: 'Income', value: payments.reduce((sum, p) => sum + p.amount, 0) },
+            { name: 'Expenditure', value: expenses.reduce((sum, e) => sum + e.amount, 0) },
+        ];
+
+        return (
+            <div className="page-container">
+                <div className="page-header">
+                    <div className="page-header-left">
+                        <button className="btn-outline" style={{ marginBottom: 15 }} onClick={() => setSelectedReport('dashboard')}>
+                            ← Back to Reports
+                        </button>
+                        <h1>Institutional Insights</h1>
+                        <p>Visual representation of performance and financial health</p>
+                    </div>
+                </div>
+
+                <div className="reports-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                    <div className="card" style={{ height: 400 }}>
+                        <div className="card-header"><h3>Student Distribution by Grade</h3></div>
+                        <div className="card-body">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={gradeData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                                    <Tooltip cursor={{ fill: 'rgba(59,130,246,0.1)' }} />
+                                    <Bar dataKey="students" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ height: 400 }}>
+                        <div className="card-header"><h3>Academic Performance Avg (%)</h3></div>
+                        <div className="card-body">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={gradeData}>
+                                    <defs>
+                                        <linearGradient id="colorPerf" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                                    <Tooltip />
+                                    <Area type="monotone" dataKey="performance" stroke="#10b981" fillOpacity={1} fill="url(#colorPerf)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ height: 400 }}>
+                        <div className="card-header"><h3>Cash Flow Overview</h3></div>
+                        <div className="card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={financeData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={100}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        <Cell fill="#10b981" />
+                                        <Cell fill="#ef4444" />
+                                    </Pie>
+                                    <Tooltip formatter={(value: number) => `KSh ${value.toLocaleString()}`} />
+                                    <Legend />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ height: 400 }}>
+                        <div className="card-header"><h3>Institutional KPI Summary</h3></div>
+                        <div className="card-body" style={{ padding: '24px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                                <div style={{ background: 'rgba(59,130,246,0.05)', padding: 15, borderRadius: 12, border: '1px solid rgba(59,130,246,0.1)' }}>
+                                    <p className="text-muted text-xs uppercase" style={{ margin: '0 0 5px' }}>Fee Collection Rate</p>
+                                    <h2 style={{ margin: 0, color: '#3b82f6' }}>
+                                        {Math.round((students.reduce((sum, s) => sum + s.paidFees, 0) / students.reduce((sum, s) => sum + s.totalFees, 0)) * 100) || 0}%
+                                    </h2>
+                                </div>
+                                <div style={{ background: 'rgba(16,185,129,0.05)', padding: 15, borderRadius: 12, border: '1px solid rgba(16,185,129,0.1)' }}>
+                                    <p className="text-muted text-xs uppercase" style={{ margin: '0 0 5px' }}>Avg Result Score</p>
+                                    <h2 style={{ margin: 0, color: '#10b981' }}>
+                                        {Math.round(results.reduce((sum, r) => sum + r.marks, 0) / (results.length || 1))}%
+                                    </h2>
+                                </div>
+                                <div style={{ background: 'rgba(239,68,68,0.05)', padding: 15, borderRadius: 12, border: '1px solid rgba(239,68,68,0.1)' }}>
+                                    <p className="text-muted text-xs uppercase" style={{ margin: '0 0 5px' }}>Operating Margin</p>
+                                    <h2 style={{ margin: 0, color: '#ef4444' }}>
+                                        {Math.round(((financeData[0].value - financeData[1].value) / (financeData[0].value || 1)) * 100)}%
+                                    </h2>
+                                </div>
+                                <div style={{ background: 'rgba(6,182,212,0.05)', padding: 15, borderRadius: 12, border: '1px solid rgba(6,182,212,0.1)' }}>
+                                    <p className="text-muted text-xs uppercase" style={{ margin: '0 0 5px' }}>Attendance Rate</p>
+                                    <h2 style={{ margin: 0, color: '#06b6d4' }}>
+                                        {Math.round((attendance.filter(a => a.status === 'Present').length / (attendance.length || 1)) * 100)}%
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (selectedReport === 'assessment') {
         return (

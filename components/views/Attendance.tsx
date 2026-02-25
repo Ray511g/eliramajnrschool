@@ -8,14 +8,19 @@ import InfoIcon from '@mui/icons-material/Info';
 import SaveIcon from '@mui/icons-material/Save';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PrintIcon from '@mui/icons-material/Print';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import Pagination from '../../components/common/Pagination';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    LineChart, Line, AreaChart, Area
+} from 'recharts';
 
 export default function Attendance() {
     const { students, attendance, saveAttendance, settings, activeGrades } = useSchool();
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedGrade, setSelectedGrade] = useState('');
     const [records, setRecords] = useState<Map<string, string>>(new Map());
-    const [activeTab, setActiveTab] = useState<'mark' | 'reports'>('mark');
+    const [activeTab, setActiveTab] = useState<'mark' | 'reports' | 'insights'>('mark');
 
     // Report Filters
     const [reportDate, setReportDate] = useState('');
@@ -148,6 +153,7 @@ export default function Attendance() {
                     <div className="tabs" style={{ marginTop: 10 }}>
                         <button className={`tab-btn ${activeTab === 'mark' ? 'active' : ''}`} onClick={() => setActiveTab('mark')}>Mark Attendance</button>
                         <button className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>Attendance Reports</button>
+                        <button className={`tab-btn ${activeTab === 'insights' ? 'active' : ''}`} onClick={() => setActiveTab('insights')}>Attendance Insights</button>
                     </div>
                 </div>
                 <div className="page-header-right">
@@ -161,7 +167,6 @@ export default function Attendance() {
 
             {activeTab === 'mark' ? (
                 <>
-
                     <div className="stats-grid">
                         <div className="stat-card green">
                             <div className="stat-card-header">
@@ -255,7 +260,7 @@ export default function Attendance() {
                         ))
                     )}
                 </>
-            ) : (
+            ) : activeTab === 'reports' ? (
                 <div className="reports-section">
                     <div className="attendance-filters" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
                         <div className="form-group">
@@ -322,7 +327,78 @@ export default function Attendance() {
                         onPageChange={setCurrentPage}
                     />
                 </div>
+            ) : (
+                <div className="insights-section">
+                    <div className="stats-grid" style={{ marginBottom: 30 }}>
+                        <div className="stat-card blue">
+                            <div className="stat-card-header">
+                                <div className="stat-card-value">{Math.round((attendance.filter(a => a.status === 'Present').length / (attendance.length || 1)) * 100)}%</div>
+                                <CheckCircleIcon style={{ color: 'var(--accent-blue)', fontSize: 28 }} />
+                            </div>
+                            <div className="stat-card-label">Overall Presence Rate</div>
+                        </div>
+                        <div className="stat-card green">
+                            <div className="stat-card-header">
+                                <div className="stat-card-value">
+                                    {Math.max(...activeGrades.map(g => {
+                                        const gradeAtt = attendance.filter(a => a.grade === g);
+                                        return gradeAtt.length > 0 ? Math.round((gradeAtt.filter(a => a.status === 'Present').length / gradeAtt.length) * 100) : 0;
+                                    }))}%
+                                </div>
+                                <TrendingUpIcon style={{ color: 'var(--accent-green)', fontSize: 28 }} />
+                            </div>
+                            <div className="stat-card-label">Best Performing Grade</div>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ height: 400, marginBottom: 24 }}>
+                        <div className="card-header"><h3>Daily Attendance Trend (Last 30 Days)</h3></div>
+                        <div className="card-body">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={
+                                    [...new Set(attendance.map(a => a.date))].sort().slice(-30).map(date => {
+                                        const dateAtt = attendance.filter(a => a.date === date);
+                                        return {
+                                            date,
+                                            presence: Math.round((dateAtt.filter(a => a.status === 'Present').length / dateAtt.length) * 100)
+                                        };
+                                    })
+                                }>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                                    <XAxis dataKey="date" fontSize={10} />
+                                    <YAxis fontSize={12} domain={[0, 100]} />
+                                    <Tooltip />
+                                    <Area type="monotone" dataKey="presence" stroke="#3b82f6" fillOpacity={0.1} fill="#3b82f6" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ height: 400 }}>
+                        <div className="card-header"><h3>Attendance Presence by Grade (%)</h3></div>
+                        <div className="card-body">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={
+                                    activeGrades.map(g => {
+                                        const gradeAtt = attendance.filter(a => a.grade === g);
+                                        return {
+                                            name: g,
+                                            presence: gradeAtt.length > 0 ? Math.round((gradeAtt.filter(a => a.status === 'Present').length / gradeAtt.length) * 100) : 0
+                                        };
+                                    })
+                                }>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                                    <XAxis dataKey="name" fontSize={10} />
+                                    <YAxis fontSize={12} domain={[0, 100]} />
+                                    <Tooltip />
+                                    <Bar dataKey="presence" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
 }
+
