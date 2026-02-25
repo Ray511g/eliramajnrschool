@@ -17,36 +17,57 @@ export default function CommercialPage() {
     const { user } = useAuth();
     const { students, tryApi } = useSchool();
     const [activeTab, setActiveTab] = useState('credit');
-    const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [showServiceModal, setShowServiceModal] = useState(false);
     const [showCreditModal, setShowCreditModal] = useState(false);
     const [showPurchaseModal, setShowPurchaseModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [datasets, setDatasets] = useState({
+        credit: [] as any[],
+        notes: [] as any[],
+        services: [] as any[],
+        procurement: [] as any[]
+    });
 
-    const fetchData = async () => {
+    const fetchAllData = async () => {
         setLoading(true);
-        let endpoint = '/api/commercial/credit';
-        if (activeTab === 'procurement') endpoint = '/api/commercial/po';
-        if (activeTab === 'notes') endpoint = '/api/commercial/notes';
-        if (activeTab === 'services') endpoint = '/api/commercial/services';
-
         try {
-            const res = await tryApi(endpoint);
-            if (res) {
-                const json = await res.json();
-                setData(json);
-            }
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
+            const [creditRes, notesRes, servicesRes, poRes] = await Promise.all([
+                tryApi('/api/commercial/credit'),
+                tryApi('/api/commercial/notes'),
+                tryApi('/api/commercial/services'),
+                tryApi('/api/commercial/po')
+            ]);
+
+            const [credit, notes, services, po] = await Promise.all([
+                creditRes?.ok ? creditRes.json() : [],
+                notesRes?.ok ? notesRes.json() : [],
+                servicesRes?.ok ? servicesRes.json() : [],
+                poRes?.ok ? poRes.json() : []
+            ]);
+
+            setDatasets({
+                credit,
+                notes,
+                services,
+                procurement: po
+            });
+        } catch (e) {
+            console.error('Failed to fetch commercial data:', e);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
-        fetchData();
-    }, [activeTab]);
+        fetchAllData();
+    }, []);
 
-    const filteredData = data.filter(item => {
+    const data = datasets[activeTab as keyof typeof datasets] || [];
+
+    const filteredData = (data || []).filter(item => {
+        if (!item) return false;
         const search = searchTerm.toLowerCase();
         return (
             (item.studentName?.toLowerCase().includes(search)) ||
@@ -73,7 +94,7 @@ export default function CommercialPage() {
                     </div>
                     <div className="stat-info">
                         <span className="stat-label">Active Credit Agreements</span>
-                        <span className="stat-value">12</span>
+                        <span className="stat-value">{datasets.credit.filter(i => i.status === 'Active' || i.status === 'PENDING').length}</span>
                     </div>
                 </div>
                 <div className="stat-card">
@@ -81,8 +102,8 @@ export default function CommercialPage() {
                         <AssignmentIcon />
                     </div>
                     <div className="stat-info">
-                        <span className="stat-label">Pending Purchase Orders</span>
-                        <span className="stat-value">5</span>
+                        <span className="stat-label">Promissory Notes</span>
+                        <span className="stat-value">{datasets.notes.length}</span>
                     </div>
                 </div>
                 <div className="stat-card">
@@ -90,8 +111,8 @@ export default function CommercialPage() {
                         <ShoppingCartIcon />
                     </div>
                     <div className="stat-info">
-                        <span className="stat-label">Outstanding Commitment</span>
-                        <span className="stat-value">KSh 1.2M</span>
+                        <span className="stat-label">Current POs</span>
+                        <span className="stat-value">{datasets.procurement.length}</span>
                     </div>
                 </div>
             </div>
@@ -161,11 +182,11 @@ export default function CommercialPage() {
                                             <tr><td colSpan={6} className="text-center p-40 text-muted">No agreements found</td></tr>
                                         ) : filteredData.map(item => (
                                             <tr key={item.id}>
-                                                <td><div className="data-table-name">{item.studentName}</div></td>
+                                                <td><div className="data-table-name">{item.studentName || 'Unknown'}</div></td>
                                                 <td>{item.guardianName || 'N/A'}</td>
-                                                <td>KSh {item.totalAmount.toLocaleString()}</td>
+                                                <td>KSh {(item.totalAmount || 0).toLocaleString()}</td>
                                                 <td>{item.installments?.length || 0} Scheduled</td>
-                                                <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status}</span></td>
+                                                <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status || 'Pending'}</span></td>
                                                 <td className="text-right">
                                                     <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }}>View Schedule</button>
                                                 </td>
@@ -191,11 +212,11 @@ export default function CommercialPage() {
                                             <tr><td colSpan={6} className="text-center p-40 text-muted">No purchase orders found</td></tr>
                                         ) : filteredData.map(item => (
                                             <tr key={item.id}>
-                                                <td><div className="data-table-name">{item.poNumber}</div></td>
-                                                <td>{item.supplierName}</td>
-                                                <td className="text-right">KSh {item.totalAmount.toLocaleString()}</td>
-                                                <td>{item.department}</td>
-                                                <td><span className={`badge ${item.status === 'Approved' ? 'green' : 'orange'}`}>{item.status}</span></td>
+                                                <td><div className="data-table-name">{item.poNumber || 'N/A'}</div></td>
+                                                <td>{item.supplierName || 'Unknown Supplier'}</td>
+                                                <td className="text-right">KSh {(item.totalAmount || 0).toLocaleString()}</td>
+                                                <td>{item.department || 'N/A'}</td>
+                                                <td><span className={`badge ${item.status === 'Approved' ? 'green' : 'orange'}`}>{item.status || 'Draft'}</span></td>
                                                 <td className="text-right">
                                                     <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }}>Details</button>
                                                 </td>
@@ -221,12 +242,12 @@ export default function CommercialPage() {
                                             <tr><td colSpan={6} className="text-center p-40 text-muted">No promissory notes found</td></tr>
                                         ) : filteredData.map(item => (
                                             <tr key={item.id}>
-                                                <td><div className="data-table-name">{item.noteNumber}</div></td>
-                                                <td>{item.guardianName}</td>
-                                                <td className="text-right">KSh {item.amount.toLocaleString()}</td>
-                                                <td>{new Date(item.issueDate).toLocaleDateString()}</td>
-                                                <td>{new Date(item.maturityDate).toLocaleDateString()}</td>
-                                                <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status}</span></td>
+                                                <td><div className="data-table-name">{item.noteNumber || 'N/A'}</div></td>
+                                                <td>{item.guardianName || 'N/A'}</td>
+                                                <td className="text-right">KSh {(item.amount || 0).toLocaleString()}</td>
+                                                <td>{item.issueDate ? new Date(item.issueDate).toLocaleDateString() : 'N/A'}</td>
+                                                <td>{item.maturityDate ? new Date(item.maturityDate).toLocaleDateString() : 'N/A'}</td>
+                                                <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status || 'Draft'}</span></td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -252,11 +273,11 @@ export default function CommercialPage() {
                                             return (
                                                 <tr key={item.id}>
                                                     <td><div className="data-table-name">{student ? `${student.firstName} ${student.lastName}` : 'Unknown Student'}</div></td>
-                                                    <td>{item.serviceType}</td>
-                                                    <td className="text-right">KSh {item.amount.toLocaleString()}</td>
-                                                    <td>{item.recurring ? `Yes (${item.frequency})` : 'No'}</td>
+                                                    <td>{item.serviceType || 'N/A'}</td>
+                                                    <td className="text-right">KSh {(item.amount || 0).toLocaleString()}</td>
+                                                    <td>{item.recurring ? `Yes (${item.frequency || 'N/A'})` : 'No'}</td>
                                                     <td>{item.nextBillingDate ? new Date(item.nextBillingDate).toLocaleDateString() : 'N/A'}</td>
-                                                    <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status}</span></td>
+                                                    <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status || 'Active'}</span></td>
                                                 </tr>
                                             );
                                         })}
@@ -268,10 +289,10 @@ export default function CommercialPage() {
                 </div>
             </div>
 
-            {showNoteModal && <AddPromissoryNoteModal onClose={() => setShowNoteModal(false)} onAdd={fetchData} />}
-            {showServiceModal && <AddServiceOrderModal onClose={() => setShowServiceModal(false)} onAdd={fetchData} />}
-            {showCreditModal && <AddCreditAgreementModal onClose={() => setShowCreditModal(false)} onAdd={fetchData} />}
-            {showPurchaseModal && <AddPurchaseOrderModal onClose={() => setShowPurchaseModal(false)} onAdd={fetchData} />}
+            {showNoteModal && <AddPromissoryNoteModal onClose={() => setShowNoteModal(false)} onAdd={fetchAllData} />}
+            {showServiceModal && <AddServiceOrderModal onClose={() => setShowServiceModal(false)} onAdd={fetchAllData} />}
+            {showCreditModal && <AddCreditAgreementModal onClose={() => setShowCreditModal(false)} onAdd={fetchAllData} />}
+            {showPurchaseModal && <AddPurchaseOrderModal onClose={() => setShowPurchaseModal(false)} onAdd={fetchAllData} />}
         </div>
     );
 }
