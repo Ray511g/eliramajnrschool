@@ -9,11 +9,11 @@ interface Props {
 }
 
 export default function ScheduleExamModal({ onClose, exam }: Props) {
-    const { addExam, updateExam } = useSchool();
+    const { addExam, updateExam, activeGrades } = useSchool();
     const [form, setForm] = useState({
         name: '',
         subject: SUBJECTS[0],
-        grade: GRADES[0],
+        grade: activeGrades[0] || (GRADES[0] as string),
         date: '',
         term: TERMS[0],
         type: 'Midterm' as 'Midterm' | 'Final' | 'Quiz' | 'Assignment',
@@ -67,7 +67,7 @@ export default function ScheduleExamModal({ onClose, exam }: Props) {
                             <div className="form-group">
                                 <label>Grade *</label>
                                 <select className="form-control w-full-input" value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value as any })}>
-                                    {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                                    {activeGrades.map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                             </div>
                         </div>

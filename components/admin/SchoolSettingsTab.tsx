@@ -3,6 +3,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import SecurityIcon from '@mui/icons-material/Security';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import SaveIcon from '@mui/icons-material/Save';
 import { useSchool } from '../../context/SchoolContext';
 import { SchoolSettings, TERMS } from '../../types';
 
@@ -178,12 +179,29 @@ export const SchoolSettingsTab: React.FC<Props> = ({ editing, setEditing }) => {
                                 </div>
                             </div>
                             <div className="form-group">
+                                <label>SSS Naming Convention</label>
+                                <select className="form-control" title="Select SSS Naming Convention" disabled={!editing} value={form.sssNaming || 'Form'} onChange={e => setForm({ ...form, sssNaming: e.target.value as any })}>
+                                    <option value="Form">Form 1 - Form 4</option>
+                                    <option value="Grade">Grade 9 - Grade 12</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid-2 mt-20">
+                            <div className="form-group">
                                 <label>Administrative Titles</label>
-                                <select className="form-control" disabled={!editing} value={form.headOfSchoolTitle || 'Headteacher'} onChange={e => setForm({ ...form, headOfSchoolTitle: e.target.value as any })}>
+                                <select className="form-control" title="Select Administrative Title" disabled={!editing} value={form.headOfSchoolTitle || 'Headteacher'} onChange={e => setForm({ ...form, headOfSchoolTitle: e.target.value as any })}>
                                     <option value="Headteacher">Headteacher</option>
                                     <option value="Principal">Principal</option>
                                     <option value="Chief Principal">Chief Principal</option>
                                 </select>
+                            </div>
+                            <div className="form-group flex-end">
+                                {editing && (
+                                    <button className="btn-primary" onClick={handleSave}>
+                                        <SaveIcon style={{ fontSize: 16 }} /> Save Structure
+                                    </button>
+                                )}
                             </div>
                         </div>
 

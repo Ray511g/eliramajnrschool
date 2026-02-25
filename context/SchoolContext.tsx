@@ -1172,10 +1172,15 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             grades.push('Grade 7', 'Grade 8', 'Grade 9');
         }
         if (settings.sssEnabled) {
-            grades.push('Form 1', 'Form 2', 'Form 3', 'Form 4');
+            if (settings.sssNaming === 'Grade') {
+                grades.push('Grade 9', 'Grade 10', 'Grade 11', 'Grade 12');
+            } else {
+                grades.push('Form 1', 'Form 2', 'Form 3', 'Form 4');
+            }
         }
-        return grades;
-    }, [settings.earlyYearsEnabled, settings.primaryEnabled, settings.jssEnabled, settings.sssEnabled]);
+        // Remove duplicates if any (e.g. Grade 9 in both JSS and SSS)
+        return Array.from(new Set(grades)) as GradeLevel[];
+    }, [settings.earlyYearsEnabled, settings.primaryEnabled, settings.jssEnabled, settings.sssEnabled, settings.sssNaming]);
 
     return (
         <SchoolContext.Provider value={{
