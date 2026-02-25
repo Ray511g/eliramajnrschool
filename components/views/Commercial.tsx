@@ -11,6 +11,9 @@ import AddPromissoryNoteModal from '../../components/modals/AddPromissoryNoteMod
 import AddServiceOrderModal from '../../components/modals/AddServiceOrderModal';
 import AddCreditAgreementModal from '../../components/modals/AddCreditAgreementModal';
 import AddPurchaseOrderModal from '../../components/modals/AddPurchaseOrderModal';
+import PurchaseOrderDetailsModal from '../../components/modals/PurchaseOrderDetailsModal';
+import ServiceOrderDetailsModal from '../../components/modals/ServiceOrderDetailsModal';
+import PromissoryNoteDetailsModal from '../../components/modals/PromissoryNoteDetailsModal';
 import { useSchool } from '../../context/SchoolContext';
 
 export default function CommercialPage() {
@@ -29,6 +32,9 @@ export default function CommercialPage() {
         services: [] as any[],
         procurement: [] as any[]
     });
+    const [selectedPO, setSelectedPO] = useState<any>(null);
+    const [selectedService, setSelectedService] = useState<any>(null);
+    const [selectedNote, setSelectedNote] = useState<any>(null);
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -69,13 +75,31 @@ export default function CommercialPage() {
     const filteredData = (data || []).filter(item => {
         if (!item) return false;
         const search = searchTerm.toLowerCase();
-        return (
+
+        // Basic fields
+        const matchesBasic =
             (item.studentName?.toLowerCase().includes(search)) ||
             (item.guardianName?.toLowerCase().includes(search)) ||
             (item.poNumber?.toLowerCase().includes(search)) ||
             (item.noteNumber?.toLowerCase().includes(search)) ||
-            (item.supplierName?.toLowerCase().includes(search))
-        );
+            (item.supplierName?.toLowerCase().includes(search)) ||
+            (item.serviceType?.toLowerCase().includes(search));
+
+        if (matchesBasic) return true;
+
+        // If it's a service order, search within the linked student
+        if (activeTab === 'services' && item.studentId) {
+            const student = students.find(s => s.id === item.studentId);
+            if (student) {
+                return (
+                    student.firstName?.toLowerCase().includes(search) ||
+                    student.lastName?.toLowerCase().includes(search) ||
+                    student.admissionNumber?.toLowerCase().includes(search)
+                );
+            }
+        }
+
+        return false;
     });
 
     return (
@@ -218,7 +242,22 @@ export default function CommercialPage() {
                                                 <td>{item.department || 'N/A'}</td>
                                                 <td><span className={`badge ${item.status === 'Approved' ? 'green' : 'orange'}`}>{item.status || 'Draft'}</span></td>
                                                 <td className="text-right">
-                                                    <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }}>Details</button>
+                                                    <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
+                                                        <button
+                                                            className="btn btn-outline"
+                                                            style={{ padding: '4px 10px', fontSize: 12 }}
+                                                            onClick={() => setSelectedPO(item)}
+                                                        >
+                                                            View
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-outline"
+                                                            style={{ padding: '4px 10px', fontSize: 12 }}
+                                                            onClick={() => setSelectedPO(item)}
+                                                        >
+                                                            Print
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -235,11 +274,12 @@ export default function CommercialPage() {
                                             <th>Issue Date</th>
                                             <th>Maturity</th>
                                             <th>Status</th>
+                                            <th className="text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredData.length === 0 ? (
-                                            <tr><td colSpan={6} className="text-center p-40 text-muted">No promissory notes found</td></tr>
+                                            <tr><td colSpan={7} className="text-center p-40 text-muted">No promissory notes found</td></tr>
                                         ) : filteredData.map(item => (
                                             <tr key={item.id}>
                                                 <td><div className="data-table-name">{item.noteNumber || 'N/A'}</div></td>
@@ -248,6 +288,24 @@ export default function CommercialPage() {
                                                 <td>{item.issueDate ? new Date(item.issueDate).toLocaleDateString() : 'N/A'}</td>
                                                 <td>{item.maturityDate ? new Date(item.maturityDate).toLocaleDateString() : 'N/A'}</td>
                                                 <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status || 'Draft'}</span></td>
+                                                <td className="text-right">
+                                                    <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
+                                                        <button
+                                                            className="btn btn-outline"
+                                                            style={{ padding: '4px 10px', fontSize: 12 }}
+                                                            onClick={() => setSelectedNote(item)}
+                                                        >
+                                                            View
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-outline"
+                                                            style={{ padding: '4px 10px', fontSize: 12 }}
+                                                            onClick={() => setSelectedNote(item)}
+                                                        >
+                                                            Print
+                                                        </button>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -263,11 +321,12 @@ export default function CommercialPage() {
                                             <th>Recurring</th>
                                             <th>Next Billing</th>
                                             <th>Status</th>
+                                            <th className="text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredData.length === 0 ? (
-                                            <tr><td colSpan={6} className="text-center p-40 text-muted">No service orders found</td></tr>
+                                            <tr><td colSpan={7} className="text-center p-40 text-muted">No service orders found</td></tr>
                                         ) : filteredData.map(item => {
                                             const student = students.find(s => s.id === item.studentId);
                                             return (
@@ -278,6 +337,24 @@ export default function CommercialPage() {
                                                     <td>{item.recurring ? `Yes (${item.frequency || 'N/A'})` : 'No'}</td>
                                                     <td>{item.nextBillingDate ? new Date(item.nextBillingDate).toLocaleDateString() : 'N/A'}</td>
                                                     <td><span className={`badge ${item.status === 'Active' ? 'green' : 'blue'}`}>{item.status || 'Active'}</span></td>
+                                                    <td className="text-right">
+                                                        <div className="action-buttons-flex" style={{ justifyContent: 'flex-end' }}>
+                                                            <button
+                                                                className="btn btn-outline"
+                                                                style={{ padding: '4px 10px', fontSize: 12 }}
+                                                                onClick={() => setSelectedService(item)}
+                                                            >
+                                                                View
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-outline"
+                                                                style={{ padding: '4px 10px', fontSize: 12 }}
+                                                                onClick={() => setSelectedService(item)}
+                                                            >
+                                                                Print
+                                                            </button>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             );
                                         })}
@@ -293,6 +370,15 @@ export default function CommercialPage() {
             {showServiceModal && <AddServiceOrderModal onClose={() => setShowServiceModal(false)} onAdd={fetchAllData} />}
             {showCreditModal && <AddCreditAgreementModal onClose={() => setShowCreditModal(false)} onAdd={fetchAllData} />}
             {showPurchaseModal && <AddPurchaseOrderModal onClose={() => setShowPurchaseModal(false)} onAdd={fetchAllData} />}
+            {selectedPO && <PurchaseOrderDetailsModal po={selectedPO} onClose={() => setSelectedPO(null)} />}
+            {selectedService && (
+                <ServiceOrderDetailsModal
+                    order={selectedService}
+                    student={students.find(s => s.id === selectedService.studentId)}
+                    onClose={() => setSelectedService(null)}
+                />
+            )}
+            {selectedNote && <PromissoryNoteDetailsModal note={selectedNote} onClose={() => setSelectedNote(null)} />}
         </div>
     );
 }

@@ -9,6 +9,7 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import FilePresentIcon from '@mui/icons-material/FilePresent';
 
 import AddExpenseRequestModal from '../modals/AddExpenseRequestModal';
+import PurchaseOrderDetailsModal from '../modals/PurchaseOrderDetailsModal'; // Reusing PO details style or can be generic
 
 const ExpenditureManager: React.FC = () => {
     const { user, hasPermission } = useAuth();
@@ -16,6 +17,7 @@ const ExpenditureManager: React.FC = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedExp, setSelectedExp] = useState<any>(null);
 
     const filteredExpenses = (expenses || []).filter(e =>
         e.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,7 +98,11 @@ const ExpenditureManager: React.FC = () => {
                                                 <CancelIcon style={{ fontSize: 20 }} />
                                             </button>
                                         )}
-                                        <button className="action-btn" title="View Document">
+                                        <button
+                                            className="action-btn"
+                                            title="View Details"
+                                            onClick={() => setSelectedExp(e)}
+                                        >
                                             <FilePresentIcon style={{ fontSize: 20 }} />
                                         </button>
                                     </div>
@@ -108,6 +114,20 @@ const ExpenditureManager: React.FC = () => {
             </div>
 
             <AddExpenseRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            {selectedExp && (
+                <PurchaseOrderDetailsModal
+                    po={{
+                        poNumber: `EXP-${selectedExp.id.slice(-6).toUpperCase()}`,
+                        status: selectedExp.status,
+                        createdAt: selectedExp.createdAt,
+                        supplierName: selectedExp.requestedByName,
+                        department: selectedExp.category,
+                        totalAmount: selectedExp.amount,
+                        items: [{ desc: selectedExp.description, qty: 1, unitPrice: selectedExp.amount, total: selectedExp.amount }]
+                    }}
+                    onClose={() => setSelectedExp(null)}
+                />
+            )}
         </div>
     );
 };
