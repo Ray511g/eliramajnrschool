@@ -46,6 +46,9 @@ export default function Results() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [bulkLevel, setBulkLevel] = useState<PerformanceLevel | ''>('');
+    const [bulkRemarks, setBulkRemarks] = useState('');
+
     const filteredExams = exams.filter(e => e.grade === selectedGrade);
     const gradeStudents = students.filter(s => s.grade === selectedGrade);
 
@@ -113,6 +116,21 @@ export default function Results() {
             ...prev,
             [studentId]: { ...prev[studentId], remarks }
         }));
+    };
+
+    const handleApplyBulk = () => {
+        if (!bulkLevel && !bulkRemarks) return;
+        const newLocal = { ...localResults };
+        gradeStudents.forEach(s => {
+            newLocal[s.id] = {
+                ...newLocal[s.id],
+                level: (bulkLevel as PerformanceLevel) || newLocal[s.id]?.level,
+                remarks: bulkRemarks || newLocal[s.id]?.remarks || '',
+                marks: bulkLevel === 'EE' ? 85 : bulkLevel === 'ME' ? 65 : bulkLevel === 'AE' ? 40 : bulkLevel === 'BE' ? 20 : newLocal[s.id]?.marks || 0
+            };
+        });
+        setLocalResults(newLocal);
+        showToast(`Applied bulk settings to ${gradeStudents.length} students`);
     };
 
     const handleSave = async () => {
@@ -261,6 +279,44 @@ export default function Results() {
                             <span className="badge red">BE: 0-29</span>
                         </div>
                     </div>
+
+                    {(activeTab === 'cbc' || activeTab === 'exams') && (
+                        <div className="bulk-actions-bar glass-card" style={{
+                            padding: '12px 20px',
+                            marginBottom: 20,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 15,
+                            border: '1px solid var(--accent-blue)',
+                            background: 'rgba(59, 130, 246, 0.05)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <HistoryIcon style={{ color: 'var(--accent-blue)', fontSize: 20 }} />
+                                <span style={{ fontWeight: 700, fontSize: 13, textTransform: 'uppercase' }}>Bulk Actions:</span>
+                            </div>
+                            <select
+                                title="Default Level"
+                                className="form-control-sm"
+                                style={{ width: 180 }}
+                                value={bulkLevel}
+                                onChange={e => setBulkLevel(e.target.value as any)}
+                            >
+                                <option value="">Set Default Level...</option>
+                                <option value="EE">Exceeding (EE)</option>
+                                <option value="ME">Meeting (ME)</option>
+                                <option value="AE">Approaching (AE)</option>
+                                <option value="BE">Below (BE)</option>
+                            </select>
+                            <input
+                                className="form-control-sm"
+                                style={{ flex: 1 }}
+                                placeholder="Set default remark for all students..."
+                                value={bulkRemarks}
+                                onChange={e => setBulkRemarks(e.target.value)}
+                            />
+                            <button className="btn-primary-sm" onClick={handleApplyBulk}>Apply to All {gradeStudents.length} Students</button>
+                        </div>
+                    )}
 
                     <div className="table-container overhaul-table">
                         <table className="data-table">

@@ -8,6 +8,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import AddStudentModal from '../../components/modals/AddStudentModal';
 import Pagination from '../../components/common/Pagination';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import Student360Modal from '../../components/modals/Student360Modal';
 
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,6 +20,7 @@ export default function Students() {
     const [gradeFilter, setGradeFilter] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+    const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const router = React.useMemo(() => typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null, []);
@@ -143,6 +146,9 @@ export default function Students() {
                                     <td>KSh {student.feeBalance.toLocaleString()}</td>
                                     <td>
                                         <div className="table-actions">
+                                            <button className="table-action-btn" title="View 360 Profile" onClick={() => setViewingStudent(student)}>
+                                                <VisibilityIcon style={{ fontSize: 16, color: 'var(--accent-blue)' }} />
+                                            </button>
                                             {hasPermission('students', 'EDIT') && (
                                                 <button className="table-action-btn" title="Edit" onClick={() => handleEdit(student)}>
                                                     <EditIcon style={{ fontSize: 16 }} />
@@ -170,6 +176,7 @@ export default function Students() {
             />
 
             {showAddModal && <AddStudentModal student={editingStudent} onClose={handleCloseModal} />}
+            {viewingStudent && <Student360Modal student={viewingStudent} onClose={() => setViewingStudent(null)} />}
         </div>
     );
 }

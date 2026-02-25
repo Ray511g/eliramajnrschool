@@ -9,6 +9,8 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LockIcon from '@mui/icons-material/Lock';
 import LogoutIcon from '@mui/icons-material/Logout';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 
 interface LayoutProps {
     children: ReactNode;
@@ -23,6 +25,18 @@ export default function Layout({ children }: LayoutProps) {
     const [showChangePassword, setShowChangePassword] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isDarkMode, setIsDarkMode] = useState(true);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('elirama_theme');
+        if (saved) setIsDarkMode(saved === 'dark');
+    }, []);
+
+    const toggleTheme = () => {
+        const newMode = !isDarkMode;
+        setIsDarkMode(newMode);
+        localStorage.setItem('elirama_theme', newMode ? 'dark' : 'light');
+    };
 
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -96,7 +110,7 @@ export default function Layout({ children }: LayoutProps) {
     };
 
     return (
-        <div className="app-layout">
+        <div className={`app-layout ${!isDarkMode ? 'light-theme' : ''}`}>
             <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
             <main className="main-content">
                 <header className="top-bar">
@@ -107,6 +121,10 @@ export default function Layout({ children }: LayoutProps) {
                     </div>
                     <div className="top-bar-right">
                         <div className="top-bar-actions">
+                            <div className="icon-badge-wrapper" onClick={toggleTheme} title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+                                {isDarkMode ? <LightModeIcon className="top-bar-icon" /> : <DarkModeIcon className="top-bar-icon" />}
+                            </div>
+
                             <div className="icon-badge-wrapper" onClick={() => setShowNotifications(!showNotifications)}>
                                 <NotificationsIcon className="top-bar-icon" />
                                 {unreadCount > 0 && <span className="icon-badge">{unreadCount}</span>}

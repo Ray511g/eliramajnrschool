@@ -15,6 +15,22 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AddStudentModal from '../../components/modals/AddStudentModal';
 import { useAuth } from '../../context/AuthContext';
+import {
+    AreaChart, Area, ResponsiveContainer, BarChart, Bar,
+    PieChart, Pie, Cell, Tooltip, XAxis, YAxis
+} from 'recharts';
+
+function Sparkline({ data, color }: { data: any[], color: string }) {
+    return (
+        <div style={{ height: 40, width: 80 }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data}>
+                    <Area type="monotone" dataKey="val" stroke={color} fill={color} fillOpacity={0.1} strokeWidth={2} />
+                </AreaChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
 
 export default function Dashboard() {
     const { students, teachers, attendance, exams, serverStatus, settings } = useSchool();
@@ -23,10 +39,39 @@ export default function Dashboard() {
     const [showAddStudent, setShowAddStudent] = useState(false);
 
     const stats = [
-        { label: 'Total Students', value: students.length, color: 'blue', sub: `${students.filter(s => s.status === 'Active').length} Active` },
-        { label: 'Staff Members', value: teachers.length, color: 'purple', sub: 'Teaching & Admin' },
-        { label: 'Academic Year', value: settings.currentYear, color: 'green', sub: `${settings.currentTerm} Active` },
-        { label: 'Exams Active', value: exams.filter(e => (e as any).status === 'Active' || (e as any).status === 'Scheduled').length, color: 'orange', sub: 'Ongoing Assessments' },
+        {
+            label: 'Total Students',
+            value: students.length,
+            color: '#3b82f6',
+            sub: `${students.filter(s => s.status === 'Active').length} Active`,
+            spark: Array.from({ length: 6 }, (_, i) => ({ val: 10 + Math.random() * 20 }))
+        },
+        {
+            label: 'Staff Members',
+            value: teachers.length,
+            color: '#a855f7',
+            sub: 'Teaching & Admin',
+            spark: Array.from({ length: 6 }, (_, i) => ({ val: 15 + Math.random() * 10 }))
+        },
+        {
+            label: 'Academic Year',
+            value: settings.currentYear,
+            color: '#10b981',
+            sub: `${settings.currentTerm} Active`,
+            spark: Array.from({ length: 6 }, (_, i) => ({ val: 5 + Math.random() * 5 }))
+        },
+        {
+            label: 'Exams Active',
+            value: exams.filter(e => (e as any).status === 'Active' || (e as any).status === 'Scheduled').length,
+            color: '#f59e0b',
+            sub: 'Ongoing Assessments',
+            spark: Array.from({ length: 6 }, (_, i) => ({ val: 2 + Math.random() * 8 }))
+        },
+    ];
+
+    const performanceData = [
+        { name: 'Jan', val: 65 }, { name: 'Feb', val: 72 }, { name: 'Mar', val: 68 },
+        { name: 'Apr', val: 85 }, { name: 'May', val: 82 }, { name: 'Jun', val: 90 }
     ];
 
     const quickActions = [
@@ -46,31 +91,19 @@ export default function Dashboard() {
             </header>
 
             <div className="stats-sections-grid">
-                <div className="stats-cluster">
-                    <h5 className="cluster-label">Academic Overview</h5>
-                    <div className="stats-mini-grid">
-                        {stats.slice(0, 2).map((stat, i) => (
-                            <div key={i} className={`stat-card dash-${stat.color}`}>
-                                <div className="stat-card-header">
-                                    <span className="stat-card-label">{stat.label}</span>
+                <div className="stats-cluster" style={{ gridColumn: 'span 2' }}>
+                    <div className="stats-mini-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                        {stats.map((stat, i) => (
+                            <div key={i} className="stat-card glass-card" style={{ borderLeft: `4px solid ${stat.color}`, padding: '20px' }}>
+                                <div className="stat-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 15 }}>
+                                    <span className="stat-card-label" style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-secondary)' }}>{stat.label}</span>
+                                    <Sparkline data={stat.spark} color={stat.color} />
                                 </div>
-                                <div className="stat-card-value">{stat.value}</div>
-                                <div className="stat-card-sub">{stat.sub}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="stats-cluster">
-                    <h5 className="cluster-label">Current Session</h5>
-                    <div className="stats-mini-grid">
-                        {stats.slice(2, 4).map((stat, i) => (
-                            <div key={i} className={`stat-card dash-${stat.color}`}>
-                                <div className="stat-card-header">
-                                    <span className="stat-card-label">{stat.label}</span>
+                                <div className="stat-card-value" style={{ fontSize: 28, fontWeight: 800, margin: '8px 0' }}>{stat.value}</div>
+                                <div className="stat-card-sub" style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: stat.color }}></span>
+                                    {stat.sub}
                                 </div>
-                                <div className="stat-card-value">{stat.value}</div>
-                                <div className="stat-card-sub">{stat.sub}</div>
                             </div>
                         ))}
                     </div>
@@ -97,16 +130,39 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            <div className="dashboard-main-grid" style={{ marginTop: '40px' }}>
-                <div className="card glass-card span-3">
-                    <div className="flex-between section-header-horizontal">
+            <div className="dashboard-main-grid" style={{ marginTop: '40px', display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 24 }}>
+                <div className="card glass-card" style={{ padding: 24 }}>
+                    <div className="section-header-horizontal">
+                        <div className="title-group">
+                            <h3 className="card-title">Performance Recap</h3>
+                            <p className="card-subtitle">Growth trend across all grades</p>
+                        </div>
+                    </div>
+                    <div style={{ height: 250, marginTop: 20 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={performanceData}>
+                                <defs>
+                                    <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="var(--accent-blue)" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="var(--accent-blue)" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <Tooltip />
+                                <Area type="monotone" dataKey="val" stroke="var(--accent-blue)" fillOpacity={1} fill="url(#colorVal)" strokeWidth={3} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="card glass-card" style={{ padding: 24 }}>
+                    <div className="flex-between section-header-horizontal" style={{ marginBottom: 20 }}>
                         <div className="title-group">
                             <h3 className="card-title">Recent Audit Activities</h3>
-                            <p className="card-subtitle">Latest administrative actions across the system</p>
+                            <p className="card-subtitle">Latest administrative actions</p>
                         </div>
-                        <button className="btn-outline-sm" onClick={() => router.push('/admin?tab=audit')}>Detailed Logs</button>
+                        <button className="btn-outline-sm" onClick={() => router.push('/admin?tab=audit')}>Logs</button>
                     </div>
-                    <div className="activity-feed-container custom-scrollbar">
+                    <div className="activity-feed-container custom-scrollbar" style={{ maxHeight: 250, overflowY: 'auto' }}>
                         <p className="empty-state-text">Synchronizing audit data...</p>
                     </div>
                 </div>
