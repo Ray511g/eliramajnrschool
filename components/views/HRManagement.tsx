@@ -12,30 +12,15 @@ import SearchIcon from '@mui/icons-material/Search';
 
 export default function HRManagementPage() {
     const { user } = useAuth();
-    const { showToast, tryApi, refreshData } = useSchool();
+    const {
+        staff, addStaff, updateStaff,
+        showToast, tryApi, refreshData, loading: contextLoading
+    } = useSchool();
     const [activeTab, setActiveTab] = useState('staff');
-    const [staff, setStaff] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
     const [runningPayroll, setRunningPayroll] = useState(false);
     const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<any>(null);
     const [searchTerm, setSearchTerm] = useState('');
-
-    const fetchStaff = async () => {
-        setLoading(true);
-        try {
-            const res = await tryApi('/api/hr/staff');
-            if (res) {
-                const json = await res.json();
-                setStaff(json);
-            }
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
-    };
-
-    useEffect(() => {
-        if (activeTab === 'staff') fetchStaff();
-    }, [activeTab]);
 
     const runPayroll = async () => {
         const month = new Date().getMonth() + 1;
@@ -67,27 +52,16 @@ export default function HRManagementPage() {
     };
 
     const handleAddStaff = async (staffData: any) => {
-        try {
-            const method = selectedStaff ? 'PUT' : 'POST';
-            const url = selectedStaff ? `/api/hr/staff/${selectedStaff.id}` : '/api/hr/staff';
-            const res = await tryApi(url, {
-                method,
-                body: JSON.stringify(staffData)
-            });
-
-            if (res) {
-                showToast(`Staff member ${selectedStaff ? 'updated' : 'added'} successfully`, 'success');
-                fetchStaff();
-                setIsAddStaffOpen(false);
-                setSelectedStaff(null);
-                refreshData();
-            }
-        } catch (e) {
-            showToast('Network error while saving staff', 'error');
+        if (selectedStaff) {
+            await updateStaff(selectedStaff.id, staffData);
+        } else {
+            await addStaff(staffData);
         }
+        setIsAddStaffOpen(false);
+        setSelectedStaff(null);
     };
 
-    const filteredStaff = staff.filter(s =>
+    const filteredStaff = (staff || []).filter(s =>
         `${s.firstName} ${s.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.designation?.toLowerCase().includes(searchTerm.toLowerCase())

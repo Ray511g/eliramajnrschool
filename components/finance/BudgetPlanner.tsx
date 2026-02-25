@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import AddIcon from '@mui/icons-material/Add';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import WarningIcon from '@mui/icons-material/Warning';
 import { useSchool } from '../../context/SchoolContext';
+import AddBudgetAllocationModal from '../modals/AddBudgetAllocationModal';
 
 interface BudgetPlannerProps {
     budgets?: any[];
@@ -24,23 +24,7 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = (props) => {
         }
     });
 
-    const [showForm, setShowForm] = useState(false);
-    const [form, setForm] = useState({
-        year: new Date().getFullYear(),
-        department: 'Academic',
-        category: 'Utilities',
-        allocatedAmount: 0
-    });
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (form.allocatedAmount <= 0) {
-            alert('Allocation amount must be greater than zero');
-            return;
-        }
-        onUpdate(form);
-        setShowForm(false);
-    };
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
         <div className="budget-planner animate-in">
@@ -49,88 +33,11 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = (props) => {
                     <h2 className="section-title">Budget Management</h2>
                     <p className="text-muted text-xs">Allocate and track departmental financial limits</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowForm(true)} title="Add new budget allocation" aria-label="New Allocation">
+                <button className="btn btn-primary" onClick={() => setIsModalOpen(true)} title="Add new budget allocation" aria-label="New Allocation">
                     <AddIcon className="mr-2" style={{ fontSize: 18 }} />
                     New Allocation
                 </button>
             </div>
-
-            {showForm && (
-                <div className="admin-section animate-in" style={{ marginBottom: 24, border: '1px solid #3b82f6' }}>
-                    <h3 className="section-title" style={{ marginBottom: 20 }}>Allocate Budget</h3>
-                    <form onSubmit={handleSubmit}>
-                        <div className="grid-3">
-                            <div className="form-group">
-                                <label htmlFor="deptSelect">Department</label>
-                                <select
-                                    id="deptSelect"
-                                    className="form-control"
-                                    value={form.department}
-                                    onChange={(e) => setForm({ ...form, department: e.target.value })}
-                                    title="Choose department"
-                                    aria-label="Department Select"
-                                >
-                                    <option>Academic</option>
-                                    <option>Administration</option>
-                                    <option>Operations</option>
-                                    <option>Extracurricular</option>
-                                    <option>Feeding</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="catSelect">Category</label>
-                                <select
-                                    id="catSelect"
-                                    className="form-control"
-                                    value={form.category}
-                                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                                    title="Choose expense category"
-                                    aria-label="Category Select"
-                                >
-                                    <option>Utilities</option>
-                                    <option>Maintenance</option>
-                                    <option>Feeding</option>
-                                    <option>Academic Materials</option>
-                                    <option>Salaries</option>
-                                    <option>Transport</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="allocAmt">Allocation (KES)</label>
-                                <input
-                                    id="allocAmt"
-                                    className="form-control"
-                                    type="number"
-                                    value={form.allocatedAmount || ''}
-                                    onChange={(e) => setForm({ ...form, allocatedAmount: parseFloat(e.target.value) || 0 })}
-                                    required
-                                    min="1"
-                                    title="Enter allocation amount"
-                                />
-                            </div>
-                        </div>
-                        <div className="grid-3" style={{ marginTop: 20 }}>
-                            <div className="form-group">
-                                <label htmlFor="finYear">Financial Year</label>
-                                <input
-                                    id="finYear"
-                                    className="form-control"
-                                    type="number"
-                                    value={form.year || ''}
-                                    onChange={(e) => setForm({ ...form, year: parseInt(e.target.value) || new Date().getFullYear() })}
-                                    required
-                                    title="Financial Year"
-                                />
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-                            <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)} title="Cancel allocation">Cancel</button>
-                            <button type="submit" className="btn btn-primary" title="Save budget allocation">Save Allocation</button>
-                        </div>
-                    </form>
-                </div>
-            )}
 
             <div className="finance-stats-container">
                 {budgets.length > 0 ? budgets.map((b, i) => (
@@ -174,6 +81,12 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = (props) => {
                     </div>
                 )}
             </div>
+
+            <AddBudgetAllocationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={onUpdate}
+            />
         </div>
     );
 };

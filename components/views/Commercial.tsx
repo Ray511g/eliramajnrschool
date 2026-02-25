@@ -9,6 +9,8 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 import SearchIcon from '@mui/icons-material/Search';
 import AddPromissoryNoteModal from '../../components/modals/AddPromissoryNoteModal';
 import AddServiceOrderModal from '../../components/modals/AddServiceOrderModal';
+import AddCreditAgreementModal from '../../components/modals/AddCreditAgreementModal';
+import AddPurchaseOrderModal from '../../components/modals/AddPurchaseOrderModal';
 import { useSchool } from '../../context/SchoolContext';
 
 export default function CommercialPage() {
@@ -19,6 +21,8 @@ export default function CommercialPage() {
     const [loading, setLoading] = useState(false);
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [showServiceModal, setShowServiceModal] = useState(false);
+    const [showCreditModal, setShowCreditModal] = useState(false);
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
     const fetchData = async () => {
@@ -127,7 +131,8 @@ export default function CommercialPage() {
                         <button className="btn btn-primary" onClick={() => {
                             if (activeTab === 'notes') setShowNoteModal(true);
                             else if (activeTab === 'services') setShowServiceModal(true);
-                            else alert(`New ${activeTab} Form would open here`);
+                            else if (activeTab === 'credit') setShowCreditModal(true);
+                            else if (activeTab === 'procurement') setShowPurchaseModal(true);
                         }} title={`Create new ${activeTab} record`} aria-label={`Add ${activeTab}`}>
                             <AddIcon className="mr-2" style={{ fontSize: 18 }} /> Create {activeTab.toUpperCase()}
                         </button>
@@ -265,6 +270,8 @@ export default function CommercialPage() {
 
             {showNoteModal && <AddPromissoryNoteModal onClose={() => setShowNoteModal(false)} onAdd={fetchData} />}
             {showServiceModal && <AddServiceOrderModal onClose={() => setShowServiceModal(false)} onAdd={fetchData} />}
+            {showCreditModal && <AddCreditAgreementModal onClose={() => setShowCreditModal(false)} onAdd={fetchData} />}
+            {showPurchaseModal && <AddPurchaseOrderModal onClose={() => setShowPurchaseModal(false)} onAdd={fetchData} />}
         </div>
     );
 }
