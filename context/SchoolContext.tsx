@@ -42,8 +42,8 @@ interface SchoolContextType {
     addStudent: (student: Omit<Student, 'id'>) => void;
     updateStudent: (id: string, data: Partial<Student>) => void;
     deleteStudent: (id: string) => void;
-    addTeacher: (teacher: Omit<Teacher, 'id'>) => void;
-    updateTeacher: (id: string, data: Partial<Teacher>) => void;
+    addTeacher: (teacher: Omit<Teacher, 'id'>) => Promise<boolean>;
+    updateTeacher: (id: string, data: Partial<Teacher>) => Promise<boolean>;
     deleteTeacher: (id: string) => void;
     saveAttendance: (records: AttendanceRecord[]) => void;
     addExam: (exam: Omit<Exam, 'id'>) => void;
@@ -447,7 +447,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             const data = await apiRes.json();
             setTeachers(prev => [...prev, data]);
             showToast('Teacher added successfully', 'success');
+            return true;
         }
+        return false;
     };
 
     const updateTeacher = async (id: string, data: Partial<Teacher>) => {
@@ -456,7 +458,9 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             const updated = await apiRes.json();
             setTeachers(prev => prev.map(t => t.id === id ? updated : t));
             showToast('Teacher updated successfully', 'success');
+            return true;
         }
+        return false;
     };
 
     const deleteTeacher = async (id: string) => {

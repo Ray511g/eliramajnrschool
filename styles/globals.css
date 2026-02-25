@@ -1217,8 +1217,10 @@ body {
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 560px;
-  max-height: 85vh;
-  overflow-y: auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   animation: slideUp 0.3s ease;
 }
 

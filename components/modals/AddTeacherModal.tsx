@@ -41,18 +41,28 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Client-side duplication check to prevent 409
+        if (!teacher && (useSchool().teachers || []).some(t => t.email.toLowerCase() === form.email.toLowerCase())) {
+            useSchool().showToast('A teacher with this email already exists in the system.', 'error');
+            return;
+        }
+
         setSaving(true);
         try {
+            let success = false;
             if (teacher) {
-                await updateTeacher(teacher.id, form);
+                success = await updateTeacher(teacher.id, form);
             } else {
-                await addTeacher({
+                success = await addTeacher({
                     ...form,
                     status: 'Active',
                     joinDate: new Date().toISOString().split('T')[0],
                 });
             }
-            onClose();
+            if (success) {
+                onClose();
+            }
         } catch (error) {
             console.error('Submission failed:', error);
         } finally {
@@ -80,7 +90,7 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
 
     return (
         <div className="modal-overlay" onClick={() => !saving && onClose()}>
-            <div className="modal" style={{ maxWidth: 800, width: '95%' }} onClick={e => e.stopPropagation()}>
+            <div className="modal" style={{ maxWidth: 800, width: '95%', height: 'auto', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <div>
                         <h2 className="m-0">{teacher ? 'Update Faculty Profile' : 'Enroll New Faculty'}</h2>
@@ -88,8 +98,8 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
                     </div>
                     <button className="modal-close" onClick={onClose} disabled={saving}><CloseIcon /></button>
                 </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="modal-body custom-scrollbar" style={{ maxHeight: '70vh', padding: '30px' }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                    <div className="modal-body custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '30px' }}>
                         {/* Section 1: Personal Information */}
                         <div className="form-section mb-24">
                             <h4 className="fs-13 uppercase tracking-widest fw-700 opacity-60 mb-15 pb-6 border-bottom">Personal & Contact Details</h4>
@@ -173,7 +183,7 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
                             </div>
                         </div>
                     </div>
-                    <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', background: 'var(--bg-primary)', padding: '20px 30px' }}>
+                    <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', background: 'var(--bg-primary)', padding: '20px 30px', marginTop: 'auto' }}>
                         <button type="button" className="btn-outline" onClick={onClose} style={{ height: 46, minWidth: 120 }} disabled={saving}>Cancel</button>
                         <button type="submit" className="btn-primary" style={{ height: 46, minWidth: 180 }} disabled={saving}>
                             {saving ? 'Processing...' : (teacher ? 'Update Registry' : 'Complete Registration')}

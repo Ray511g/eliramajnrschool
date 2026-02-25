@@ -1,86 +1,30 @@
+
+> elirama-web@0.0.0 build
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+Γ£ö Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 352ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+
   Γû▓ Next.js 14.2.35
   - Environments: .env
 
    Linting and checking validity of types ...
-   Creating an optimized production build ...
- Γ£ô Compiled successfully
-   Collecting page data ...
-   Generating static pages (0/30) ...
-   Generating static pages (7/30) 
-   Generating static pages (14/30) 
-   Generating static pages (22/30) 
- Γ£ô Generating static pages (30/30)
-   Finalizing page optimization ...
-   Collecting build traces ...
+Failed to compile.
 
-Route (pages)                              Size     First Load JS
-Γöî Γùï /                                      449 B           262 kB
-Γö£   /_app                                  0 B             226 kB
-Γö£ Γùï /404                                   180 B           226 kB
-Γö£ Γùï /admin                                 402 B           269 kB
-Γö£ ╞Æ /api/admin/system-health               0 B             226 kB
-Γö£ ╞Æ /api/attendance                        0 B             226 kB
-Γö£ ╞Æ /api/audit                             0 B             226 kB
-Γö£ ╞Æ /api/auth/login                        0 B             226 kB
-Γö£ ╞Æ /api/cbc/learning-areas                0 B             226 kB
-Γö£ ╞Æ /api/cbc/scores                        0 B             226 kB
-Γö£ ╞Æ /api/cbc/scores/bulk                   0 B             226 kB
-Γö£ ╞Æ /api/debug-db                          0 B             226 kB
-Γö£ ╞Æ /api/exams                             0 B             226 kB
-Γö£ ╞Æ /api/exams/[id]                        0 B             226 kB
-Γö£ ╞Æ /api/fees                              0 B             226 kB
-Γö£ ╞Æ /api/fees/[id]                         0 B             226 kB
-Γö£ ╞Æ /api/fees/apply                        0 B             226 kB
-Γö£ ╞Æ /api/fees/revert                       0 B             226 kB
-Γö£ ╞Æ /api/fees/structure                    0 B             226 kB
-Γö£ ╞Æ /api/health                            0 B             226 kB
-Γö£ ╞Æ /api/results                           0 B             226 kB
-Γö£ ╞Æ /api/roles                             0 B             226 kB
-Γö£ ╞Æ /api/settings                          0 B             226 kB
-Γö£ ╞Æ /api/settings/reset                    0 B             226 kB
-Γö£ ╞Æ /api/students                          0 B             226 kB
-Γö£ ╞Æ /api/students/[id]                     0 B             226 kB
-Γö£ ╞Æ /api/sync/status                       0 B             226 kB
-Γö£ ╞Æ /api/teachers                          0 B             226 kB
-Γö£ ╞Æ /api/teachers/[id]                     0 B             226 kB
-Γö£ ╞Æ /api/timetable                         0 B             226 kB
-Γö£ ╞Æ /api/timetable/[id]                    0 B             226 kB
-Γö£ ╞Æ /api/users                             0 B             226 kB
-Γö£ ╞Æ /api/users/[id]                        0 B             226 kB
-Γö£ ╞Æ /api/users/[id]/reset-password         0 B             226 kB
-Γö£ ╞Æ /api/users/change-password             0 B             226 kB
-Γö£ Γùï /app/Admin                             1.71 kB         268 kB
-Γö£ Γùï /app/Attendance (328 ms)               366 B           256 kB
-Γö£ Γùï /app/Communication                     193 B           256 kB
-Γö£ Γùï /app/Dashboard                         804 B           255 kB
-Γö£ Γùï /app/Exams (456 ms)                    442 B           255 kB
-Γö£ Γùï /app/Fees                              720 B           261 kB
-Γö£ Γùï /app/Grades (354 ms)                   1.22 kB         253 kB
-Γö£ Γùï /app/Login                             1.02 kB         253 kB
-Γö£ Γùï /app/Profile                           1.51 kB         253 kB
-Γö£ Γùï /app/Reports (336 ms)                  700 B           261 kB
-Γö£ Γùï /app/Results (329 ms)                  310 B           261 kB
-Γö£ Γùï /app/Students                          445 B           255 kB
-Γö£ Γùï /app/Teachers                          369 B           255 kB
-Γö£ Γùï /app/Timetable                         312 B           259 kB
-Γö£ Γùï /attendance                            405 B           263 kB
-Γö£ Γùï /communication                         407 B           263 kB
-Γö£ Γùï /exams                                 401 B           262 kB
-Γö£ Γùï /fees                                  401 B           268 kB
-Γö£ Γùï /grades                                1.26 kB         260 kB
-Γö£ Γùï /login                                 1.15 kB         253 kB
-Γö£ Γùï /profile                               1.55 kB         260 kB
-Γö£ Γùï /reports                               404 B           268 kB
-Γö£ Γùï /results                               404 B           269 kB
-Γö£ Γùï /students                              404 B           262 kB
-Γö£ Γùï /teachers                              404 B           262 kB
-Γöö Γùï /timetable                             407 B           266 kB
-+ First Load JS shared by all              233 kB
-  Γö£ chunks/framework-64ad27b21261a9ce.js   44.8 kB
-  Γö£ chunks/main-fc56ac81e639fb5e.js        34 kB
-  Γö£ chunks/pages/_app-16c2c832f7d9eecd.js  146 kB
-  Γöö other shared chunks (total)            7.72 kB
+./components/modals/AddTeacherModal.tsx:55:17
+Type error: Type 'void' is not assignable to type 'boolean'.
 
-Γùï  (Static)   prerendered as static content
-╞Æ  (Dynamic)  server-rendered on demand
-
+  53 |             let success = false;
+  54 |             if (teacher) {
+> 55 |                 success = await updateTeacher(teacher.id, form);
+     |                 ^
+  56 |             } else {
+  57 |                 success = await addTeacher({
+  58 |                     ...form,
+Next.js build worker exited with code: 1 and signal: null
