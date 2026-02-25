@@ -9,18 +9,18 @@ export const SystemAuditTab: React.FC = () => {
 
     useEffect(() => {
         fetchAuditLogs();
-    }, []);
+    }, [fetchAuditLogs]);
 
     const filteredLogs = (auditLogs || []).filter(log =>
-        log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.details?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
-        <div className="admin-section" style={{ gridColumn: 'span 2' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h3 style={{ margin: 0 }}><HistoryIcon style={{ fontSize: 22 }} /> System Audit Logs</h3>
+        <div className="admin-section">
+            <div className="flex-between" style={{ marginBottom: 20 }}>
+                <h3 className="m-0"><HistoryIcon className="nav-icon" /> System Audit Logs</h3>
                 <div className="search-box">
                     <SearchIcon style={{ fontSize: 18, color: '#94a3b8' }} />
                     <input
@@ -32,7 +32,7 @@ export const SystemAuditTab: React.FC = () => {
                 </div>
             </div>
 
-            <div className="card" style={{ padding: 0 }}>
+            <div className="card p-0">
                 <table className="data-table">
                     <thead>
                         <tr>
@@ -44,24 +44,24 @@ export const SystemAuditTab: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredLogs.slice(0, 100).map((log, idx) => (
-                            <tr key={idx}>
-                                <td style={{ fontSize: 12 }}>{new Date(log.timestamp).toLocaleString()}</td>
+                        {filteredLogs.slice(0, 100).map((log) => (
+                            <tr key={log.id}>
+                                <td className="fs-12">{new Date(log.createdAt).toLocaleString()}</td>
                                 <td>
-                                    <div style={{ fontWeight: 600 }}>{log.user}</div>
-                                    <div style={{ fontSize: 10, color: '#64748b' }}>IP: {log.ipAddress || 'Internal'}</div>
+                                    <div className="fw-600">{log.userName}</div>
+                                    <div className="fs-10 opacity-60">IP: {log.ipAddress || 'Internal'}</div>
                                 </td>
                                 <td>
-                                    <div style={{ fontWeight: 500 }}>{log.action}</div>
-                                    <div style={{ fontSize: 11, color: '#64748b' }}>{log.details}</div>
+                                    <div className="fw-500">{log.action}</div>
+                                    <div className="fs-11 opacity-80">{log.details}</div>
                                 </td>
-                                <td><span style={{ fontSize: 11, opacity: 0.7 }}>{log.userAgent?.split(' ')[0] || 'Web Interface'}</span></td>
+                                <td><span className="fs-11 opacity-60">{log.deviceInfo || 'Web Interface'}</span></td>
                                 <td><span className="badge green">SUCCESS</span></td>
                             </tr>
                         ))}
                         {filteredLogs.length === 0 && (
                             <tr>
-                                <td colSpan={5} style={{ padding: '60px 0', textAlign: 'center', color: '#64748b' }}>
+                                <td colSpan={5} className="text-center" style={{ padding: '60px 0', color: 'var(--text-secondary)' }}>
                                     <HistoryIcon style={{ fontSize: 48, opacity: 0.2, marginBottom: 12 }} />
                                     <p>No audit records found matching your criteria.</p>
                                 </td>
