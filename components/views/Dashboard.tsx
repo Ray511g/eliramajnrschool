@@ -198,9 +198,9 @@ export default function Dashboard() {
                                     <div key={i} style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)' }} className="flex-between">
                                         <div>
                                             <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{log.action}</div>
-                                            <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>{log.module} • {new Date(log.timestamp).toLocaleTimeString()}</div>
+                                            <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>{log.module} • {new Date(log.createdAt).toLocaleTimeString()}</div>
                                         </div>
-                                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-blue)' }}>{log.user}</div>
+                                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-blue)' }}>{log.userName}</div>
                                     </div>
                                 ))
                             )}

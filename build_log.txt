@@ -5,11 +5,11 @@
 Environment variables loaded from .env
 Prisma schema loaded from prisma\schema.prisma
 
-Γ£ö Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 352ms
+Γ£ö Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 338ms
 
 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
 
-Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+Tip: Want real-time updates to your database without manual polling? Discover how with Pulse: https://pris.ly/tip-0-pulse
 
   Γû▓ Next.js 14.2.35
   - Environments: .env
@@ -17,14 +17,14 @@ Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enha
    Linting and checking validity of types ...
 Failed to compile.
 
-./components/modals/AddTeacherModal.tsx:55:17
-Type error: Type 'void' is not assignable to type 'boolean'.
+./components/views/Dashboard.tsx:201:125
+Type error: Property 'timestamp' does not exist on type 'AuditLogItem'.
 
-  53 |             let success = false;
-  54 |             if (teacher) {
-> 55 |                 success = await updateTeacher(teacher.id, form);
-     |                 ^
-  56 |             } else {
-  57 |                 success = await addTeacher({
-  58 |                     ...form,
+  199 |                                         <div>
+  200 |                                             <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{log.action}</div>
+> 201 |                                             <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>{log.module} ΓÇó {new Date(log.timestamp).toLocaleTimeString()}</div>
+      |                                                                                                                             ^
+  202 |                                         </div>
+  203 |                                         <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-blue)' }}>{log.user}</div>
+  204 |                                     </div>
 Next.js build worker exited with code: 1 and signal: null
