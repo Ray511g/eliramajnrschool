@@ -6,6 +6,9 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SchoolIcon from '@mui/icons-material/School';
+import GroupIcon from '@mui/icons-material/Group';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ClassIcon from '@mui/icons-material/Class';
 import AddTeacherModal from '../../components/modals/AddTeacherModal';
 import Pagination from '../../components/common/Pagination';
 
@@ -17,14 +20,14 @@ export default function Teachers() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    const filtered = teachers.filter(t =>
-        `${t.firstName} ${t.lastName} ${t.subjects.join(' ')}`.toLowerCase().includes(search.toLowerCase())
+    const filtered = (teachers || []).filter(t =>
+        `${t.firstName} ${t.lastName} ${(t.subjects || []).join(' ')}`.toLowerCase().includes(search.toLowerCase())
     );
 
     const paginatedTeachers = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    const active = teachers.filter(t => t.status === 'Active').length;
-    const totalSubjects = new Set(teachers.flatMap(t => t.subjects)).size;
+    const active = (teachers || []).filter(t => t.status === 'Active').length;
+    const totalSubjects = new Set((teachers || []).flatMap(t => t.subjects || [])).size;
 
     const handleEdit = (teacher: Teacher) => {
         setEditingTeacher(teacher);
@@ -40,28 +43,40 @@ export default function Teachers() {
         <div className="page-container">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1>Teachers</h1>
-                    <p>Manage teaching staff and assignments</p>
+                    <h1 className="page-title">Teaching Faculty</h1>
+                    <p className="page-subtitle">Manage pedagogical staff, subject assignments, and operational status</p>
                 </div>
                 <div className="page-header-right">
-                    <button className="btn-primary purple" onClick={() => setShowAddModal(true)}>
-                        <AddIcon style={{ fontSize: 18 }} /> Add Teacher
+                    <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                        <AddIcon style={{ fontSize: 18 }} /> Register New Teacher
                     </button>
                 </div>
             </div>
 
             <div className="stats-grid">
                 <div className="stat-card blue">
-                    <div className="stat-card-value">{teachers.length}</div>
-                    <div className="stat-card-label">Total Teachers</div>
+                    <div className="stat-card-header">
+                        <div className="stat-card-label">Total Faculty</div>
+                        <div className="stat-card-icon"><GroupIcon /></div>
+                    </div>
+                    <div className="stat-card-value">{teachers?.length || 0}</div>
+                    <div className="stat-card-sub">Registered Staff</div>
                 </div>
                 <div className="stat-card green">
+                    <div className="stat-card-header">
+                        <div className="stat-card-label">Active Duty</div>
+                        <div className="stat-card-icon"><CheckCircleIcon /></div>
+                    </div>
                     <div className="stat-card-value">{active}</div>
-                    <div className="stat-card-label">Active Teachers</div>
+                    <div className="stat-card-sub green">Verified & Active</div>
                 </div>
                 <div className="stat-card purple">
+                    <div className="stat-card-header">
+                        <div className="stat-card-label">Curriculum Scope</div>
+                        <div className="stat-card-icon"><ClassIcon /></div>
+                    </div>
                     <div className="stat-card-value">{totalSubjects}</div>
-                    <div className="stat-card-label">Subjects Taught</div>
+                    <div className="stat-card-sub">Unique Subjects Taught</div>
                 </div>
             </div>
 
@@ -71,47 +86,77 @@ export default function Teachers() {
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Search teachers..."
+                        placeholder="Search by name, subject or email..."
                         value={search}
-                        onChange={e => setSearch(e.target.value)}
+                        onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
                     />
                 </div>
             </div>
 
             <div className="data-table-wrapper">
                 {filtered.length === 0 ? (
-                    <div className="empty-state">
-                        <SchoolIcon className="empty-state-icon" />
-                        <p>No teachers found</p>
+                    <div className="empty-state" style={{ padding: '80px 0' }}>
+                        <SchoolIcon className="empty-state-icon" style={{ fontSize: 64, color: 'var(--text-muted)' }} />
+                        <p className="fs-16 fw-500">No faculty members match your criteria</p>
+                        <button className="btn-outline mt-15" onClick={() => setSearch('')}>Clear Search</button>
                     </div>
                 ) : (
                     <table className="data-table">
-                        <thead className="sticky-header">
+                        <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Subjects</th>
-                                <th>Grades</th>
+                                <th>Faculty Member</th>
+                                <th>Contact Details</th>
+                                <th>Qualification</th>
+                                <th>Curriculum Focus</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginatedTeachers.map(teacher => (
                                 <tr key={teacher.id}>
-                                    <td>{teacher.firstName} {teacher.lastName}</td>
-                                    <td>{teacher.email}</td>
-                                    <td>{teacher.phone}</td>
-                                    <td>{teacher.subjects.join(', ')}</td>
-                                    <td>{teacher.grades.join(', ')}</td>
-                                    <td><span className={`badge ${teacher.status === 'Active' ? 'green' : 'red'}`}>{teacher.status}</span></td>
                                     <td>
-                                        <div className="table-actions">
-                                            <button className="table-action-btn" title="Edit" onClick={() => handleEdit(teacher)}>
+                                        <div className="flex-row">
+                                            <div className="avatar-circle" style={{ background: 'var(--accent-purple-bg)', color: 'var(--accent-purple)' }}>
+                                                {(teacher.firstName?.[0] || '') + (teacher.lastName?.[0] || '')}
+                                            </div>
+                                            <div style={{ marginLeft: 12 }}>
+                                                <div className="fw-600 fs-14">{teacher.firstName} {teacher.lastName}</div>
+                                                <div className="fs-11 opacity-60 uppercase tracking-widest">{teacher.id.slice(-6)}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="fs-13">{teacher.email}</div>
+                                        <div className="fs-11 opacity-60">{teacher.phone}</div>
+                                    </td>
+                                    <td>
+                                        <div className="badge blue-light fs-11" style={{ borderRadius: 6 }}>{teacher.qualification || 'K.C.P.E/K.C.S.E'}</div>
+                                    </td>
+                                    <td>
+                                        <div className="flex-row" style={{ flexWrap: 'wrap', gap: 4 }}>
+                                            {(teacher.subjects || []).slice(0, 2).map(s => (
+                                                <span key={s} className="fs-10 fw-600 px-8 py-2 bg-surface rounded-sm border-1 border-color">{s}</span>
+                                            ))}
+                                            {(teacher.subjects || []).length > 2 && <span className="fs-10 opacity-60">+{teacher.subjects.length - 2} more</span>}
+                                        </div>
+                                        <div className="fs-10 mt-4 opacity-50">Grades: {(teacher.grades || []).join(', ')}</div>
+                                    </td>
+                                    <td>
+                                        <span className={`status-tag ${teacher.status?.toLowerCase() === 'active' ? 'active' : 'error'}`}>
+                                            {teacher.status || 'Active'}
+                                        </span>
+                                    </td>
+                                    <td className="text-right">
+                                        <div className="table-actions justify-end">
+                                            <button className="table-action-btn" title="Edit Profile" onClick={() => handleEdit(teacher)}>
                                                 <EditIcon style={{ fontSize: 16 }} />
                                             </button>
-                                            <button className="table-action-btn danger" title="Delete" onClick={() => deleteTeacher(teacher.id)}>
+                                            <button className="table-action-btn danger" title="Remove Record" onClick={() => {
+                                                if (window.confirm(`Are you sure you want to remove ${teacher.firstName} ${teacher.lastName}?`)) {
+                                                    deleteTeacher(teacher.id);
+                                                }
+                                            }}>
                                                 <DeleteIcon style={{ fontSize: 16 }} />
                                             </button>
                                         </div>
@@ -123,12 +168,17 @@ export default function Teachers() {
                 )}
             </div>
 
-            <Pagination
-                totalItems={filtered.length}
-                itemsPerPage={itemsPerPage}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-            />
+            <div className="flex-between mt-24">
+                <div className="fs-13 opacity-60">
+                    Showing {Math.min(filtered.length, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(filtered.length, currentPage * itemsPerPage)} of {filtered.length} faculty members
+                </div>
+                <Pagination
+                    totalItems={filtered.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
 
             {showAddModal && <AddTeacherModal teacher={editingTeacher} onClose={handleCloseModal} />}
         </div>

@@ -72,81 +72,97 @@ export default function AddTeacherModal({ onClose, teacher }: Props) {
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal" style={{ maxWidth: 700, width: '90%' }} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>{teacher ? 'Edit Teacher' : 'Add New Teacher'}</h2>
+                    <div>
+                        <h2 className="m-0">{teacher ? 'Update Faculty Profile' : 'Enroll New Faculty'}</h2>
+                        <p className="fs-12 opacity-60 m-0">Institutional teaching staff management</p>
+                    </div>
                     <button className="modal-close" onClick={onClose}><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
-                    <div className="modal-body">
-                        <div className="form-row">
+                    <div className="modal-body custom-scrollbar" style={{ maxHeight: '75vh' }}>
+                        <div className="nav-section-label" style={{ paddingLeft: 0, marginBottom: 15 }}>Personal & Contact Statistics</div>
+                        <div className="grid-2">
                             <div className="form-group">
-                                <label>First Name *</label>
-                                <input className="form-control" required value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} />
+                                <label className="fs-12 fw-600 mb-6 block">Legal First Name *</label>
+                                <input className="form-control" required value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} placeholder="e.g. John" />
                             </div>
                             <div className="form-group">
-                                <label>Last Name *</label>
-                                <input className="form-control" required value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} />
+                                <label className="fs-12 fw-600 mb-6 block">Legal Last Name *</label>
+                                <input className="form-control" required value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} placeholder="e.g. Doe" />
                             </div>
                         </div>
-                        <div className="form-row">
+                        <div className="grid-2 mt-15">
                             <div className="form-group">
-                                <label>Email *</label>
-                                <input type="email" className="form-control" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                            </div>
-                            <div className="form-group">
-                                <label>Phone *</label>
-                                <input className="form-control" required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label>Qualification</label>
-                            <input className="form-control" value={form.qualification} onChange={e => setForm({ ...form, qualification: e.target.value })} />
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Max Lessons / Day</label>
-                                <input type="number" className="form-control" value={form.maxLessonsDay} onChange={e => setForm({ ...form, maxLessonsDay: parseInt(e.target.value) })} />
+                                <label className="fs-12 fw-600 mb-6 block">Institutional Email *</label>
+                                <input type="email" className="form-control" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="j.doe@elirama.edu" />
                             </div>
                             <div className="form-group">
-                                <label>Max Lessons / Week</label>
-                                <input type="number" className="form-control" value={form.maxLessonsWeek} onChange={e => setForm({ ...form, maxLessonsWeek: parseInt(e.target.value) })} />
+                                <label className="fs-12 fw-600 mb-6 block">Mobile Connection *</label>
+                                <input className="form-control" required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+254 7XX XXX XXX" />
                             </div>
                         </div>
-                        <div className="form-group">
-                            <label>Subjects *</label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                                {SUBJECTS.map(subject => (
-                                    <button
-                                        key={subject}
-                                        type="button"
-                                        className={`attendance-status-btn ${form.subjects.includes(subject) ? 'present active' : ''}`}
-                                        onClick={() => toggleSubject(subject)}
-                                    >
-                                        {subject}
-                                    </button>
-                                ))}
+
+                        <div className="mt-24">
+                            <div className="nav-section-label" style={{ paddingLeft: 0, marginBottom: 15 }}>Academic Background</div>
+                            <div className="form-group">
+                                <label className="fs-12 fw-600 mb-6 block">Primary Qualification / Degree</label>
+                                <input className="form-control" value={form.qualification} onChange={e => setForm({ ...form, qualification: e.target.value })} placeholder="e.g. B.Ed (Science), TSC Certified" />
+                            </div>
+                            <div className="grid-2 mt-15">
+                                <div className="form-group">
+                                    <label className="fs-12 fw-600 mb-6 block">Max Lessons / Day</label>
+                                    <input type="number" className="form-control" value={form.maxLessonsDay} onChange={e => setForm({ ...form, maxLessonsDay: parseInt(e.target.value) })} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="fs-12 fw-600 mb-6 block">Max Lessons / Week</label>
+                                    <input type="number" className="form-control" value={form.maxLessonsWeek} onChange={e => setForm({ ...form, maxLessonsWeek: parseInt(e.target.value) })} />
+                                </div>
                             </div>
                         </div>
-                        <div className="form-group">
-                            <label>Assigned Grades</label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                                {activeGrades.map(grade => (
-                                    <button
-                                        key={grade}
-                                        type="button"
-                                        className={`attendance-status-btn ${form.grades.includes(grade) ? 'present active' : ''}`}
-                                        onClick={() => toggleGrade(grade)}
-                                    >
-                                        {grade}
-                                    </button>
-                                ))}
+
+                        <div className="mt-24">
+                            <div className="nav-section-label" style={{ paddingLeft: 0, marginBottom: 15 }}>Curriculum Assignment</div>
+                            <div className="form-group">
+                                <label className="fs-12 fw-600 mb-6 block">Specialized Subjects *</label>
+                                <div className="flex-row" style={{ flexWrap: 'wrap', gap: 6 }}>
+                                    {SUBJECTS.map(subject => (
+                                        <button
+                                            key={subject}
+                                            type="button"
+                                            className={`badge ${form.subjects.includes(subject) ? 'green active' : 'gray'}`}
+                                            style={{ cursor: 'pointer', border: '1px solid var(--border-color)', height: 32, padding: '0 12px' }}
+                                            onClick={() => toggleSubject(subject)}
+                                        >
+                                            {subject}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="form-group mt-20">
+                                <label className="fs-12 fw-600 mb-6 block">Assigned Grade Levels</label>
+                                <div className="flex-row" style={{ flexWrap: 'wrap', gap: 6 }}>
+                                    {activeGrades.map(grade => (
+                                        <button
+                                            key={grade}
+                                            type="button"
+                                            className={`badge ${form.grades.includes(grade) ? 'blue active' : 'gray'}`}
+                                            style={{ cursor: 'pointer', border: '1px solid var(--border-color)', height: 32, padding: '0 12px' }}
+                                            onClick={() => toggleGrade(grade)}
+                                        >
+                                            {grade}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div className="modal-footer">
-                        <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary purple">{teacher ? 'Save Changes' : 'Add Teacher'}</button>
+                    <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
+                        <button type="button" className="btn-outline" onClick={onClose} style={{ height: 44 }}>Cancel Deployment</button>
+                        <button type="submit" className="btn-primary" style={{ height: 44 }}>
+                            {teacher ? 'Update Credentials' : 'Commit Faculty Registration'}
+                        </button>
                     </div>
                 </form>
             </div>
