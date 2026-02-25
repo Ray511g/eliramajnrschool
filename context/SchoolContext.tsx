@@ -227,7 +227,22 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
         const id = generateId();
         setToasts(prev => [...prev, { id, message, type }]);
-        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+    }, []);
+
+    // Proactive Sync: Listen for storage changes from other tabs
+    useEffect(() => {
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === STORAGE_KEY && e.newValue) {
+                const data = JSON.parse(e.newValue);
+                if (data.settings) setSettings(data.settings);
+                if (data.gradeFees) setGradeFees(data.gradeFees);
+                if (data.roles) setRoles(data.roles);
+                if (data.systemUsers) setSystemUsers(data.systemUsers);
+            }
+        };
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
     }, []);
 
     // Use a ref to prevent overlapping requests
@@ -952,18 +967,22 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
     // SETTINGS
     const updateSettings = async (data: Partial<SchoolSettings>) => {
+        // Optimistic update
+        setSettings(prev => ({ ...prev, ...data }));
+
         const apiRes = await tryApi(`${API_URL}/settings`, { method: 'PUT', body: JSON.stringify(data) });
         if (apiRes) {
             const updated = await apiRes.json();
             setSettings(updated);
-            showToast('Institutional settings synchronized', 'success');
-            refreshData();
+            showToast('Institutional settings updated and broadcasted', 'success');
+
+            // Proactive re-sync of all data using new settings (e.g. academic levels)
+            await fetchData(true);
             return true;
         } else {
-            // Robust local fallback
-            setSettings(prev => ({ ...prev, ...data }));
+            // Revert or keep local? We keep local as standard in this "it just works" app
             showToast('Settings saved to local storage (Offline)', 'info');
-            return true; // Return true to allow UI to close editing mode
+            return true;
         }
     };
 

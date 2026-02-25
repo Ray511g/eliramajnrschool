@@ -17,7 +17,7 @@ import AddStudentModal from '../../components/modals/AddStudentModal';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Dashboard() {
-    const { students, teachers, attendance, exams, serverStatus } = useSchool();
+    const { students, teachers, attendance, exams, serverStatus, settings } = useSchool();
     const { hasPermission: hasAuthPermission, user } = useAuth();
     const router = useRouter();
     const [showAddStudent, setShowAddStudent] = useState(false);
@@ -25,7 +25,7 @@ export default function Dashboard() {
     const stats = [
         { label: 'Total Students', value: students.length, color: 'blue', sub: `${students.filter(s => s.status === 'Active').length} Active` },
         { label: 'Staff Members', value: teachers.length, color: 'purple', sub: 'Teaching & Admin' },
-        { label: 'Academic Year', value: '2025/26', color: 'green', sub: 'Term 1 Active' },
+        { label: 'Academic Year', value: settings.currentYear, color: 'green', sub: `${settings.currentTerm} Active` },
         { label: 'Exams Active', value: exams.filter(e => (e as any).status === 'Active' || (e as any).status === 'Scheduled').length, color: 'orange', sub: 'Ongoing Assessments' },
     ];
 

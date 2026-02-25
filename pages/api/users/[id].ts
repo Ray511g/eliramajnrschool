@@ -9,8 +9,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const currentUser = requireAuth(req, res);
     if (!currentUser) return;
-    if (currentUser.role !== 'admin' && currentUser.role !== 'Super Admin') {
-        return res.status(403).json({ error: 'Only admins can manage users' });
+
+    const userRole = typeof currentUser.role === 'string' ? currentUser.role : (currentUser.role as any)?.name;
+    if (userRole?.toLowerCase() !== 'super admin' && userRole?.toLowerCase() !== 'admin') {
+        return res.status(403).json({ error: 'Only administrators can manage system accounts' });
     }
 
     const { id } = req.query;
@@ -34,8 +36,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'PUT') {
         try {
-            const { name, email, roleId, permissions, password } = req.body;
-            const updateData: any = { name, email, roleId, permissions };
+            const { name, email, roleId, permissions, password, firstName, lastName, username } = req.body;
+            const updateData: any = {
+                name,
+                email,
+                roleId,
+                permissions,
+                firstName: firstName || undefined,
+                lastName: lastName || undefined,
+                username: username || undefined
+            };
 
             if (password) {
                 updateData.password = await bcrypt.hash(password, 10);

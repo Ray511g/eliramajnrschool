@@ -12,8 +12,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const currentUser = requireAuth(req, res);
     if (!currentUser) return;
 
+    const userRole = typeof currentUser.role === 'string' ? currentUser.role : (currentUser.role as any)?.name;
+    const isAdmin = userRole?.toLowerCase() === 'super admin' || userRole?.toLowerCase() === 'admin';
+
     if (req.method === 'GET') {
-        if (!checkPermission(currentUser, 'users', 'VIEW', res)) return;
+        if (!isAdmin && !checkPermission(currentUser, 'users', 'VIEW')) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
         const users = await prisma.user.findMany({
             include: { role: true }
         });
@@ -26,7 +31,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-        if (!checkPermission(currentUser, 'users', 'CREATE', res)) return;
+        if (!isAdmin && !checkPermission(currentUser, 'users', 'CREATE')) {
+            return res.status(403).json({ error: 'Only admins can create system accounts' });
+        }
         const { name, email, password, roleId, firstName, lastName, username, permissions } = req.body;
         const hashedPassword = await bcrypt.hash(password || 'elirama123', 10);
 

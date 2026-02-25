@@ -44,6 +44,14 @@ export function checkPermission(user: any, module: string, action: string, res?:
     if (user.role === 'Super Admin') return true;
 
     const permissions = user.permissions || {};
+
+    // 1. Check user-specific overrides (flat list)
+    if (Array.isArray((permissions as any)._user)) {
+        const userOverrides = (permissions as any)._user as string[];
+        if (userOverrides.includes(`MANAGE_${module.toUpperCase()}`)) return true;
+    }
+
+    // 2. Check role-based permissions
     let modulePermissions = permissions[module];
 
     // Legacy compatibility for 'fees' and 'finance' module naming

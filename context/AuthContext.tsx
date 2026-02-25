@@ -68,11 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Ensure permissions object exists
         const permissions = user.permissions || {};
-        const modulePermissions = permissions[module];
 
+        // 1. Check user-specific overrides (flat array)
+        if (Array.isArray((permissions as any)._user)) {
+            const userOverrides = (permissions as any)._user as string[];
+            if (userOverrides.includes(`MANAGE_${module.toUpperCase()}`)) return true;
+        }
+
+        // 2. Check role-based permissions (JSON structure)
+        const modulePermissions = permissions[module];
         if (!modulePermissions) return false;
 
-        // Handle both Array and String formats (for flexibility with different DB states)
         if (Array.isArray(modulePermissions)) {
             return modulePermissions.includes(action.toUpperCase());
         }

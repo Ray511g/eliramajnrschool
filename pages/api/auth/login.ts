@@ -33,7 +33,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             email: user.email,
             role: user.role?.name || 'Teacher',
             name: user.name,
-            permissions: user.role?.permissions || {}
+            permissions: {
+                ...(user.role?.permissions as object || {}),
+                _user: user.permissions || []
+            }
         });
 
         // Audit Log
@@ -54,7 +57,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 name: user.name,
                 email: user.email,
                 role: user.role?.name || 'Teacher',
-                permissions: user.role?.permissions || {}
+                permissions: {
+                    ...(user.role?.permissions as object || {}),
+                    _user: user.permissions || []
+                }
             },
         });
     } catch (err) {
