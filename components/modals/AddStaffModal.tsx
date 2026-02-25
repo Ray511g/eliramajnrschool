@@ -18,8 +18,11 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onAdd, i
         lastName: '',
         type: 'SUPPORT_STAFF',
         role: '',
+        department: '',
         email: '',
         phone: '',
+        kraPin: '',
+        nssfNumber: '',
         salaryType: 'Fixed',
         basicSalary: 0,
         bankName: '',
@@ -34,8 +37,11 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onAdd, i
                 lastName: initialData.lastName,
                 type: initialData.type,
                 role: initialData.role,
+                department: initialData.department || '',
                 email: initialData.email || '',
                 phone: initialData.phone || '',
+                kraPin: initialData.kraPin || '',
+                nssfNumber: initialData.nssfNumber || '',
                 salaryType: initialData.salaryType,
                 basicSalary: initialData.basicSalary,
                 bankName: initialData.bankName || '',
@@ -48,8 +54,11 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onAdd, i
                 lastName: '',
                 type: 'SUPPORT_STAFF',
                 role: '',
+                department: '',
                 email: '',
                 phone: '',
+                kraPin: '',
+                nssfNumber: '',
                 salaryType: 'Fixed',
                 basicSalary: 0,
                 bankName: '',
@@ -138,6 +147,23 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onAdd, i
                                 />
                             </div>
                             <div className="form-group">
+                                <label htmlFor="department" className="form-label">Department</label>
+                                <select
+                                    id="department"
+                                    className="form-control"
+                                    value={formData.department}
+                                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                    title="Department"
+                                >
+                                    <option value="">General</option>
+                                    <option value="Academic">Academic</option>
+                                    <option value="Operations">Operations</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Security">Security</option>
+                                    <option value="Catering">Catering</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
                                 <label htmlFor="phone" className="form-label">Mobile Number</label>
                                 <input
                                     id="phone"
@@ -157,6 +183,28 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onAdd, i
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     placeholder="staff@example.com"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="kraPin" className="form-label">KRA PIN</label>
+                                <input
+                                    id="kraPin"
+                                    type="text"
+                                    className="form-control"
+                                    value={formData.kraPin}
+                                    onChange={(e) => setFormData({ ...formData, kraPin: e.target.value })}
+                                    placeholder="A00..."
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="nssfNumber" className="form-label">NSSF Number</label>
+                                <input
+                                    id="nssfNumber"
+                                    type="text"
+                                    className="form-control"
+                                    value={formData.nssfNumber}
+                                    onChange={(e) => setFormData({ ...formData, nssfNumber: e.target.value })}
+                                    placeholder="Enter NSSF no."
                                 />
                             </div>
                         </div>

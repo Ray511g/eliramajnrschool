@@ -21,10 +21,13 @@ export interface Staff {
     id: string;
     firstName: string;
     lastName: string;
-    type: 'BOM_TEACHER' | 'SUPPORT_STAFF';
+    type: 'BOM_TEACHER' | 'SUPPORT_STAFF' | 'ADMIN';
     role: string;
+    department?: string;
     email?: string;
     phone?: string;
+    kraPin?: string;
+    nssfNumber?: string;
     salaryType: 'Fixed' | 'Hourly';
     basicSalary: number;
     allowances?: any[];

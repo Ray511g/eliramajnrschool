@@ -14,7 +14,7 @@ export default function HRManagementPage() {
     const { user } = useAuth();
     const {
         staff, addStaff, updateStaff,
-        showToast, tryApi, refreshData, loading: contextLoading
+        showToast, tryApi, refreshData, loading
     } = useSchool();
     const [activeTab, setActiveTab] = useState('staff');
     const [runningPayroll, setRunningPayroll] = useState(false);
@@ -64,7 +64,7 @@ export default function HRManagementPage() {
     const filteredStaff = (staff || []).filter(s =>
         `${s.firstName} ${s.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.designation?.toLowerCase().includes(searchTerm.toLowerCase())
+        s.role?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -147,7 +147,7 @@ export default function HRManagementPage() {
                                                 <div className="text-muted text-xs">{s.email}</div>
                                             </td>
                                             <td>
-                                                <div>{s.designation || s.role}</div>
+                                                <div>{s.role}</div>
                                                 <div className="text-muted text-xs" style={{ color: '#3b82f6' }}>{s.department || 'General'}</div>
                                             </td>
                                             <td>
