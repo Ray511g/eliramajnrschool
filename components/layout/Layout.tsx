@@ -18,7 +18,6 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const { toasts, isSyncing, settings, changeUserPassword } = useSchool();
     const { user, logout } = useAuth();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -111,12 +110,10 @@ export default function Layout({ children }: LayoutProps) {
     };
 
     return (
-        <div className={`app-layout ${!isDarkMode ? 'light-theme' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <div className={`app-layout ${!isDarkMode ? 'light-theme' : ''}`}>
             <Sidebar
                 isOpen={sidebarOpen}
                 setIsOpen={setSidebarOpen}
-                isCollapsed={sidebarCollapsed}
-                setIsCollapsed={setSidebarCollapsed}
             />
             <main className="main-content">
                 <header className="top-bar">

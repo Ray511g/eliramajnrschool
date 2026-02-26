@@ -59,17 +59,14 @@ const navItems = [
     { path: '/about', icon: <InfoIcon />, label: 'About Software' },
 ];
 
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+
 
 interface SidebarProps {
     isOpen: boolean;
     setIsOpen: (open: boolean) => void;
-    isCollapsed: boolean;
-    setIsCollapsed: (collapsed: boolean) => void;
 }
 
-export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
+export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const { logout, user, hasPermission } = useAuth();
     const { serverStatus, settings } = useSchool();
     const router = useRouter();
@@ -135,15 +132,8 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
 
             {isOpen && <div className="sidebar-overlay open" onClick={() => setIsOpen(false)} />}
 
-            <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
+            <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <button
-                        className="sidebar-squeeze-btn"
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                    >
-                        {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-                    </button>
                     <div className="sidebar-logo-container">
                         <div className="sidebar-logo">
                             {settings?.logo ? (
