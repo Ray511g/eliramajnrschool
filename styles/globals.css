@@ -198,11 +198,11 @@
 }
 
 .text-sm {
-  fontSize: 0.875rem;
+  font-size: 0.875rem;
 }
 
 .text-xs {
-  fontSize: 0.75rem;
+  font-size: 0.75rem;
 }
 
 * {
@@ -1363,6 +1363,14 @@ body {
   flex-direction: column;
   overflow: hidden;
   animation: slideUp 0.3s ease;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
 .modal-content {
