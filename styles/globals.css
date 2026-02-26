@@ -2,9 +2,8 @@
 
 :root {
   --sidebar-width: 280px;
-  --sidebar-collapsed-width: 80px;
   --header-height: 70px;
-  --sidebar-transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --sidebar-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   /* existing variables below... */
   /* HSL Colors - Refined Premium Palette */
   --primary-h: 222;
@@ -63,7 +62,6 @@
   --radius-md: 12px;
   --radius-lg: 16px;
 
-  --sidebar-width: 270px;
   /* Transition & Effects */
   --glass-blur: blur(20px);
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -212,22 +210,18 @@
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  backface-visibility: hidden;
-}
-
-body {
-  font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-primary);
-  background-image:
-    radial-gradient(at 0% 0%, hsla(var(--primary-h), var(--primary-s), 50%, 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(280, 80%, 50%, 0.08) 0px, transparent 50%);
-  color: var(--text-primary);
-  height: 100vh;
-  margin: 0;
-  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
 }
 
 /* Scrollbar */
@@ -251,10 +245,16 @@ body {
 
 /* ===== LAYOUT ===== */
 .app-layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
   height: 100vh;
-  width: 100%;
+  width: 100vw;
   overflow: hidden;
+  background-color: var(--bg-primary);
+  /* Stabilize text rendering */
+  transform: translateZ(0);
+  perspective: 1000px;
+  backface-visibility: hidden;
 }
 
 /* ===== SIDEBAR ===== */
@@ -377,14 +377,24 @@ body {
 }
 
 .main-content {
-  flex: 1;
-  min-width: 0;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background: transparent;
+  width: 100%;
+  min-width: 0;
+}
+
+.page-wrapper {
+  flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  position: relative;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 1024px) {
@@ -403,9 +413,11 @@ body {
 }
 
 .page-container {
-  padding: 24px 32px;
+  padding: clamp(16px, 4vw, 32px);
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 /* ===== PAGE HEADER ===== */
@@ -1215,7 +1227,9 @@ body {
 
 .animate-up {
   animation: animateUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
+  /* Stabilize text by removing will-change and using translate3d */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 @keyframes fade-in {
