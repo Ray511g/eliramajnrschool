@@ -316,6 +316,7 @@ body {
   pointer-events: none;
   width: 0;
   overflow: hidden;
+  white-space: nowrap;
 }
 
 .sidebar.collapsed .sidebar-header {
@@ -344,6 +345,9 @@ body {
   align-items: center;
   gap: 14px;
   border-bottom: 1px solid var(--border-color);
+  overflow: hidden;
+  flex-shrink: 0;
+  height: 110px; /* Fixed height to prevent shaking */
 }
 
 .sidebar-logo {
@@ -361,11 +365,25 @@ body {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+.sidebar-brand {
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
 .sidebar-brand h2 {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  /* Stabilize text */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
 }
 
 .sidebar-brand p {
@@ -480,11 +498,12 @@ body {
 }
 
 .page-container {
-  padding: clamp(16px, 4vw, 32px);
+  padding: clamp(16px, 3vw, 32px);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   flex-shrink: 0;
+  min-height: min-content;
 }
 
 /* ===== PAGE HEADER ===== */
@@ -1116,18 +1135,24 @@ body {
 .top-bar-left {
   display: flex;
   align-items: center;
+  min-width: 0;
+  flex: 1;
 }
 
 .school-breadcrumb {
   font-size: 14px;
   color: var(--text-secondary);
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top-bar-right {
   display: flex;
   align-items: center;
   gap: var(--space-6);
+  flex-shrink: 0;
   position: relative;
 }
 

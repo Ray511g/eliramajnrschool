@@ -156,7 +156,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
                     </div>
                     <div className="sidebar-brand">
                         <h2>{settings?.schoolName || 'School Management System'}</h2>
-                        {!isCollapsed && <p>{settings?.motto || 'Academic Excellence'}</p>}
+                        <p>{settings?.motto || 'Academic Excellence'}</p>
                     </div>
                 </div>
 
