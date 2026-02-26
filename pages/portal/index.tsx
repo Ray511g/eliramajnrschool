@@ -115,8 +115,11 @@ export default function ParentDashboard() {
                 </div>
             </main>
 
+            <style jsx global>{`
+                html, body { overflow-y: auto !important; height: auto !important; }
+            `}</style>
             <style jsx>{`
-                .portal-dashboard { min-height: 100vh; background: #f8fafc; color: #1e293b; font-family: 'Outfit', sans-serif; }
+                .portal-dashboard { min-height: 100vh; background: #f8fafc; color: #1e293b; font-family: 'Outfit', sans-serif; overflow-y: auto; }
                 .portal-container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
                 .portal-nav { background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 0; position: sticky; top: 0; z-index: 100; }
                 .nav-flex { display: flex; justify-content: space-between; align-items: center; }
@@ -160,6 +163,13 @@ export default function ParentDashboard() {
                 .full-report-btn { margin-top: 8px; width: 100%; background: #f1f5f9; color: #475569; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
                 .full-report-btn:hover { background: #e2e8f0; }
                 .empty-msg { color: #94a3b8; font-size: 14px; text-align: center; padding: 20px 0; }
+
+                @media (max-width: 768px) {
+                    .portal-welcome-banner { flex-direction: column; gap: 24px; text-align: center; padding: 24px; }
+                    .balance-widget { min-width: 100%; }
+                    .portal-grid { grid-template-columns: 1fr; }
+                    .portal-main { padding-top: 20px; }
+                }
             `}</style>
         </div>
     );

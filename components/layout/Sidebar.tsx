@@ -59,7 +59,7 @@ const navItems = [
     { path: '/communication', icon: <EmailIcon />, label: 'Communication', permission: 'MANAGE_COMMUNICATION' },
     { path: '/admin', icon: <SettingsIcon />, label: 'Admin', permission: 'MANAGE_ADMIN' },
     { path: '/manual', icon: <MenuBookIcon />, label: 'System Manual' },
-    { path: '/portal', icon: <OpenInNewIcon />, label: 'Parent Portal (Demo)' },
+    { path: '/portal', icon: <OpenInNewIcon />, label: 'Parent Portal' },
     { path: '/about', icon: <InfoIcon />, label: 'About Software' },
 ];
 
