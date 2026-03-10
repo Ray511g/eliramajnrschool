@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import AddIcon from '@mui/icons-material/Add';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -38,71 +38,61 @@ export default function CommercialPage() {
     const [selectedNote, setSelectedNote] = useState<any>(null);
     const [selectedCredit, setSelectedCredit] = useState<any>(null);
 
-    const fetchAllData = async () => {
+    const [loaded, setLoaded] = useState<Record<string, boolean>>({});
+
+    const fetchTabData = useCallback(async (tab: string) => {
+        if (loaded[tab]) return;
         setLoading(true);
         try {
-            const [creditRes, notesRes, servicesRes, poRes] = await Promise.all([
-                tryApi('/api/commercial/credit'),
-                tryApi('/api/commercial/notes'),
-                tryApi('/api/commercial/services'),
-                tryApi('/api/commercial/po')
-            ]);
-
-            const [credit, notes, services, po] = await Promise.all([
-                creditRes?.ok ? creditRes.json() : [],
-                notesRes?.ok ? notesRes.json() : [],
-                servicesRes?.ok ? servicesRes.json() : [],
-                poRes?.ok ? poRes.json() : []
-            ]);
-
-            setDatasets({
-                credit,
-                notes,
-                services,
-                procurement: po
-            });
+            const endpoint = `/api/commercial/${tab === 'procurement' ? 'po' : tab}`;
+            const res = await tryApi(endpoint);
+            if (res?.ok) {
+                const json = await res.json();
+                setDatasets(prev => ({ ...prev, [tab]: json }));
+                setLoaded(prev => ({ ...prev, [tab]: true }));
+            }
         } catch (e) {
-            console.error('Failed to fetch commercial data:', e);
+            console.error(`Failed to fetch ${tab} data:`, e);
         } finally {
             setLoading(false);
         }
-    };
+    }, [loaded, tryApi]);
 
     useEffect(() => {
-        fetchAllData();
-    }, []);
+        fetchTabData(activeTab);
+    }, [activeTab, fetchTabData]);
 
-    const data = datasets[activeTab as keyof typeof datasets] || [];
+    const filteredData = useMemo(() => {
+        const rawData = datasets[activeTab as keyof typeof datasets] || [];
+        if (!searchTerm) return rawData;
 
-    const filteredData = (data || []).filter(item => {
-        if (!item) return false;
         const search = searchTerm.toLowerCase();
+        return rawData.filter(item => {
+            if (!item) return false;
 
-        // Basic fields
-        const matchesBasic =
-            (item.studentName?.toLowerCase().includes(search)) ||
-            (item.guardianName?.toLowerCase().includes(search)) ||
-            (item.poNumber?.toLowerCase().includes(search)) ||
-            (item.noteNumber?.toLowerCase().includes(search)) ||
-            (item.supplierName?.toLowerCase().includes(search)) ||
-            (item.serviceType?.toLowerCase().includes(search));
+            const matchesBasic =
+                (item.studentName?.toLowerCase().includes(search)) ||
+                (item.guardianName?.toLowerCase().includes(search)) ||
+                (item.poNumber?.toLowerCase().includes(search)) ||
+                (item.noteNumber?.toLowerCase().includes(search)) ||
+                (item.supplierName?.toLowerCase().includes(search)) ||
+                (item.serviceType?.toLowerCase().includes(search));
 
-        if (matchesBasic) return true;
+            if (matchesBasic) return true;
 
-        // If it's a service order, search within the linked student
-        if (activeTab === 'services' && item.studentId) {
-            const student = students.find(s => s.id === item.studentId);
-            if (student) {
-                return (
+            // Optimized student lookup
+            if (activeTab === 'services' && item.studentId) {
+                const student = students.find(s => s.id === item.studentId);
+                return student && (
                     student.firstName?.toLowerCase().includes(search) ||
                     student.lastName?.toLowerCase().includes(search) ||
                     student.admissionNumber?.toLowerCase().includes(search)
                 );
             }
-        }
 
-        return false;
-    });
+            return false;
+        });
+    }, [datasets, activeTab, searchTerm, students]);
 
     return (
         <div className="finance-page animate-in">
@@ -374,10 +364,10 @@ export default function CommercialPage() {
                 </div>
             </div>
 
-            {showNoteModal && <AddPromissoryNoteModal onClose={() => setShowNoteModal(false)} onAdd={fetchAllData} />}
-            {showServiceModal && <AddServiceOrderModal onClose={() => setShowServiceModal(false)} onAdd={fetchAllData} />}
-            {showCreditModal && <AddCreditAgreementModal onClose={() => setShowCreditModal(false)} onAdd={fetchAllData} />}
-            {showPurchaseModal && <AddPurchaseOrderModal onClose={() => setShowPurchaseModal(false)} onAdd={fetchAllData} />}
+            {showNoteModal && <AddPromissoryNoteModal onClose={() => setShowNoteModal(false)} onAdd={() => { setLoaded(p => ({ ...p, notes: false })); fetchTabData('notes'); }} />}
+            {showServiceModal && <AddServiceOrderModal onClose={() => setShowServiceModal(false)} onAdd={() => { setLoaded(p => ({ ...p, services: false })); fetchTabData('services'); }} />}
+            {showCreditModal && <AddCreditAgreementModal onClose={() => setShowCreditModal(false)} onAdd={() => { setLoaded(p => ({ ...p, credit: false })); fetchTabData('credit'); }} />}
+            {showPurchaseModal && <AddPurchaseOrderModal onClose={() => setShowPurchaseModal(false)} onAdd={() => { setLoaded(p => ({ ...p, procurement: false })); fetchTabData('procurement'); }} />}
             {selectedPO && <PurchaseOrderDetailsModal po={selectedPO} onClose={() => setSelectedPO(null)} />}
             {selectedService && (
                 <ServiceOrderDetailsModal

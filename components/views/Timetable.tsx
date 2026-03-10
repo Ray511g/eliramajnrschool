@@ -12,24 +12,39 @@ export default function Timetable() {
     const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grade' | 'teacher'>('grade');
 
-    const gradeEntries = viewMode === 'grade'
-        ? timetable.filter(e => e.grade === selectedGrade)
-        : timetable.filter(e => e.teacherId === selectedTeacherId);
+    const gradeEntries = useMemo(() =>
+        viewMode === 'grade'
+            ? timetable.filter(e => e.grade === selectedGrade)
+            : timetable.filter(e => e.teacherId === selectedTeacherId),
+        [timetable, viewMode, selectedGrade, selectedTeacherId]
+    );
 
-    const selectedTeacher = teachers.find(t => t.id === selectedTeacherId);
+    const selectedTeacher = useMemo(() =>
+        teachers.find(t => t.id === selectedTeacherId),
+        [teachers, selectedTeacherId]
+    );
 
     // Sort and filter active slots
-    const slots: TimeSlot[] = (settings.timeSlots || [])
-        .filter(s => s.isActive !== false)
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
+    const slots: TimeSlot[] = useMemo(() =>
+        (settings.timeSlots || [])
+            .filter(s => s.isActive !== false)
+            .sort((a, b) => (a.order || 0) - (b.order || 0)),
+        [settings.timeSlots]
+    );
 
-    const getEntry = (day: string, slotId: string, slotLabel: string) => {
-        // Try finding by slotId first (new system), fallback to timeSlot label (legacy)
-        return gradeEntries.find(e =>
-            e.day === day &&
-            ((e.slotId === slotId) || (!e.slotId && e.timeSlot === slotLabel))
-        );
-    };
+    // Optimized O(1) lookup map for the grid
+    const entryMap = useMemo(() => {
+        const map: Record<string, TimetableEntry> = {};
+        gradeEntries.forEach(e => {
+            const key = `${e.day}-${e.slotId || e.timeSlot}`;
+            map[key] = e;
+        });
+        return map;
+    }, [gradeEntries]);
+
+    const getEntry = useCallback((day: string, slotId: string, slotLabel: string) => {
+        return entryMap[`${day}-${slotId}`] || entryMap[`${day}-${slotLabel}`];
+    }, [entryMap]);
 
     const handleEdit = (entry: TimetableEntry) => {
         setEditingEntry(entry);

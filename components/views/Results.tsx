@@ -12,8 +12,8 @@ import CBCProgressReportModal from '../../components/modals/CBCProgressReportMod
 import Pagination from '../../components/common/Pagination';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
-import { 
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, 
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
     PieChart, Pie, Legend
 } from 'recharts';
 
@@ -84,18 +84,21 @@ export default function Results() {
     const [bulkLevel, setBulkLevel] = useState<PerformanceLevel | ''>('');
     const [bulkRemarks, setBulkRemarks] = useState('');
 
-    const filteredExams = exams.filter(e => e.grade === selectedGrade);
-    const gradeStudents = students.filter(s => s.grade === selectedGrade);
+    const filteredExams = useMemo(() => exams.filter(e => e.grade === selectedGrade), [exams, selectedGrade]);
+    const gradeStudents = useMemo(() => students.filter(s => s.grade === selectedGrade), [students, selectedGrade]);
 
     // CBC Filtering
-    const gradeAreas = learningAreas.filter(a => a.grade === selectedGrade);
-    const selectedArea = gradeAreas.find(a => a.id === selectedAreaId);
-    const selectedStrand = selectedArea?.strands.find(s => s.id === selectedStrandId);
-    const selectedSubStrand = selectedStrand?.subStrands.find(ss => ss.id === selectedSubStrandId);
-    const selectedAssessment = selectedSubStrand?.assessments.find(a => a.id === selectedAssessmentId);
+    const gradeAreas = useMemo(() => learningAreas.filter(a => a.grade === selectedGrade), [learningAreas, selectedGrade]);
+    const selectedArea = useMemo(() => gradeAreas.find(a => a.id === selectedAreaId), [gradeAreas, selectedAreaId]);
+    const selectedStrand = useMemo(() => selectedArea?.strands.find(s => s.id === selectedStrandId), [selectedArea, selectedStrandId]);
+    const selectedSubStrand = useMemo(() => selectedStrand?.subStrands.find(ss => ss.id === selectedSubStrandId), [selectedStrand, selectedSubStrandId]);
+    const selectedAssessment = useMemo(() => selectedSubStrand?.assessments.find(a => a.id === selectedAssessmentId), [selectedSubStrand, selectedAssessmentId]);
 
-    const paginatedStudents = gradeStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-    const selectedExam = exams.find(e => e.id === selectedExamId);
+    const paginatedStudents = useMemo(() =>
+        gradeStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+        [gradeStudents, currentPage]
+    );
+    const selectedExam = useMemo(() => exams.find(e => e.id === selectedExamId), [exams, selectedExamId]);
 
     const handleLoadResults = () => {
         if (activeTab === 'exams' && selectedExamId) {
@@ -219,10 +222,10 @@ export default function Results() {
             {activeTab === 'analytics' && (
                 <div className="analytics-viewport animate-in" style={{ marginTop: 24 }}>
                     {!selectedGrade ? (
-                         <div className="glass-card p-40 text-center">
+                        <div className="glass-card p-40 text-center">
                             <TrendingUpIcon style={{ fontSize: 64, opacity: 0.1, marginBottom: 16 }} />
                             <h3>Select a Grade to view Analytics</h3>
-                         </div>
+                        </div>
                     ) : (
                         <div className="analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 24 }}>
                             <div className="chart-card glass-card">

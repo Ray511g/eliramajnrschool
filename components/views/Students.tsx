@@ -41,15 +41,19 @@ export default function Students() {
     }, [router]);
 
     const { filtered, stats } = React.useMemo(() => {
+        let activeCount = 0;
+        let maleCount = 0;
+        let femaleCount = 0;
+
         const filteredList = students.filter(s => {
+            if (s.status === 'Active') activeCount++;
+            if (s.gender === 'Male') maleCount++;
+            else if (s.gender === 'Female') femaleCount++;
+
             const matchSearch = `${s.firstName} ${s.lastName} ${s.admissionNumber}`.toLowerCase().includes(search.toLowerCase());
             const matchGrade = !gradeFilter || s.grade === gradeFilter;
             return matchSearch && matchGrade;
         });
-
-        const activeCount = students.filter(s => s.status === 'Active').length;
-        const maleCount = students.filter(s => s.gender === 'Male').length;
-        const femaleCount = students.filter(s => s.gender === 'Female').length;
 
         return {
             filtered: filteredList,
